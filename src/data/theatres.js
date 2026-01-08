@@ -6,7 +6,7 @@ export const THEATRES = [
     description: 'Ukraine / Russia Conflict Zone',
     center: [35, 50],
     // Accurate bounds: Western Europe to Urals, Scandinavia to Mediterranean
-    bounds: { west: 20, east: 60, north: 60, south: 42 },
+    bounds: { west: 15, east: 45, north: 60, south: 42 },
     scale: 4
   },
   {
@@ -15,7 +15,7 @@ export const THEATRES = [
     description: 'Levant / Gulf / Iran',
     center: [45, 30],
     // Accurate bounds: Egypt to Pakistan, Turkey to Yemen
-    bounds: { west: 25, east: 65, north: 42, south: 12 },
+    bounds: { west: 26, east: 65, north: 42, south: 12 },
     scale: 4
   },
   {
@@ -24,7 +24,7 @@ export const THEATRES = [
     description: 'Taiwan Strait / South China Sea',
     center: [125, 20],
     // Accurate bounds: Bay of Bengal to Japan, Mongolia to Indonesia
-    bounds: { west: 95, east: 155, north: 45, south: -10 },
+    bounds: { west: 95, east: 147, north: 45, south: -10 },
     scale: 3
   },
   {
@@ -33,7 +33,7 @@ export const THEATRES = [
     description: 'Sahel / Horn of Africa',
     center: [20, 5],
     // Accurate bounds: African continent
-    bounds: { west: -18, east: 52, north: 38, south: -35 },
+    bounds: { west: -18, east: 52, north: 37, south: -35 },
     scale: 2.5
   },
   {
@@ -42,7 +42,7 @@ export const THEATRES = [
     description: 'Western Hemisphere',
     center: [-80, 15],
     // Accurate bounds: North and South America
-    bounds: { west: -170, east: -30, north: 72, south: -56 },
+    bounds: { west: -150, east: -34, north: 60, south: -55 },
     scale: 2
   }
 ];
