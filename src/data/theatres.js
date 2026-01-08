@@ -20,10 +20,10 @@ export const THEATRES = [
     center: [45, 30],
     bounds: { west: 26, east: 65, north: 42, south: 12 },
     scale: 4,
-    // Polygon covering Turkey, Syria, Iraq, Iran, Gulf states, Israel
+    // Polygon covering Turkey, Syria, Iraq, Iran, Gulf states, Oman, Israel
     polygon: [
-      [42, 26], [42, 45], [38, 50], [35, 62], [25, 62],
-      [22, 55], [15, 50], [12, 42], [28, 32], [35, 26]
+      [42, 26], [42, 45], [38, 55], [35, 62], [25, 62],
+      [20, 60], [17, 55], [15, 50], [12, 42], [28, 32], [35, 26]
     ]
   },
   {
@@ -46,11 +46,12 @@ export const THEATRES = [
     center: [20, 5],
     bounds: { west: -18, east: 52, north: 37, south: -35 },
     scale: 2.5,
-    // Polygon roughly covering African continent
+    // Polygon roughly covering African continent including Morocco and Mauritania
     polygon: [
-      [37, -10], [35, 12], [30, 32], [20, 42], [5, 50],
-      [-5, 50], [-35, 25], [-35, 15], [-25, -15], [10, -18],
-      [25, -5], [35, 5]
+      [36, -6], [35, -10], [28, -17], [21, -17], [15, -17],
+      [10, -17], [5, -10], [5, 10], [-5, 12], [-10, 15],
+      [-35, 20], [-35, 28], [-28, 30], [-20, 35], [-5, 42],
+      [5, 50], [12, 52], [20, 42], [30, 32], [35, 10]
     ]
   },
   {
