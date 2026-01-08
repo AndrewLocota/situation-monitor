@@ -264,6 +264,18 @@
   color: var(--text-secondary, #8892a8);
   font-style: italic;
   letter-spacing: 0.5px;
+  transition: opacity 0.3s ease;
+  min-width: 180px;
+}
+
+.footer-tagline.ascii-art {
+  font-style: normal;
+  font-size: 6px;
+  line-height: 1;
+  letter-spacing: 0;
+  font-family: monospace;
+  color: var(--text-secondary, #8892a8);
+  white-space: pre;
 }
 
 .footer-separator {

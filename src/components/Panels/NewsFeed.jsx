@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ASCIIBox } from '../ui';
 import { useDataStore } from '../../stores';
 import { timeAgo } from '../../utils/timeFormat';
+import { geolocateNews } from '../../utils/geolocateNews';
 import './Panels.css';
 
 const CATEGORIES = ['all', 'politics', 'tech', 'finance', 'intel', 'ai'];
@@ -26,7 +27,7 @@ const NewsSkeleton = ({ count = 5 }) => (
 export function NewsFeed() {
     const [category, setCategory] = useState('all');
     const [maxItems, setMaxItems] = useState(10);
-    const { allNews, loading, lastUpdated } = useDataStore();
+    const { allNews, loading, lastUpdated, setSelectedNews } = useDataStore();
 
     // Filter news by category (simple keyword matching)
     const filteredNews = allNews.filter(item => {
@@ -133,15 +134,32 @@ export function NewsFeed() {
                                     <span className="news-source">{item.source}</span>
                                     <span className="news-time">{timeAgo(item.pubDate)}</span>
                                 </div>
-                                <a
-                                    className="news-title"
-                                    href={item.link}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                >
-                                    {isAlert && <span className="news-alert-badge">!</span>}
-                                    {item.title}
-                                </a>
+                                <div className="news-title-row">
+                                    <span
+                                        className="news-title clickable"
+                                        onClick={() => {
+                                            const location = geolocateNews(item);
+                                            if (location) {
+                                                setSelectedNews({ ...item, location });
+                                            }
+                                        }}
+                                        title={geolocateNews(item) ? `Click to view on map (${geolocateNews(item)?.label})` : 'No location detected'}
+                                    >
+                                        {isAlert && <span className="news-alert-badge">!</span>}
+                                        {item.title}
+                                        {geolocateNews(item) && <span className="news-map-icon">📍</span>}
+                                    </span>
+                                    <a
+                                        className="news-link-icon"
+                                        href={item.link}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        title="Open article"
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        ↗
+                                    </a>
+                                </div>
                             </div>
                         );
                     })

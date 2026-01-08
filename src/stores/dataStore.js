@@ -40,6 +40,7 @@ export const useDataStore = create((set) => ({
   isLoading: false,
   error: null,
   lastUpdate: null,
+  selectedNews: null, // Selected news item for map focus
 
   // Loading states
   loading: {
@@ -119,7 +120,11 @@ export const useDataStore = create((set) => ({
     set(state => ({
       lastUpdated: { ...state.lastUpdated, [key]: Date.now() }
     }));
-  }
+  },
+
+  setSelectedNews: (newsItem) => set({ selectedNews: newsItem }),
+  
+  clearSelectedNews: () => set({ selectedNews: null })
 }));
 
 export default useDataStore;

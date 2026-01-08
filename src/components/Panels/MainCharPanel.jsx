@@ -5,7 +5,7 @@ import './Panels.css';
 
 // Common names to track in news
 const NOTABLE_NAMES = [
-    'Trump', 'Biden', 'Musk', 'Putin', 'Xi', 'Zelensky',
+    'Trump', 'Biden', 'Vance', 'Musk', 'Putin', 'Xi', 'Zelensky',
     'Harris', 'DeSantis', 'Haley', 'Netanyahu', 'Kim',
     'Pelosi', 'McConnell', 'Bezos', 'Zuckerberg', 'Gates',
     'Altman', 'Pichai', 'Cook', 'Nadella', 'Powell', 'Yellen'
@@ -34,7 +34,7 @@ export function MainCharPanel() {
 
     if (characters.length === 0) {
         return (
-            <ASCIIBox title="MAIN CHARACTER" collapsible defaultCollapsed={false} dataSource="Calculated from RSS headlines">
+            <ASCIIBox title="MAIN CHARACTER" collapsible defaultCollapsed={false} isLive={true} dataSource="Calculated from RSS headlines">
                 {isLoading ? (
                     <div className="panel-loading">Analyzing headlines...</div>
                 ) : (
@@ -47,7 +47,7 @@ export function MainCharPanel() {
     const [top, ...rest] = characters;
 
     return (
-        <ASCIIBox title="MAIN CHARACTER" collapsible defaultCollapsed={false} dataSource="Calculated from RSS headlines">
+        <ASCIIBox title="MAIN CHARACTER" collapsible defaultCollapsed={false} isLive={true} dataSource="Calculated from RSS headlines">
             <div className="mainchar-display">
                 <div className="mainchar-label">Today's Main Character</div>
                 <div className="mainchar-name">{top.name}</div>

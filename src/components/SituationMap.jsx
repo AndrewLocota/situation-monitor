@@ -12,6 +12,9 @@ import {
 import { VIDEO_MARKERS } from '../data/videoMarkers';
 import { fetchLiveUAMapEvents, fetchUkraineFrontline, EVENT_STYLES } from '../data/liveFeeds';
 import { getAllConflictEvents, GLOBAL_EVENT_STYLES } from '../data/globalConflicts';
+import { geolocateNewsItems } from '../utils/geolocateNews';
+import { useDataStore } from '../stores';
+import { timeAgo } from '../utils/timeFormat';
 
 // Cluster spread configuration
 const CLUSTER_CONFIG = {
@@ -31,7 +34,8 @@ const COLORS = {
     usnato: '#4da6ff',
     china: '#ff9f43',
     russia: '#ff4757',
-    video: '#2ed573'
+    video: '#2ed573',
+    news: '#00d4ff'  // Cyan for news markers
 };
 
 // Custom CSS filter for wireframe effect on tiles
@@ -112,6 +116,24 @@ const createVideoIcon = (color) => {
     });
 };
 
+// News marker icon (newspaper style)
+const createNewsIcon = (color) => {
+    return L.divIcon({
+        className: 'custom-news-marker',
+        html: `<div style="
+            width: 10px;
+            height: 10px;
+            background: ${color};
+            border: 1px solid rgba(0,0,0,0.5);
+            border-radius: 2px;
+            box-shadow: 0 0 6px ${color};
+            opacity: 0.9;
+        "></div>`,
+        iconSize: [10, 10],
+        iconAnchor: [5, 5]
+    });
+};
+
 // Map bounds controller
 const MapController = ({ activeTheatre, onTheatreSelect }) => {
     const map = useMap();
@@ -141,6 +163,27 @@ const MapController = ({ activeTheatre, onTheatreSelect }) => {
             map.flyTo([20, 0], 2, { duration: 1 });
         }
     }, [activeTheatre, map]);
+
+    return null;
+};
+
+// News focus handler - flies to selected news location
+const NewsFocusHandler = ({ selectedNews, clearSelectedNews, setFocusedNewsId }) => {
+    const map = useMap();
+
+    useEffect(() => {
+        if (selectedNews && selectedNews.location) {
+            const { lat, lng } = selectedNews.location;
+            // Fly to the news location
+            map.flyTo([lat, lng], 8, { duration: 1 });
+            // Set the focused news ID to highlight/open popup
+            setFocusedNewsId(selectedNews.id);
+            // Clear the selection after flying
+            setTimeout(() => {
+                clearSelectedNews();
+            }, 100);
+        }
+    }, [selectedNews, map, clearSelectedNews, setFocusedNewsId]);
 
     return null;
 };
@@ -432,6 +475,15 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
     const [liveEvents, setLiveEvents] = useState([]);
     const [frontlineData, setFrontlineData] = useState([]);
     const [spreadState, setSpreadState] = useState({ active: false, positions: {}, center: null });
+    const [focusedNewsId, setFocusedNewsId] = useState(null);
+
+    // Get news and selectedNews from store
+    const { allNews, selectedNews, clearSelectedNews } = useDataStore();
+
+    // Geolocate news items (first 10)
+    const geolocatedNews = useMemo(() => {
+        return geolocateNewsItems(allNews, 10);
+    }, [allNews]);
 
     // Collect all markers for cluster detection
     const allMarkers = useMemo(() => {
@@ -546,6 +598,11 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
 
                 <MapController activeTheatre={activeTheatre} onTheatreSelect={onTheatreSelect} />
                 <ZoomDisplay />
+                <NewsFocusHandler
+                    selectedNews={selectedNews}
+                    clearSelectedNews={clearSelectedNews}
+                    setFocusedNewsId={setFocusedNewsId}
+                />
                 <ClusterSpreadManager
                     allMarkers={allMarkers}
                     spreadState={spreadState}
@@ -740,6 +797,35 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                     </Marker>
                 ))}
 
+                {/* News Feed Markers */}
+                {geolocatedNews.map(({ newsItem, location }, index) => (
+                    <Marker
+                        key={`news-${newsItem.id || index}`}
+                        position={[location.lat, location.lng]}
+                        icon={createNewsIcon(COLORS.news)}
+                    >
+                        <Popup maxWidth={300}>
+                            <div style={{ fontFamily: 'monospace', fontSize: '11px', maxWidth: '280px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', borderBottom: '1px solid #2a3040', paddingBottom: '4px' }}>
+                                    <span style={{ color: COLORS.news, fontWeight: 'bold', fontSize: '9px' }}>{newsItem.source}</span>
+                                    <span style={{ color: '#5a6478', fontSize: '9px' }}>{timeAgo(newsItem.pubDate)}</span>
+                                </div>
+                                <a
+                                    href={newsItem.link}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{ color: '#e0e4eb', textDecoration: 'none', lineHeight: '1.4', display: 'block' }}
+                                >
+                                    {newsItem.title}
+                                </a>
+                                <div style={{ marginTop: '6px', fontSize: '9px', color: '#5a6478' }}>
+                                    📍 {location.label}
+                                </div>
+                            </div>
+                        </Popup>
+                    </Marker>
+                ))}
+
                 {/* Live Events */}
                 {liveEvents.map(event => {
                     const style = EVENT_STYLES[event.type] || { color: '#ffffff' };
@@ -862,6 +948,7 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                     <div style={{ color: COLORS.china }}>■ CHINA</div>
                     <div style={{ color: COLORS.russia }}>■ RUSSIA</div>
                     <div style={{ color: COLORS.video }}>◆ VIDEO INTEL</div>
+                    <div style={{ color: COLORS.news }}>■ NEWS FEED</div>
                 </div>
             </div>
 

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Header } from './layout/Header';
 import MusicPlayer from './MusicPlayer';
 import {
@@ -27,6 +27,25 @@ const UIOverlay = ({ onRefresh, videoPlaying, children }) => {
 
     const { isLoading, error, lastUpdate, allNews, conflictEvents, earthquakes } = useDataStore();
     const { panels } = useSettingsStore();
+
+    // Cycling footer taglines
+    const FOOTER_TAGLINES = [
+        { type: 'text', content: 'We live in interesting times' },
+        { type: 'text', content: 'SITUATION MONITOR' },
+        {
+            type: 'ascii', content: `  (--v--)
+__  __|__
+(@)_(::|@\\
+\`--\\_____)`}
+    ];
+    const [taglineIndex, setTaglineIndex] = useState(0);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setTaglineIndex(prev => (prev + 1) % FOOTER_TAGLINES.length);
+        }, 5000);
+        return () => clearInterval(interval);
+    }, []);
 
     return (
         <div className="app">
@@ -151,7 +170,9 @@ const UIOverlay = ({ onRefresh, videoPlaying, children }) => {
             <footer className="app-footer" style={{ position: 'relative', zIndex: 10 }}>
                 <div className="footer-left">
                     <span className="terminal-prompt">&gt;</span>
-                    <span className="footer-tagline">We live in interesting times</span>
+                    <span className={`footer-tagline ${FOOTER_TAGLINES[taglineIndex].type === 'ascii' ? 'ascii-art' : ''}`}>
+                        {FOOTER_TAGLINES[taglineIndex].content}
+                    </span>
                     <span className="footer-separator">|</span>
                     <div className="footer-stats">
                         <span className="stat-item">

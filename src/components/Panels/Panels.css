@@ -201,6 +201,39 @@
   margin-right: 4px;
 }
 
+.news-title-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.news-title.clickable {
+  cursor: pointer;
+  flex: 1;
+}
+
+.news-title.clickable:hover {
+  color: var(--accent-primary, #4da6ff);
+}
+
+.news-map-icon {
+  font-size: 10px;
+  margin-left: 4px;
+  opacity: 0.7;
+}
+
+.news-link-icon {
+  font-size: 12px;
+  color: var(--text-dim, #5a6478);
+  text-decoration: none;
+  padding: 2px;
+  flex-shrink: 0;
+}
+
+.news-link-icon:hover {
+  color: var(--accent-primary, #4da6ff);
+}
+
 /* Markets Grid */
 .markets-section {
   margin-bottom: 8px;
