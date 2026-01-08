@@ -188,20 +188,50 @@
   }
 }
 
-/* Responsive */
+/* Responsive Visibility */
+.mobile-only { display: none !important; }
+
+/* Responsive Header */
 @media (max-width: 768px) {
   .header {
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    min-height: 48px;
+    height: 48px;
+    padding: 0 8px;
     gap: 8px;
   }
 
-  .header-center {
-    order: -1;
-    width: 100%;
-    justify-content: flex-start;
+  .header-brand .header-title {
+    display: none; /* Hide title on mobile to save space */
   }
 
-  .header-date {
+  .header-brand .header-bracket {
     display: none;
   }
+  
+  /* Show "SM" or abbreviated brand if needed, or just hide branding text */
+  .header-brand::after {
+    content: "SM";
+    font-weight: bold;
+    color: var(--text-primary);
+    letter-spacing: 0.1em;
+  }
+
+  .header-center {
+    flex: 1; /* Center takes available space */
+    order: 0;
+    justify-content: center;
+    width: auto;
+  }
+
+  .header-right {
+    gap: 8px;
+  }
+
+  .header-time-label, .header-date {
+    display: none;
+  }
+  
+  .mobile-only { display: flex !important; }
+  .desktop-only { display: none !important; }
 }

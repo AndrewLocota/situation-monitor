@@ -284,32 +284,88 @@
 }
 
 /* Responsive adjustments */
-@media (max-width: 1400px) {
+/* Responsive adjustments */
+@media (max-width: 1200px) {
   .sidebar {
     width: 280px;
     min-width: 280px;
   }
 }
 
-@media (max-width: 1200px) {
-  .sidebar {
-    width: 260px;
-    min-width: 260px;
-  }
-}
-
 @media (max-width: 1000px) {
+  .main-container {
+    position: relative;
+  }
+
+  /* Convert sidebars to overlays */
+  .sidebar {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    height: 100%;
+    z-index: 100;
+    width: 300px; /* Wider on mobile for better reading */
+    min-width: 300px;
+    background: rgba(6, 8, 12, 0.95);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+  }
+
+  .sidebar.left {
+    left: 0;
+  }
+
   .sidebar.right {
-    display: none;
+    right: 0;
+  }
+
+  /* Collapsed state on mobile */
+  .sidebar.collapsed {
+    width: 32px !important;
+    min-width: 32px !important;
+    background: rgba(6, 8, 12, 0.6);
+    backdrop-filter: blur(4px);
+  }
+
+  .sidebar.left.collapsed {
+    border-right: 1px solid var(--border-color, #2a3040);
+  }
+
+  .sidebar.right.collapsed {
+    border-left: 1px solid var(--border-color, #2a3040);
+  }
+  
+  /* Ensure toggle is clickable */
+  .sidebar-toggle {
+    height: 80px; /* Larger touch target */
+    width: 24px;
+    background: var(--bg-elevated);
+  }
+
+  /* Map takes full space underneath */
+  .map-area {
+    width: 100%;
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 600px) {
+  /* On very small screens, sidebar takes almost full width when open */
   .sidebar {
+    width: 85vw;
+    min-width: 85vw;
+  }
+  
+  .app-footer {
+    display: flex;
+    padding: 0 8px;
+    font-size: 9px;
+  }
+  
+  .footer-center, .footer-right {
     display: none;
   }
-
-  .app-footer {
+  
+  .header-date {
     display: none;
   }
 }

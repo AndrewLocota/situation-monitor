@@ -22,8 +22,8 @@ import '../App.css';
  * The map is passed as children and rendered in the center area.
  */
 const UIOverlay = ({ onRefresh, videoPlaying, children }) => {
-    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-    const [rightSidebarCollapsed, setRightSidebarCollapsed] = useState(false);
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(() => window.innerWidth < 1000);
+    const [rightSidebarCollapsed, setRightSidebarCollapsed] = useState(() => window.innerWidth < 1000);
 
     const { isLoading, error, lastUpdate, allNews, conflictEvents, earthquakes } = useDataStore();
     const { panels } = useSettingsStore();
@@ -61,10 +61,14 @@ const UIOverlay = ({ onRefresh, videoPlaying, children }) => {
                         <span className="live-dot" />
                         <span className="live-text">{isLoading ? 'SYNCING' : 'LIVE'}</span>
                     </div>
+                    {/* Mobile Time Display */}
+                    <div className="header-time mobile-only" style={{ marginLeft: '8px', border: 'none', background: 'transparent', padding: 0 }}>
+                        <span className="header-time-value" style={{ fontSize: '11px' }}>{new Date().toISOString().substring(11, 19)} UTC</span>
+                    </div>
                 </div>
 
                 <div className="header-right">
-                    <div className="header-time">
+                    <div className="header-time desktop-only">
                         <span className="header-time-label">UTC</span>
                         <span className="header-time-value">{new Date().toISOString().substring(11, 19)}</span>
                     </div>
