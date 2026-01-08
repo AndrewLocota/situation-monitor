@@ -1,4 +1,4 @@
-// Theatre regions with geographically accurate bounding boxes
+// Theatre regions with polygon coordinates for irregular shapes
 export const THEATRES = [
   {
     id: 'europe',
@@ -6,7 +6,12 @@ export const THEATRES = [
     description: 'Ukraine / Russia Conflict Zone',
     center: [35, 50],
     bounds: { west: 15, east: 45, north: 60, south: 42 },
-    scale: 4
+    scale: 4,
+    // Polygon roughly covering Ukraine, Belarus, Western Russia, Poland border
+    polygon: [
+      [60, 20], [60, 35], [56, 42], [50, 42], [47, 35], 
+      [45, 30], [45, 22], [48, 20], [52, 15], [58, 18]
+    ]
   },
   {
     id: 'middle_east',
@@ -14,7 +19,12 @@ export const THEATRES = [
     description: 'Levant / Gulf / Iran',
     center: [45, 30],
     bounds: { west: 26, east: 65, north: 42, south: 12 },
-    scale: 4
+    scale: 4,
+    // Polygon covering Turkey, Syria, Iraq, Iran, Gulf states, Israel
+    polygon: [
+      [42, 26], [42, 45], [38, 50], [35, 62], [25, 62],
+      [22, 55], [15, 50], [12, 42], [28, 32], [35, 26]
+    ]
   },
   {
     id: 'pacific',
@@ -22,7 +32,12 @@ export const THEATRES = [
     description: 'Taiwan Strait / South China Sea',
     center: [125, 20],
     bounds: { west: 95, east: 147, north: 45, south: -10 },
-    scale: 3
+    scale: 3,
+    // Polygon covering China coast, Taiwan, Philippines, Vietnam, Korea, Japan
+    polygon: [
+      [45, 100], [45, 130], [40, 145], [25, 145], [10, 140],
+      [-5, 130], [-10, 110], [5, 95], [20, 95], [35, 100]
+    ]
   },
   {
     id: 'africa',
@@ -30,7 +45,13 @@ export const THEATRES = [
     description: 'Sahel / Horn of Africa',
     center: [20, 5],
     bounds: { west: -18, east: 52, north: 37, south: -35 },
-    scale: 2.5
+    scale: 2.5,
+    // Polygon roughly covering African continent
+    polygon: [
+      [37, -10], [35, 12], [30, 32], [20, 42], [5, 50],
+      [-5, 50], [-35, 25], [-35, 15], [-25, -15], [10, -18],
+      [25, -5], [35, 5]
+    ]
   },
   {
     id: 'americas',
@@ -38,7 +59,13 @@ export const THEATRES = [
     description: 'Western Hemisphere',
     center: [-80, 15],
     bounds: { west: -150, east: -34, north: 60, south: -55 },
-    scale: 2
+    scale: 2,
+    // Polygon covering North/Central/South America
+    polygon: [
+      [60, -130], [55, -55], [50, -50], [25, -80], [10, -60],
+      [-10, -35], [-35, -40], [-55, -70], [-55, -80], [-40, -75],
+      [10, -85], [20, -105], [35, -120], [50, -130]
+    ]
   }
 ];
 

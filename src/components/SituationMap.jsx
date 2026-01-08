@@ -610,16 +610,19 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                 />
 
 
-                {/* Theatre Zone Rectangles */}
+                {/* Theatre Zone Polygons */}
                 {THEATRES.map(theatre => (
                     <Polygon
                         key={theatre.id}
-                        positions={[
-                            [theatre.bounds.north, theatre.bounds.west],
-                            [theatre.bounds.north, theatre.bounds.east],
-                            [theatre.bounds.south, theatre.bounds.east],
-                            [theatre.bounds.south, theatre.bounds.west]
-                        ]}
+                        positions={theatre.polygon
+                            ? theatre.polygon.map(([lat, lng]) => [lat, lng])
+                            : [
+                                [theatre.bounds.north, theatre.bounds.west],
+                                [theatre.bounds.north, theatre.bounds.east],
+                                [theatre.bounds.south, theatre.bounds.east],
+                                [theatre.bounds.south, theatre.bounds.west]
+                            ]
+                        }
                         pathOptions={{
                             color: COLORS.accent,
                             weight: 1,
