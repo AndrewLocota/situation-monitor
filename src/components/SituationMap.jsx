@@ -9,6 +9,7 @@ import {
     MILITARY_BASES,
     SHIPPING_CHOKEPOINTS
 } from '../data/theatres';
+import { VIDEO_MARKERS } from '../data/videoMarkers';
 import { fetchLiveUAMapEvents, fetchUkraineFrontline, EVENT_STYLES } from '../data/liveFeeds';
 import { getAllConflictEvents, GLOBAL_EVENT_STYLES } from '../data/globalConflicts';
 
@@ -21,7 +22,8 @@ const COLORS = {
     success: '#2ed573',
     usnato: '#4da6ff',
     china: '#ff9f43',
-    russia: '#ff4757'
+    russia: '#ff4757',
+    video: '#2ed573'
 };
 
 // Custom CSS filter for wireframe effect on tiles
@@ -85,6 +87,23 @@ const createTriangleIcon = (color, size = 10) => {
     });
 };
 
+const createVideoIcon = (color) => {
+    return L.divIcon({
+        className: 'custom-video-marker',
+        html: `<div style="
+            width: 14px; 
+            height: 14px; 
+            background: ${color}; 
+            border: 2px solid #000; 
+            transform: rotate(45deg);
+            box-shadow: 0 0 10px ${color};
+            display: flex; align-items: center; justify-content: center;
+        "><div style="width: 4px; height: 4px; background: #000; border-radius: 50%;"></div></div>`,
+        iconSize: [14, 14],
+        iconAnchor: [7, 7]
+    });
+};
+
 // Map bounds controller
 const MapController = ({ activeTheatre, onTheatreSelect }) => {
     const map = useMap();
@@ -144,7 +163,149 @@ const ZoomDisplay = () => {
     );
 };
 
-const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark' }) => {
+// Video popup content component with ref forwarding for video control
+const VideoPopupContent = React.forwardRef(({ video, onVideoPlay, onVideoPause }, ref) => {
+    const videoRef = useRef(null);
+
+    // Expose video element to parent
+    React.useImperativeHandle(ref, () => ({
+        play: () => {
+            if (videoRef.current) {
+                videoRef.current.play().catch(e => console.log('Video autoplay blocked:', e));
+            }
+        },
+        pause: () => {
+            if (videoRef.current) {
+                videoRef.current.pause();
+            }
+        },
+        stop: () => {
+            if (videoRef.current) {
+                videoRef.current.pause();
+                videoRef.current.currentTime = 0;
+            }
+        }
+    }));
+
+    return (
+        <div style={{ fontFamily: 'monospace', fontSize: '11px', minWidth: '280px' }}>
+            <strong style={{ color: COLORS.video }}>VIDEO INTEL // {video.title}</strong><br />
+            <div style={{ marginTop: '6px', border: `1px solid ${COLORS.video}` }}>
+                <video
+                    ref={videoRef}
+                    src={video.src}
+                    loop
+                    playsInline
+                    muted={false}
+                    onPlay={onVideoPlay}
+                    onPause={onVideoPause}
+                    style={{ width: '100%', display: 'block' }}
+                />
+            </div>
+            <div style={{ fontSize: '9px', color: '#888', marginTop: '4px', textAlign: 'right' }}>
+                LOOP: ACTIVE // ID: {video.id.toUpperCase()}
+            </div>
+        </div>
+    );
+});
+
+const VideoMarkerLayer = ({ onVideoStateChange, onTheatreSelect }) => {
+    const map = useMap();
+    const [activeVideoId, setActiveVideoId] = useState(null);
+    const videoRefs = useRef({});
+
+    // Listen for popup close events to stop video and notify parent
+    useEffect(() => {
+        const handlePopupClose = () => {
+            // Stop all videos when any popup closes
+            Object.values(videoRefs.current).forEach(ref => {
+                if (ref && ref.stop) ref.stop();
+            });
+            setActiveVideoId(null);
+            onVideoStateChange(false);
+        };
+
+        map.on('popupclose', handlePopupClose);
+        return () => {
+            map.off('popupclose', handlePopupClose);
+        };
+    }, [map, onVideoStateChange]);
+
+    const handleMarkerClick = (video) => {
+        // Find containing theatre and pan so the popup is visible
+        const theatre = THEATRES.find(t =>
+            video.lat <= t.bounds.north &&
+            video.lat >= t.bounds.south &&
+            video.lng <= t.bounds.east &&
+            video.lng >= t.bounds.west
+        );
+
+        if (theatre) {
+            const bounds = L.latLngBounds(
+                [theatre.bounds.south, theatre.bounds.west],
+                [theatre.bounds.north, theatre.bounds.east]
+            );
+            map.flyToBounds(bounds, { duration: 1, padding: [20, 20] });
+        }
+    };
+
+    const handlePopupOpen = (video) => {
+        setActiveVideoId(video.id);
+        // Start video when popup opens
+        setTimeout(() => {
+            const ref = videoRefs.current[video.id];
+            if (ref && ref.play) {
+                ref.play();
+            }
+        }, 100);
+        onVideoStateChange(true);
+    };
+
+    const handleVideoPlay = () => {
+        onVideoStateChange(true);
+    };
+
+    const handleVideoPause = () => {
+        // If the user manually pauses the video, we should allow music to resume
+        // But we need to check if the popup is still open. 
+        // If the popup is open but video is paused, do we resume music? 
+        // User request: "resumes once they are not [playing]" -> Yes.
+        onVideoStateChange(false);
+    };
+
+    return (
+        <>
+            {VIDEO_MARKERS.map(video => (
+                <Marker
+                    key={video.id}
+                    position={[video.lat, video.lng]}
+                    icon={createVideoIcon(COLORS.video)}
+                    eventHandlers={{
+                        click: () => handleMarkerClick(video)
+                    }}
+                >
+                    <Popup
+                        minWidth={300}
+                        maxWidth={400}
+                        className="video-popup"
+                        eventHandlers={{
+                            add: () => handlePopupOpen(video)
+                        }}
+                    >
+                        <VideoPopupContent
+                            ref={el => videoRefs.current[video.id] = el}
+                            video={video}
+                            onVideoPlay={handleVideoPlay}
+                            onVideoPause={handleVideoPause}
+                        />
+                    </Popup>
+                </Marker>
+            ))}
+        </>
+    );
+};
+
+const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVideoStateChange }) => {
     const [liveEvents, setLiveEvents] = useState([]);
     const [frontlineData, setFrontlineData] = useState([]);
 
@@ -226,6 +387,7 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark' }) => 
 
                 <MapController activeTheatre={activeTheatre} onTheatreSelect={onTheatreSelect} />
                 <ZoomDisplay />
+
 
                 {/* Theatre Zone Rectangles */}
                 {THEATRES.map(theatre => (
@@ -324,6 +486,9 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark' }) => 
                         </Popup>
                     </Marker>
                 ))}
+
+                {/* Video Intelligence */}
+                <VideoMarkerLayer onVideoStateChange={onVideoStateChange} onTheatreSelect={onTheatreSelect} />
 
                 {/* Military Bases */}
                 {MILITARY_BASES.map(base => {
@@ -461,6 +626,7 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark' }) => 
                     <div style={{ color: COLORS.usnato }}>■ US/NATO</div>
                     <div style={{ color: COLORS.china }}>■ CHINA</div>
                     <div style={{ color: COLORS.russia }}>■ RUSSIA</div>
+                    <div style={{ color: COLORS.video }}>◆ VIDEO INTEL</div>
                 </div>
             </div>
 

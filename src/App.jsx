@@ -10,6 +10,7 @@ import './index.css';
 function App() {
   const [activeTheatre, setActiveTheatre] = useState(null);
   const [mapTheme, setMapTheme] = useState('dark'); // 'dark' or 'black'
+  const [videoPlaying, setVideoPlaying] = useState(false);
 
   const handleTheatreSelect = (theatreId) => {
     setActiveTheatre(theatreId);
@@ -45,6 +46,7 @@ function App() {
           activeTheatre={activeTheatre}
           onTheatreSelect={handleTheatreSelect}
           mapTheme={mapTheme}
+          onVideoStateChange={setVideoPlaying}
         />
       </div>
 
@@ -87,7 +89,7 @@ function App() {
               STATUS: <span style={{ color: accentColor }}>ONLINE</span> |
               THEATRE: <span style={{ color: accentColor }}>{activeTheatre ? activeTheatre.toUpperCase() : 'GLOBAL'}</span>
             </div>
-            <MusicPlayer />
+            <MusicPlayer forcePause={videoPlaying} />
           </div>
 
           <div style={{ display: 'flex', gap: '12px' }}>

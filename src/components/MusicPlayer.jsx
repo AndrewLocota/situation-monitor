@@ -9,7 +9,7 @@ const TRACKS = [
     { title: 'TRACK 03', src: `${BASE}music/track3.mp3` }
 ];
 
-const MusicPlayer = () => {
+const MusicPlayer = ({ forcePause = false }) => {
     const audioRef = useRef(null);
     const [playing, setPlaying] = useState(true); // Autostart enabled
     const [volume, setVolume] = useState(0.20);
@@ -49,7 +49,7 @@ const MusicPlayer = () => {
 
     useEffect(() => {
         if (canLoad && ready && audioRef.current) {
-            if (playing) {
+            if (playing && !forcePause) {
                 const playPromise = audioRef.current.play();
                 if (playPromise !== undefined) {
                     playPromise.catch(e => {
@@ -61,7 +61,7 @@ const MusicPlayer = () => {
                 audioRef.current.pause();
             }
         }
-    }, [playing, ready, canLoad, currentTrack]);
+    }, [playing, ready, canLoad, currentTrack, forcePause]);
 
     // Retry playback on first user interaction
     useEffect(() => {
