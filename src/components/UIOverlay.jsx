@@ -47,6 +47,38 @@ __  __|__
         return () => clearInterval(interval);
     }, []);
 
+    // Persistent Visitor Counter
+    const [visitorCount, setVisitorCount] = useState(null);
+    useEffect(() => {
+        const fetchVisitorCount = async () => {
+            try {
+                // Check if we've already counted this user session to avoid spamming increments on refresh
+                const key = 'situation_monitor_visit_counted';
+                const hasCounted = sessionStorage.getItem(key);
+
+                let url = 'https://api.countapi.xyz/hit/AndrewLocota/situation-monitor';
+                if (hasCounted) {
+                    // Just get the info, don't increment
+                    url = 'https://api.countapi.xyz/get/AndrewLocota/situation-monitor';
+                }
+
+                const response = await fetch(url);
+                const data = await response.json();
+                if (data && data.value) {
+                    setVisitorCount(data.value);
+                    if (!hasCounted) {
+                        sessionStorage.setItem(key, 'true');
+                    }
+                }
+            } catch (err) {
+                console.warn('Failed to fetch visitor count:', err);
+                // Fallback to simple local storage count if API fails? No, just hide it.
+            }
+        };
+
+        fetchVisitorCount();
+    }, []);
+
     return (
         <div className="app">
             {/* Map Layer - Positioned absolutely behind everything */}
@@ -113,13 +145,11 @@ __  __|__
                         {sidebarCollapsed ? '»' : '«'}
                     </button>
 
-                    {!sidebarCollapsed && (
-                        <div className="sidebar-content">
-                            {panels.newsFeed && <NewsFeed />}
-                            {panels.polymarket && <PolymarketPanel />}
-                            {panels.mainChar && <MainCharPanel />}
-                        </div>
-                    )}
+                    <div className="sidebar-content" style={{ display: sidebarCollapsed ? 'none' : 'flex' }}>
+                        {panels.newsFeed && <NewsFeed />}
+                        {panels.polymarket && <PolymarketPanel />}
+                        {panels.mainChar && <MainCharPanel />}
+                    </div>
                 </aside>
 
                 {/* Center area (just for layout spacing and center UI elements) */}
@@ -152,17 +182,15 @@ __  __|__
                         {rightSidebarCollapsed ? '«' : '»'}
                     </button>
 
-                    {!rightSidebarCollapsed && (
-                        <div className="sidebar-content">
-                            {panels.markets && <MarketsPanel />}
-                            {panels.sectors && <SectorHeatmap />}
-                            {panels.commodities && <CommoditiesPanel />}
-                            {panels.congress && <CongressPanel />}
-                            {panels.whales && <WhalePanel />}
-                            {panels.moneyPrinter && <MoneyPrinterPanel />}
-                            {panels.contracts && <ContractsPanel />}
-                        </div>
-                    )}
+                    <div className="sidebar-content" style={{ display: rightSidebarCollapsed ? 'none' : 'flex' }}>
+                        {panels.markets && <MarketsPanel />}
+                        {panels.sectors && <SectorHeatmap />}
+                        {panels.commodities && <CommoditiesPanel />}
+                        {panels.congress && <CongressPanel />}
+                        {panels.whales && <WhalePanel />}
+                        {panels.moneyPrinter && <MoneyPrinterPanel />}
+                        {panels.contracts && <ContractsPanel />}
+                    </div>
                 </aside>
             </div>
 
@@ -203,6 +231,15 @@ __  __|__
                     </span>
                 </div>
                 <div className="footer-right desktop-only">
+                    {visitorCount !== null && (
+                        <>
+                            <span className="stat-item" style={{ marginRight: '16px' }}>
+                                <span className="stat-label">VISITORS</span>
+                                <span className="stat-value">{visitorCount.toLocaleString()}</span>
+                            </span>
+                            <span className="footer-separator">|</span>
+                        </>
+                    )}
                     <kbd>Ctrl+R</kbd> Refresh
                 </div>
             </footer>
