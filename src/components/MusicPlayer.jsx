@@ -6,8 +6,7 @@ const BASE = import.meta.env.BASE_URL;
 // Only include tracks that exist
 const TRACKS = [
     { title: 'MACARENA (SLOWED)', src: `${BASE}music/macarena.mp3` },
-    { title: 'NIGHTCALL (DRIVE)', src: `${BASE}music/macarena.mp3` }, // Reusing file for demo
-    { title: 'MEMORY REBOOT', src: `${BASE}music/macarena.mp3` }     // Reusing file for demo
+    { title: 'ARCADIA (CODY MARTIN)', src: `${BASE}music/Cody%20Martin%20-%20Arcadia%20Good%20Times%20Bad%20Times.mp3` }
 ];
 
 const MusicPlayer = ({ forcePause = false }) => {

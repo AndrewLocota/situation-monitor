@@ -171,6 +171,10 @@ const VideoPopupContent = React.forwardRef(({ video, onVideoPlay, onVideoPause }
     React.useImperativeHandle(ref, () => ({
         play: () => {
             if (videoRef.current) {
+                // If start time configured and we are at start, seek
+                if (video.startTime && videoRef.current.currentTime < video.startTime) {
+                    videoRef.current.currentTime = video.startTime;
+                }
                 videoRef.current.play().catch(e => console.log('Video autoplay blocked:', e));
             }
         },
@@ -182,7 +186,7 @@ const VideoPopupContent = React.forwardRef(({ video, onVideoPlay, onVideoPause }
         stop: () => {
             if (videoRef.current) {
                 videoRef.current.pause();
-                videoRef.current.currentTime = 0;
+                videoRef.current.currentTime = video.startTime || 0;
             }
         }
     }));

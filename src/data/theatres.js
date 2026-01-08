@@ -47,14 +47,27 @@ export const INTEL_HOTSPOTS = [
   {
     id: 'dc',
     name: 'Washington DC',
-    subtext: 'Pentagon Pizza Index',
-    lat: 38.9072,
-    lon: -77.0369,
-    keywords: ['pentagon', 'white house', 'washington', 'us military', 'cia', 'nsa', 'biden', 'trump', 'congress'],
-    description: 'US national security hub. Pentagon, CIA, NSA, State Dept. Monitor for late-night activity spikes.',
-    agencies: ['Pentagon', 'CIA', 'NSA', 'State Dept'],
+    subtext: 'Capitol Hill / Congress',
+    lat: 38.8899,
+    lon: -77.0090,
+    keywords: ['white house', 'washington', 'biden', 'trump', 'congress', 'senate'],
+    description: 'US political center. Capitol Hill legislative monitoring.',
+    agencies: ['Congress', 'Secret Service'],
     status: 'Active monitoring',
     level: 'watch',
+    theatre: 'US_DOMESTIC'
+  },
+  {
+    id: 'pentagon',
+    name: 'The Pentagon',
+    subtext: 'Pizza Index: ELEVATED',
+    lat: 38.8719,
+    lon: -77.0563,
+    keywords: ['pentagon', 'pizza index', 'logistics', 'dod', 'defense'],
+    description: 'Department of Defense HQ. Monitoring Pizza Index: Spike in late-night deliveries indicates potential operational planning.',
+    agencies: ['DoD', 'Joint Chiefs', 'DIA'],
+    status: 'Pizza Orders: +450%',
+    level: 'high',
     theatre: 'US_DOMESTIC'
   },
   {
