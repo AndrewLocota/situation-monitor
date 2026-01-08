@@ -264,11 +264,8 @@ const VideoMarkerLayer = ({ onVideoStateChange, onTheatreSelect }) => {
     };
 
     const handleVideoPause = () => {
-        // If the user manually pauses the video, we should allow music to resume
-        // But we need to check if the popup is still open. 
-        // If the popup is open but video is paused, do we resume music? 
-        // User request: "resumes once they are not [playing]" -> Yes.
-        onVideoStateChange(false);
+        // Keep music paused while popup is open/active, even if video is paused manually.
+        // Music only resumes when popup is closed (exiting the focused state).
     };
 
     return (
