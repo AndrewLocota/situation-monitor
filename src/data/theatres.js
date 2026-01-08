@@ -7,10 +7,10 @@ export const THEATRES = [
     center: [35, 50],
     bounds: { west: 15, east: 45, north: 60, south: 42 },
     scale: 4,
-    // Polygon roughly covering Ukraine, Belarus, Western Russia, Poland border
+    // Polygon covering Ukraine, Belarus, Russia, Poland, Czechia, Slovakia, Hungary, Romania, Serbia, Bulgaria, Georgia (excludes Austria/Slovenia)
     polygon: [
-      [60, 20], [60, 35], [56, 42], [50, 42], [47, 35], 
-      [45, 30], [45, 22], [48, 20], [52, 15], [58, 18]
+      [55, 14], [60, 22], [60, 45], [55, 48], [50, 46], [42, 46],
+      [42, 28], [42, 22], [45, 17], [49, 14], [52, 14]
     ]
   },
   {
@@ -20,10 +20,10 @@ export const THEATRES = [
     center: [45, 30],
     bounds: { west: 26, east: 65, north: 42, south: 12 },
     scale: 4,
-    // Polygon covering Turkey, Syria, Iraq, Iran, Gulf states, Oman, Israel
+    // Polygon covering Turkey, Syria, Iraq, Iran, Gulf states, Oman, Israel (excludes Rhodes)
     polygon: [
-      [42, 26], [42, 45], [38, 55], [35, 62], [25, 62],
-      [20, 60], [17, 55], [15, 50], [12, 42], [28, 32], [35, 26]
+      [36, 28.5], [42, 26], [42, 45], [38, 55], [35, 62], [25, 62],
+      [20, 60], [17, 55], [15, 50], [12, 42], [28, 32], [31, 34], [34, 34]
     ]
   },
   {
@@ -33,9 +33,9 @@ export const THEATRES = [
     center: [125, 20],
     bounds: { west: 95, east: 147, north: 45, south: -10 },
     scale: 3,
-    // Polygon covering China coast, Taiwan, Philippines, Vietnam, Korea, Japan
+    // Polygon covering China coast, Taiwan, Philippines, Vietnam, Korea, all of Japan including Hokkaido
     polygon: [
-      [45, 100], [45, 130], [40, 145], [25, 145], [10, 140],
+      [46, 100], [46, 145], [42, 148], [30, 148], [10, 140],
       [-5, 130], [-10, 110], [5, 95], [20, 95], [35, 100]
     ]
   },
@@ -46,12 +46,14 @@ export const THEATRES = [
     center: [20, 5],
     bounds: { west: -18, east: 52, north: 37, south: -35 },
     scale: 2.5,
-    // Polygon roughly covering African continent including Morocco and Mauritania
+    // Polygon roughly covering African continent
     polygon: [
-      [36, -6], [35, -10], [28, -17], [21, -17], [15, -17],
-      [10, -17], [5, -10], [5, 10], [-5, 12], [-10, 15],
-      [-35, 20], [-35, 28], [-28, 30], [-20, 35], [-5, 42],
-      [5, 50], [12, 52], [20, 42], [30, 32], [35, 10]
+      // North Africa (West to East): Morocco -> Egypt
+      [36, -6], [37, 3], [37, 10], [33, 11], [32, 25], [31, 34],
+      // East Coast (North to South): Red Sea -> Horn -> South Africa
+      [15, 40], [12, 43], [12, 51], [0, 42], [-10, 40], [-25, 33], [-35, 20],
+      // West Coast (South to North): South Africa -> Namibia -> West Africa -> Morocco
+      [-28, 16], [-22, 14], [-15, 12], [4, 9], [4, -8], [12, -17], [20, -17], [28, -13], [36, -6]
     ]
   },
   {
@@ -61,10 +63,10 @@ export const THEATRES = [
     center: [-80, 15],
     bounds: { west: -150, east: -34, north: 60, south: -55 },
     scale: 2,
-    // Polygon covering North/Central/South America
+    // Polygon covering North/Central/South America including all of Brazil and Caribbean
     polygon: [
-      [60, -130], [55, -55], [50, -50], [25, -80], [10, -60],
-      [-10, -35], [-35, -40], [-55, -70], [-55, -80], [-40, -75],
+      [60, -130], [55, -55], [50, -50], [25, -80], [20, -68], [18, -68],
+      [5, -35], [-5, -35], [-25, -35], [-35, -40], [-55, -70], [-55, -80], [-40, -75],
       [10, -85], [20, -105], [35, -120], [50, -130]
     ]
   }
