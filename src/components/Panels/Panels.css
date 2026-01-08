@@ -34,22 +34,106 @@
   box-shadow: 0 0 8px var(--accent-glow, rgba(77, 166, 255, 0.3));
 }
 
-.load-more-btn {
+/* News Header Controls */
+.news-header-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.items-select {
+  padding: 2px 4px;
+  font-size: 9px;
+  font-family: var(--font-mono, monospace);
+  color: var(--accent-primary, #4da6ff);
+  background: var(--bg-dark, #06080c);
+  border: 1px solid var(--border-color, #2a3040);
+  cursor: pointer;
+}
+
+.items-select:hover {
+  border-color: var(--accent-primary, #4da6ff);
+}
+
+.items-select option {
+  background: var(--bg-dark, #06080c);
+  color: var(--text-primary, #e0e4eb);
+}
+
+/* Skeleton Loading */
+.news-skeleton {
+  display: flex;
+  flex-direction: column;
+}
+
+.news-skeleton-item {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border-dim, #1a2030);
+}
+
+.news-skeleton-meta {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.skeleton-line {
+  display: block;
+  background: linear-gradient(90deg,
+    var(--border-dim, #1a2030) 0%,
+    var(--border-color, #2a3040) 50%,
+    var(--border-dim, #1a2030) 100%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s infinite;
+  border-radius: 2px;
+}
+
+.skeleton-source {
+  width: 60px;
+  height: 10px;
+}
+
+.skeleton-time {
+  width: 40px;
+  height: 10px;
+}
+
+.skeleton-title {
+  width: 100%;
+  height: 12px;
+  margin-bottom: 4px;
+}
+
+.skeleton-title-short {
+  width: 70%;
+  height: 12px;
+}
+
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Show More Button */
+.show-more-btn {
   display: block;
   width: 100%;
-  padding: 8px;
+  padding: 10px;
   margin-top: 8px;
   font-size: 10px;
   font-weight: bold;
-  color: var(--text-dim, #5a6478);
-  background: var(--bg-elevated, #141824);
+  font-family: var(--font-mono, monospace);
+  color: var(--accent-primary, #4da6ff);
+  background: rgba(77, 166, 255, 0.05);
   border: 1px solid var(--border-color, #2a3040);
   cursor: pointer;
   transition: all 0.15s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.load-more-btn:hover {
-  color: var(--accent-primary, #4da6ff);
+.show-more-btn:hover {
+  background: rgba(77, 166, 255, 0.15);
   border-color: var(--accent-primary, #4da6ff);
   box-shadow: 0 0 8px var(--accent-glow, rgba(77, 166, 255, 0.3));
 }

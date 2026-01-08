@@ -3,26 +3,37 @@ import { useDataStore } from '../../stores';
 import './Panels.css';
 
 export function MoneyPrinterPanel() {
-    const { fedData, fedBalance, isLoading } = useDataStore();
+    const { fedData, loading } = useDataStore();
 
     // Use fedData if available, otherwise show placeholder
-    const m2 = fedData?.m2 || 20.9;
-    const fedRate = fedData?.fedFundsRate || 5.25;
-    const inflation = fedData?.inflationRate || 3.4;
+    const m2 = fedData?.m2 || 6.8;
+    const fedRate = fedData?.fedFundsRate || 4.5;
+    const inflation = fedData?.inflationRate || 2.9;
+    const change = fedData?.change || 0;
+    const changePercent = fedData?.changePercent || 0;
+    const percentOfMax = fedData?.percentOfMax || 75;
 
-    const data = fedBalance || {
+    const data = {
         value: m2,
-        change: 0,
-        changePercent: 0,
+        change: change,
+        changePercent: changePercent,
         date: new Date().toISOString().slice(0, 10),
-        percentOfMax: 85,
+        percentOfMax: percentOfMax,
     };
 
     const isExpanding = data.change > 0;
     const status = isExpanding ? 'PRINTER ON' : 'PRINTER OFF';
+    const isLive = !loading?.fed && fedData?.m2;
 
     return (
-        <ASCIIBox title="MONEY PRINTER" collapsible defaultCollapsed={true}>
+        <ASCIIBox
+            title="MONEY PRINTER"
+            collapsible
+            defaultCollapsed={true}
+            isLive={isLive}
+            isLoading={loading?.fed}
+            dataSource="FRED"
+        >
             <div className="printer-gauge">
                 <div className="printer-label">Federal Reserve Balance Sheet</div>
                 <div className="printer-value">

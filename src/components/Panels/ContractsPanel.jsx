@@ -3,7 +3,8 @@ import { useDataStore } from '../../stores';
 import './Panels.css';
 
 export function ContractsPanel() {
-    const { govContracts, isLoading } = useDataStore();
+    const { govContracts, loading } = useDataStore();
+    const isLive = !loading?.contracts && govContracts.length > 0;
 
     const formatValue = (v) => {
         if (v >= 1000000000) return `$${(v / 1000000000).toFixed(1)}B`;
@@ -18,8 +19,11 @@ export function ContractsPanel() {
             collapsible
             defaultCollapsed={true}
             headerRight={<span className="panel-count">{govContracts.length}</span>}
+            isLive={isLive}
+            isLoading={loading?.contracts}
+            dataSource="USASpending"
         >
-            {isLoading && govContracts.length === 0 ? (
+            {loading?.contracts && govContracts.length === 0 ? (
                 <div className="panel-loading">Loading contracts...</div>
             ) : govContracts.length === 0 ? (
                 <div className="panel-empty">No contracts to display</div>

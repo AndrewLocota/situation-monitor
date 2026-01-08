@@ -14,6 +14,11 @@ import {
   fetchPolymarketEvents,
   fetchFedData,
   fetchMarketIndices,
+  fetchCongressTrades,
+  fetchWhaleTransactions,
+  fetchGovContracts,
+  fetchSectorData,
+  fetchCommodityData,
 } from '../services/api/liveDataFetcher';
 
 export function useLiveData(options = {}) {
@@ -22,6 +27,7 @@ export function useLiveData(options = {}) {
     conflictInterval = 30000,  // 30 seconds
     marketsInterval = 30000,   // 30 seconds
     earthquakeInterval = 120000, // 2 minutes
+    specialDataInterval = 300000, // 5 minutes for congress, whales, contracts
     enabled = true,
   } = options;
 
@@ -33,6 +39,11 @@ export function useLiveData(options = {}) {
     setPolymarket,
     setFedData,
     setMarkets,
+    setSectors,
+    setCommodities,
+    setCongressTrades,
+    setWhaleTransactions,
+    setGovContracts,
     setLastUpdate,
     setLoading,
     setError,
@@ -44,6 +55,7 @@ export function useLiveData(options = {}) {
   const conflictTimerRef = useRef(null);
   const marketsTimerRef = useRef(null);
   const earthquakeTimerRef = useRef(null);
+  const specialDataTimerRef = useRef(null);
 
   // Fetch news (non-blocking)
   const fetchNews = useCallback(async () => {
@@ -139,12 +151,58 @@ export function useLiveData(options = {}) {
       .finally(() => setLoadingState('polymarket', false));
 
     // Fetch fed data
+    setLoadingState('fed', true);
     fetchFedData()
       .then(fedData => {
         setFedData(fedData);
       })
-      .catch(err => console.error('Failed to fetch fed data:', err));
-  }, [setCrypto, setPolymarket, setFedData, setMarkets, setLoadingState, setLastUpdated]);
+      .catch(err => console.error('Failed to fetch fed data:', err))
+      .finally(() => setLoadingState('fed', false));
+
+    // Fetch sector data
+    fetchSectorData()
+      .then(sectors => {
+        setSectors(sectors);
+      })
+      .catch(err => console.error('Failed to fetch sector data:', err));
+
+    // Fetch commodity data
+    fetchCommodityData()
+      .then(commodities => {
+        setCommodities(commodities);
+      })
+      .catch(err => console.error('Failed to fetch commodity data:', err));
+  }, [setCrypto, setPolymarket, setFedData, setMarkets, setSectors, setCommodities, setLoadingState, setLastUpdated]);
+
+  // Fetch special data sources (congress trades, whale txs, gov contracts)
+  const fetchSpecialData = useCallback(async () => {
+    // Fetch congress trades
+    setLoadingState('congress', true);
+    fetchCongressTrades()
+      .then(trades => {
+        setCongressTrades(trades);
+      })
+      .catch(err => console.error('Failed to fetch congress trades:', err))
+      .finally(() => setLoadingState('congress', false));
+
+    // Fetch whale transactions
+    setLoadingState('whales', true);
+    fetchWhaleTransactions()
+      .then(txs => {
+        setWhaleTransactions(txs);
+      })
+      .catch(err => console.error('Failed to fetch whale transactions:', err))
+      .finally(() => setLoadingState('whales', false));
+
+    // Fetch government contracts
+    setLoadingState('contracts', true);
+    fetchGovContracts()
+      .then(contracts => {
+        setGovContracts(contracts);
+      })
+      .catch(err => console.error('Failed to fetch gov contracts:', err))
+      .finally(() => setLoadingState('contracts', false));
+  }, [setCongressTrades, setWhaleTransactions, setGovContracts, setLoadingState]);
 
   // Initial data fetch - NON-BLOCKING (each data source fetches independently)
   const fetchAllData = useCallback(() => {
@@ -157,6 +215,7 @@ export function useLiveData(options = {}) {
     fetchConflicts();
     fetchEqs();
     fetchMarketData();
+    fetchSpecialData();
 
     // Mark global loading as done after a short delay
     // (individual loading states are managed per-source)
@@ -164,7 +223,7 @@ export function useLiveData(options = {}) {
       setLoading(false);
       setLastUpdate(new Date().toISOString());
     }, 500);
-  }, [fetchNews, fetchConflicts, fetchEqs, fetchMarketData, setLoading, setError, setLastUpdate]);
+  }, [fetchNews, fetchConflicts, fetchEqs, fetchMarketData, fetchSpecialData, setLoading, setError, setLastUpdate]);
 
   // Set up refresh intervals
   useEffect(() => {
@@ -178,15 +237,17 @@ export function useLiveData(options = {}) {
     conflictTimerRef.current = setInterval(fetchConflicts, conflictInterval);
     marketsTimerRef.current = setInterval(fetchMarketData, marketsInterval);
     earthquakeTimerRef.current = setInterval(fetchEqs, earthquakeInterval);
+    specialDataTimerRef.current = setInterval(fetchSpecialData, specialDataInterval);
 
     return () => {
       if (newsTimerRef.current) clearInterval(newsTimerRef.current);
       if (conflictTimerRef.current) clearInterval(conflictTimerRef.current);
       if (marketsTimerRef.current) clearInterval(marketsTimerRef.current);
       if (earthquakeTimerRef.current) clearInterval(earthquakeTimerRef.current);
+      if (specialDataTimerRef.current) clearInterval(specialDataTimerRef.current);
     };
-  }, [enabled, newsInterval, conflictInterval, marketsInterval, earthquakeInterval,
-      fetchAllData, fetchNews, fetchConflicts, fetchMarketData, fetchEqs]);
+  }, [enabled, newsInterval, conflictInterval, marketsInterval, earthquakeInterval, specialDataInterval,
+      fetchAllData, fetchNews, fetchConflicts, fetchMarketData, fetchEqs, fetchSpecialData]);
 
   // Manual refresh function
   const refresh = useCallback(() => {

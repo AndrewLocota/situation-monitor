@@ -144,7 +144,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 4px 12px;
+  padding: 4px 8px; /* Match .header-time padding for same height */
   background: rgba(77, 166, 255, 0.1);
   border: 1px solid rgba(77, 166, 255, 0.3);
 }
@@ -218,18 +218,43 @@
   }
 
   .header-center {
-    flex: 1; /* Center takes available space */
-    order: 0;
-    justify-content: center;
-    width: auto;
+    flex: 0; /* Center is empty now, minimize */
+    display: none;
   }
 
   .header-right {
-    gap: 8px;
+    flex: 1;
+    justify-content: flex-end;
+    gap: 6px;
   }
 
-  .header-time-label, .header-date {
+  /* Compact LIVE indicator on mobile */
+  .live-indicator {
+    padding: 2px 8px;
+    gap: 4px;
+  }
+
+  .live-indicator .live-text {
+    font-size: 9px;
+  }
+
+  .live-indicator .live-dot {
+    width: 6px;
+    height: 6px;
+  }
+
+  /* Compact time on mobile */
+  .header-time {
+    padding: 2px 6px;
+    gap: 4px;
+  }
+
+  .header-time-label {
     display: none;
+  }
+
+  .header-time-value {
+    font-size: 11px;
   }
   
   .mobile-only { display: flex !important; }

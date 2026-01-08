@@ -1,15 +1,31 @@
 import { useState } from 'react';
 import { ASCIIBox } from '../ui';
-import { ASCIILoader } from '../ui/ASCIILoader';
 import { useDataStore } from '../../stores';
 import { timeAgo } from '../../utils/timeFormat';
 import './Panels.css';
 
 const CATEGORIES = ['all', 'politics', 'tech', 'finance', 'intel', 'ai'];
+const ITEMS_OPTIONS = [10, 25, 50, 100];
+
+// Skeleton loading component for news items
+const NewsSkeleton = ({ count = 5 }) => (
+    <div className="news-skeleton">
+        {Array.from({ length: count }).map((_, i) => (
+            <div key={i} className="news-skeleton-item">
+                <div className="news-skeleton-meta">
+                    <span className="skeleton-line skeleton-source"></span>
+                    <span className="skeleton-line skeleton-time"></span>
+                </div>
+                <div className="skeleton-line skeleton-title"></div>
+                <div className="skeleton-line skeleton-title-short"></div>
+            </div>
+        ))}
+    </div>
+);
 
 export function NewsFeed() {
     const [category, setCategory] = useState('all');
-    const [maxItems, setMaxItems] = useState(20);
+    const [maxItems, setMaxItems] = useState(10);
     const { allNews, loading, lastUpdated } = useDataStore();
 
     // Filter news by category (simple keyword matching)
@@ -45,6 +61,39 @@ export function NewsFeed() {
         }
     }).slice(0, maxItems);
 
+    // Check if there are more items available
+    const totalFiltered = allNews.filter(item => {
+        if (category === 'all') return true;
+        const titleLower = (item.title || '').toLowerCase();
+        const sourceLower = (item.source || '').toLowerCase();
+        switch (category) {
+            case 'politics':
+                return titleLower.includes('trump') || titleLower.includes('biden') ||
+                    titleLower.includes('congress') || titleLower.includes('senate') ||
+                    titleLower.includes('election') || titleLower.includes('political');
+            case 'tech':
+                return sourceLower.includes('tech') || titleLower.includes('ai') ||
+                    titleLower.includes('tech') || titleLower.includes('apple') ||
+                    titleLower.includes('google') || titleLower.includes('microsoft');
+            case 'finance':
+                return sourceLower.includes('market') || sourceLower.includes('bloomberg') ||
+                    titleLower.includes('stock') || titleLower.includes('market') ||
+                    titleLower.includes('economy');
+            case 'intel':
+                return titleLower.includes('ukraine') || titleLower.includes('russia') ||
+                    titleLower.includes('military') || titleLower.includes('conflict') ||
+                    titleLower.includes('war') || titleLower.includes('attack');
+            case 'ai':
+                return titleLower.includes('ai') || titleLower.includes('artificial intelligence') ||
+                    titleLower.includes('openai') || titleLower.includes('chatgpt') ||
+                    titleLower.includes('machine learning');
+            default:
+                return true;
+        }
+    }).length;
+
+    const hasMore = totalFiltered > maxItems;
+
     return (
         <ASCIIBox
             title="NEWS FEED"
@@ -53,10 +102,8 @@ export function NewsFeed() {
             isLive={true}
             isLoading={loading.news}
             lastUpdated={lastUpdated.news}
-            dataSource="RSS"
-            headerRight={
-                <span className="panel-count">{filteredNews.length}</span>
-            }
+            dataSource="Reuters, AP, BBC, NPR, CNN RSS"
+            count={filteredNews.length}
         >
             {/* Category filters */}
             <div className="news-filters">
@@ -72,8 +119,8 @@ export function NewsFeed() {
             </div>
 
             <div className="news-feed">
-                {loading.news && filteredNews.length === 0 ? (
-                    <ASCIILoader text="SYNCING FEEDS" variant="spinner" />
+                {loading.news && allNews.length === 0 ? (
+                    <NewsSkeleton count={6} />
                 ) : filteredNews.length === 0 ? (
                     <div className="panel-empty">No news items</div>
                 ) : (
@@ -101,15 +148,16 @@ export function NewsFeed() {
                 )}
             </div>
 
-            {/* Load more */}
-            {filteredNews.length >= maxItems && (
+            {/* Show more button */}
+            {hasMore && (
                 <button
-                    className="load-more-btn"
-                    onClick={() => setMaxItems(prev => prev + 20)}
+                    className="show-more-btn"
+                    onClick={() => setMaxItems(prev => prev + 10)}
                 >
-                    LOAD MORE
+                    SHOW MORE ({totalFiltered - filteredNews.length} remaining)
                 </button>
             )}
+
         </ASCIIBox>
     );
 }

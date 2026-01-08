@@ -4,7 +4,8 @@ import { timeAgo } from '../../utils/timeFormat';
 import './Panels.css';
 
 export function CongressPanel() {
-    const { congressTrades, isLoading } = useDataStore();
+    const { congressTrades, loading } = useDataStore();
+    const isLive = !loading?.congress && congressTrades.length > 0;
 
     return (
         <ASCIIBox
@@ -12,8 +13,11 @@ export function CongressPanel() {
             collapsible
             defaultCollapsed={true}
             headerRight={<span className="panel-count">{congressTrades.length}</span>}
+            isLive={isLive}
+            isLoading={loading?.congress}
+            dataSource="House/Senate"
         >
-            {isLoading && congressTrades.length === 0 ? (
+            {loading?.congress && congressTrades.length === 0 ? (
                 <div className="panel-loading">Loading trades...</div>
             ) : congressTrades.length === 0 ? (
                 <div className="panel-empty">No recent trades</div>

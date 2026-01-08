@@ -57,24 +57,22 @@ const UIOverlay = ({ onRefresh, videoPlaying, children }) => {
                 </div>
 
                 <div className="header-center">
+                    {/* Empty center for balance, or could add tagline later */}
+                </div>
+
+                <div className="header-right">
+                    {/* LIVE indicator - to the left of time */}
                     <div className={`live-indicator ${isLoading ? 'syncing' : ''}`}>
                         <span className="live-dot" />
                         <span className="live-text">{isLoading ? 'SYNCING' : 'LIVE'}</span>
                     </div>
-                    {/* Mobile Time Display */}
-                    <div className="header-time mobile-only" style={{ marginLeft: '8px', border: 'none', background: 'transparent', padding: 0 }}>
-                        <span className="header-time-value" style={{ fontSize: '11px' }}>{new Date().toISOString().substring(11, 19)} UTC</span>
-                    </div>
-                </div>
-
-                <div className="header-right">
-                    <div className="header-time desktop-only">
+                    <div className="header-time">
                         <span className="header-time-label">UTC</span>
                         <span className="header-time-value">{new Date().toISOString().substring(11, 19)}</span>
                     </div>
-                    <div className="header-date">{new Date().toISOString().substring(0, 10)}</div>
+                    <div className="header-date desktop-only">{new Date().toISOString().substring(0, 10)}</div>
                     <button
-                        className="header-btn"
+                        className="header-btn desktop-only"
                         onClick={onRefresh}
                         title="Refresh Data"
                         disabled={isLoading}
@@ -123,33 +121,6 @@ const UIOverlay = ({ onRefresh, videoPlaying, children }) => {
                         </div>
                     )}
 
-                    {/* Status bar */}
-                    <div className="status-bar" style={{ pointerEvents: 'auto' }}>
-                        <div className="status-item">
-                            <span className="status-label">NEWS</span>
-                            <span className="status-value">{allNews.length}</span>
-                        </div>
-                        <div className="status-item">
-                            <span className="status-label">EVENTS</span>
-                            <span className="status-value">{conflictEvents.length}</span>
-                        </div>
-                        <div className="status-item">
-                            <span className="status-label">QUAKES</span>
-                            <span className="status-value">{earthquakes.length}</span>
-                        </div>
-                        <div className="status-item">
-                            <span className="status-label">LAST UPDATE</span>
-                            <span className="status-value">
-                                {lastUpdate
-                                    ? new Date(lastUpdate).toLocaleTimeString()
-                                    : '--:--:--'}
-                            </span>
-                        </div>
-                        <div className="status-item live">
-                            <span className="live-dot" />
-                            <span>LIVE</span>
-                        </div>
-                    </div>
                 </main>
 
                 {/* Right Sidebar */}
@@ -176,19 +147,42 @@ const UIOverlay = ({ onRefresh, videoPlaying, children }) => {
                 </aside>
             </div>
 
-            {/* Footer status */}
+            {/* Footer with status info */}
             <footer className="app-footer" style={{ position: 'relative', zIndex: 10 }}>
                 <div className="footer-left">
                     <span className="terminal-prompt">&gt;</span>
-                    <span className="footer-status">
-                        SITUATION MONITOR v3.0 | OPERATIONAL
-                    </span>
+                    <span className="footer-tagline">We live in interesting times</span>
+                    <span className="footer-separator">|</span>
+                    <div className="footer-stats">
+                        <span className="stat-item">
+                            <span className="stat-label">NEWS</span>
+                            <span className="stat-value">{allNews.length}</span>
+                        </span>
+                        <span className="stat-item">
+                            <span className="stat-label">EVENTS</span>
+                            <span className="stat-value">{conflictEvents.length}</span>
+                        </span>
+                        <span className="stat-item">
+                            <span className="stat-label">QUAKES</span>
+                            <span className="stat-value">{earthquakes.length}</span>
+                        </span>
+                    </div>
                 </div>
                 <div className="footer-center">
-                    <span className="blink">█</span> AWAITING INPUT
+                    <span className="stat-item">
+                        <span className="stat-label">UPDATED</span>
+                        <span className="stat-value">
+                            {lastUpdate ? new Date(lastUpdate).toLocaleTimeString() : '--:--:--'}
+                        </span>
+                    </span>
+                    <span className="footer-separator">|</span>
+                    <span className="live-indicator-small">
+                        <span className="live-dot" />
+                        LIVE
+                    </span>
                 </div>
-                <div className="footer-right">
-                    <kbd>[</kbd> Left Panel <kbd>]</kbd> Right Panel <kbd>Ctrl+R</kbd> Refresh
+                <div className="footer-right desktop-only">
+                    <kbd>Ctrl+R</kbd> Refresh
                 </div>
             </footer>
         </div>

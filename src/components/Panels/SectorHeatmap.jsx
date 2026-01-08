@@ -3,7 +3,8 @@ import { useDataStore } from '../../stores';
 import './Panels.css';
 
 export function SectorHeatmap() {
-    const { sectors, isLoading } = useDataStore();
+    const { sectors, loading } = useDataStore();
+    const isLive = sectors.length > 0;
 
     // Static sector data as fallback
     const defaultSectors = [
@@ -35,7 +36,7 @@ export function SectorHeatmap() {
     };
 
     return (
-        <ASCIIBox title="SECTOR HEATMAP" collapsible defaultCollapsed={true} isLive={false}>
+        <ASCIIBox title="SECTOR HEATMAP" collapsible defaultCollapsed={true} isLive={isLive} dataSource="Yahoo">
             <div className="heatmap-grid">
                 {displaySectors.map((sector, i) => (
                     <div

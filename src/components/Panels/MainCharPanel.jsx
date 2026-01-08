@@ -34,7 +34,7 @@ export function MainCharPanel() {
 
     if (characters.length === 0) {
         return (
-            <ASCIIBox title="MAIN CHARACTER" collapsible defaultCollapsed={false}>
+            <ASCIIBox title="MAIN CHARACTER" collapsible defaultCollapsed={false} dataSource="Calculated from RSS headlines">
                 {isLoading ? (
                     <div className="panel-loading">Analyzing headlines...</div>
                 ) : (
@@ -47,7 +47,7 @@ export function MainCharPanel() {
     const [top, ...rest] = characters;
 
     return (
-        <ASCIIBox title="MAIN CHARACTER" collapsible defaultCollapsed={false}>
+        <ASCIIBox title="MAIN CHARACTER" collapsible defaultCollapsed={false} dataSource="Calculated from RSS headlines">
             <div className="mainchar-display">
                 <div className="mainchar-label">Today's Main Character</div>
                 <div className="mainchar-name">{top.name}</div>

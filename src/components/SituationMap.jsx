@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { MapContainer, TileLayer, useMap, Marker, Popup, Polygon, Circle, Polyline, CircleMarker, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -12,6 +12,14 @@ import {
 import { VIDEO_MARKERS } from '../data/videoMarkers';
 import { fetchLiveUAMapEvents, fetchUkraineFrontline, EVENT_STYLES } from '../data/liveFeeds';
 import { getAllConflictEvents, GLOBAL_EVENT_STYLES } from '../data/globalConflicts';
+
+// Cluster spread configuration
+const CLUSTER_CONFIG = {
+    proximityThreshold: 50, // pixels - markers closer than this are considered overlapping
+    spreadRadius: 60, // pixels - radius of the semicircle spread
+    minZoomForSpread: 4, // don't spread at very low zoom levels
+    targetSpacing: 120, // pixels - desired minimum spacing between markers after zoom (increased for better visibility)
+};
 
 // Palantir-inspired colors
 const COLORS = {
@@ -163,6 +171,121 @@ const ZoomDisplay = () => {
     );
 };
 
+// Cluster spread manager - detects overlapping markers and spreads them on click
+const ClusterSpreadManager = ({ allMarkers, spreadState, setSpreadState }) => {
+    const map = useMap();
+
+    // Find markers that overlap at a given point
+    const findOverlappingMarkers = useCallback((clickLatLng) => {
+        const clickPoint = map.latLngToContainerPoint(clickLatLng);
+        const overlapping = [];
+
+        allMarkers.forEach(marker => {
+            const markerPoint = map.latLngToContainerPoint(L.latLng(marker.lat, marker.lng));
+            const distance = clickPoint.distanceTo(markerPoint);
+            if (distance < CLUSTER_CONFIG.proximityThreshold) {
+                overlapping.push({ ...marker, pixelDistance: distance });
+            }
+        });
+
+        return overlapping;
+    }, [map, allMarkers]);
+
+    // Calculate spread positions in a semicircle
+    const calculateSpreadPositions = useCallback((center, markers) => {
+        const centerPoint = map.latLngToContainerPoint(center);
+        const count = markers.length;
+        const spreadPositions = {};
+
+        if (count <= 1) return spreadPositions;
+
+        // Spread in a semicircle (arc from -90 to 90 degrees, pointing upward)
+        const startAngle = -Math.PI / 2 - (Math.PI / 2);
+        const endAngle = -Math.PI / 2 + (Math.PI / 2);
+        const angleStep = (endAngle - startAngle) / (count - 1);
+
+        markers.forEach((marker, idx) => {
+            const angle = startAngle + (idx * angleStep);
+            const offsetX = Math.cos(angle) * CLUSTER_CONFIG.spreadRadius;
+            const offsetY = Math.sin(angle) * CLUSTER_CONFIG.spreadRadius;
+
+            const newPoint = L.point(centerPoint.x + offsetX, centerPoint.y + offsetY);
+            const newLatLng = map.containerPointToLatLng(newPoint);
+
+            spreadPositions[marker.id] = {
+                lat: newLatLng.lat,
+                lng: newLatLng.lng,
+                originalLat: marker.lat,
+                originalLng: marker.lng
+            };
+        });
+
+        return spreadPositions;
+    }, [map]);
+
+    // Calculate required zoom level to achieve target spacing between markers
+    const calculateRequiredZoom = useCallback((markers) => {
+        if (markers.length < 2) return map.getZoom();
+
+        // Find the minimum geographic distance between any two markers
+        let minDistance = Infinity;
+        for (let i = 0; i < markers.length; i++) {
+            for (let j = i + 1; j < markers.length; j++) {
+                const p1 = L.latLng(markers[i].lat, markers[i].lng);
+                const p2 = L.latLng(markers[j].lat, markers[j].lng);
+                const dist = p1.distanceTo(p2); // meters
+                if (dist < minDistance) minDistance = dist;
+            }
+        }
+
+        // Calculate zoom level where this distance equals target spacing in pixels
+        // At zoom Z, 1 pixel ≈ 156543.03392 * cos(lat) / 2^Z meters
+        const centerLat = markers.reduce((sum, m) => sum + m.lat, 0) / markers.length;
+        const metersPerPixelAtZoom1 = 156543.03392 * Math.cos(centerLat * Math.PI / 180);
+
+        // We want: minDistance / (metersPerPixelAtZoom1 / 2^zoom) = targetSpacing
+        // So: 2^zoom = targetSpacing * metersPerPixelAtZoom1 / minDistance
+        const requiredZoom = Math.log2((CLUSTER_CONFIG.targetSpacing * metersPerPixelAtZoom1) / minDistance);
+
+        return Math.min(Math.max(requiredZoom, map.getZoom() + 1), 16);
+    }, [map]);
+
+    // Handle map click to detect clusters
+    useMapEvents({
+        click: (e) => {
+            const overlapping = findOverlappingMarkers(e.latlng);
+
+            if (overlapping.length > 1 && map.getZoom() >= CLUSTER_CONFIG.minZoomForSpread) {
+                // Calculate the zoom needed to separate markers
+                const requiredZoom = calculateRequiredZoom(overlapping);
+                const currentZoom = map.getZoom();
+
+                if (requiredZoom > currentZoom + 0.5) {
+                    // Need to zoom in more - fly there and the markers will naturally spread
+                    map.flyTo(e.latlng, requiredZoom, { duration: 0.7 });
+                    // Clear any existing spread state since we're zooming
+                    setSpreadState({ active: false, positions: {}, center: null });
+                } else {
+                    // Already zoomed enough - spread markers in semicircle
+                    const positions = calculateSpreadPositions(e.latlng, overlapping);
+                    setSpreadState({ active: true, positions, center: e.latlng });
+                }
+            } else if (spreadState.active) {
+                // Click elsewhere - collapse spread
+                setSpreadState({ active: false, positions: {}, center: null });
+            }
+        },
+        zoomstart: () => {
+            // Collapse spread when zooming
+            if (spreadState.active) {
+                setSpreadState({ active: false, positions: {}, center: null });
+            }
+        }
+    });
+
+    return null;
+};
+
 // Video popup content component with ref forwarding for video control
 const VideoPopupContent = React.forwardRef(({ video, onVideoPlay, onVideoPause }, ref) => {
     const videoRef = useRef(null);
@@ -203,6 +326,7 @@ const VideoPopupContent = React.forwardRef(({ video, onVideoPlay, onVideoPause }
                     muted={false}
                     onPlay={onVideoPlay}
                     onPause={onVideoPause}
+                    onLoadedMetadata={(e) => { e.target.volume = 0.5; }}
                     style={{ width: '100%', display: 'block' }}
                 />
             </div>
@@ -213,7 +337,7 @@ const VideoPopupContent = React.forwardRef(({ video, onVideoPlay, onVideoPause }
     );
 });
 
-const VideoMarkerLayer = ({ onVideoStateChange, onTheatreSelect }) => {
+const VideoMarkerLayer = ({ onVideoStateChange, onTheatreSelect, getMarkerPosition }) => {
     const map = useMap();
     const [activeVideoId, setActiveVideoId] = useState(null);
     const videoRefs = useRef({});
@@ -236,19 +360,11 @@ const VideoMarkerLayer = ({ onVideoStateChange, onTheatreSelect }) => {
     }, [map, onVideoStateChange]);
 
     const handleMarkerClick = (video) => {
-        // Find containing theatre and pan so the popup is visible
-        const theatre = THEATRES.find(t =>
-            video.lat <= t.bounds.north &&
-            video.lat >= t.bounds.south &&
-            video.lng <= t.bounds.east &&
-            video.lng >= t.bounds.west
-        );
-
-        if (theatre) {
-            // Center on the marker with a cinematic zoom
-            // Offset latitude slightly to make room for the popup if needed, but centering is usually fine
-            map.flyTo([video.lat, video.lng], 6, { duration: 1.5 });
-        }
+        // Center on the marker with a cinematic zoom
+        // Offset latitude slightly upward to account for popup height above the marker
+        const targetZoom = 8;
+        const popupOffset = 0.02 * Math.pow(2, 10 - targetZoom); // Scale offset by target zoom level
+        map.flyTo([video.lat + popupOffset, video.lng], targetZoom, { duration: 1 });
     };
 
     const handlePopupOpen = (video) => {
@@ -272,12 +388,20 @@ const VideoMarkerLayer = ({ onVideoStateChange, onTheatreSelect }) => {
         // Music only resumes when popup is closed (exiting the focused state).
     };
 
+    // Use spread position if available, otherwise original
+    const getVideoPosition = (video) => {
+        if (getMarkerPosition) {
+            return getMarkerPosition(`video-${video.id}`, video.lat, video.lng);
+        }
+        return [video.lat, video.lng];
+    };
+
     return (
         <>
             {VIDEO_MARKERS.map(video => (
                 <Marker
                     key={video.id}
-                    position={[video.lat, video.lng]}
+                    position={getVideoPosition(video)}
                     icon={createVideoIcon(COLORS.video)}
                     eventHandlers={{
                         click: () => handleMarkerClick(video)
@@ -307,6 +431,42 @@ const VideoMarkerLayer = ({ onVideoStateChange, onTheatreSelect }) => {
 const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVideoStateChange }) => {
     const [liveEvents, setLiveEvents] = useState([]);
     const [frontlineData, setFrontlineData] = useState([]);
+    const [spreadState, setSpreadState] = useState({ active: false, positions: {}, center: null });
+
+    // Collect all markers for cluster detection
+    const allMarkers = useMemo(() => {
+        const markers = [];
+
+        // Intel hotspots
+        INTEL_HOTSPOTS.forEach(spot => {
+            markers.push({ id: `intel-${spot.id}`, lat: spot.lat, lng: spot.lon, type: 'intel', data: spot });
+        });
+
+        // Video markers
+        VIDEO_MARKERS.forEach(video => {
+            markers.push({ id: `video-${video.id}`, lat: video.lat, lng: video.lng, type: 'video', data: video });
+        });
+
+        // Military bases
+        MILITARY_BASES.forEach(base => {
+            markers.push({ id: `base-${base.id}`, lat: base.lat, lng: base.lon, type: 'base', data: base });
+        });
+
+        // Shipping chokepoints
+        SHIPPING_CHOKEPOINTS.forEach(point => {
+            markers.push({ id: `ship-${point.id}`, lat: point.lat, lng: point.lon, type: 'ship', data: point });
+        });
+
+        return markers;
+    }, []);
+
+    // Get marker position (spread or original)
+    const getMarkerPosition = useCallback((markerId, originalLat, originalLng) => {
+        if (spreadState.active && spreadState.positions[markerId]) {
+            return [spreadState.positions[markerId].lat, spreadState.positions[markerId].lng];
+        }
+        return [originalLat, originalLng];
+    }, [spreadState]);
 
     // Fetch live feed data
     useEffect(() => {
@@ -386,6 +546,11 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
 
                 <MapController activeTheatre={activeTheatre} onTheatreSelect={onTheatreSelect} />
                 <ZoomDisplay />
+                <ClusterSpreadManager
+                    allMarkers={allMarkers}
+                    spreadState={spreadState}
+                    setSpreadState={setSpreadState}
+                />
 
 
                 {/* Theatre Zone Rectangles */}
@@ -499,7 +664,7 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                 {INTEL_HOTSPOTS.map(spot => (
                     <Marker
                         key={spot.id}
-                        position={[spot.lat, spot.lon]}
+                        position={getMarkerPosition(`intel-${spot.id}`, spot.lat, spot.lon)}
                         icon={createPulseIcon(getLevelColor(spot.level))}
                     >
                         <Popup maxWidth={300}>
@@ -532,7 +697,11 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                 ))}
 
                 {/* Video Intelligence */}
-                <VideoMarkerLayer onVideoStateChange={onVideoStateChange} onTheatreSelect={onTheatreSelect} />
+                <VideoMarkerLayer
+                    onVideoStateChange={onVideoStateChange}
+                    onTheatreSelect={onTheatreSelect}
+                    getMarkerPosition={getMarkerPosition}
+                />
 
                 {/* Military Bases */}
                 {MILITARY_BASES.map(base => {
@@ -541,7 +710,7 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                     return (
                         <Marker
                             key={base.id}
-                            position={[base.lat, base.lon]}
+                            position={getMarkerPosition(`base-${base.id}`, base.lat, base.lon)}
                             icon={createSquareIcon(color)}
                         >
                             <Popup>
@@ -558,7 +727,7 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                 {SHIPPING_CHOKEPOINTS.map(point => (
                     <Marker
                         key={point.id}
-                        position={[point.lat, point.lon]}
+                        position={getMarkerPosition(`ship-${point.id}`, point.lat, point.lon)}
                         icon={createTriangleIcon('#00d4ff')}
                     >
                         <Popup>
@@ -625,7 +794,7 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                 })}
             </MapContainer>
 
-            {/* Popup styles */}
+            {/* Popup styles and performance optimizations */}
             <style>{`
         .leaflet-container {
           background: #0a0a0f !important;
@@ -647,6 +816,28 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
         }
         .leaflet-popup-close-button {
           color: #8892a8 !important;
+        }
+        /* Performance optimizations for smooth zooming */
+        .leaflet-tile-container {
+          will-change: transform;
+        }
+        .leaflet-zoom-anim .leaflet-zoom-animated {
+          will-change: transform;
+          transition: transform 0.25s cubic-bezier(0, 0, 0.25, 1) !important;
+        }
+        .leaflet-marker-pane,
+        .leaflet-shadow-pane,
+        .leaflet-overlay-pane,
+        .leaflet-marker-icon,
+        .leaflet-marker-shadow {
+          will-change: transform;
+        }
+        .leaflet-pane {
+          transform: translateZ(0);
+        }
+        .leaflet-tile {
+          transform: translateZ(0);
+          backface-visibility: hidden;
         }
       `}</style>
 

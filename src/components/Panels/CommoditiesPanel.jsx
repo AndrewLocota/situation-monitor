@@ -3,15 +3,16 @@ import { useDataStore } from '../../stores';
 import './Panels.css';
 
 export function CommoditiesPanel() {
-    const { commodities, isLoading } = useDataStore();
+    const { commodities, loading } = useDataStore();
+    const isLive = commodities.length > 0;
 
     // Fallback data
     const defaultCommodities = [
-        { symbol: 'GC=F', name: 'Gold', price: 0, change: 0 },
-        { symbol: 'SI=F', name: 'Silver', price: 0, change: 0 },
-        { symbol: 'CL=F', name: 'Crude Oil', price: 0, change: 0 },
-        { symbol: 'NG=F', name: 'Nat Gas', price: 0, change: 0 },
-        { symbol: '^VIX', name: 'VIX', price: 0, change: 0 },
+        { symbol: 'GOLD', name: 'Gold', price: 0, change: 0 },
+        { symbol: 'SILVER', name: 'Silver', price: 0, change: 0 },
+        { symbol: 'OIL', name: 'Crude Oil', price: 0, change: 0 },
+        { symbol: 'NATGAS', name: 'Nat Gas', price: 0, change: 0 },
+        { symbol: 'COPPER', name: 'Copper', price: 0, change: 0 },
     ];
 
     const displayItems = commodities.length > 0 ? commodities : defaultCommodities;
@@ -23,12 +24,14 @@ export function CommoditiesPanel() {
 
     return (
         <ASCIIBox
-            title="COMMODITIES / VIX"
+            title="COMMODITIES"
             collapsible
             defaultCollapsed={true}
             headerRight={<span className="panel-count">{displayItems.length}</span>}
+            isLive={isLive}
+            dataSource="Yahoo"
         >
-            {isLoading && commodities.length === 0 ? (
+            {loading?.markets && commodities.length === 0 ? (
                 <div className="panel-loading">Loading commodities...</div>
             ) : (
                 <div className="commodities-list">

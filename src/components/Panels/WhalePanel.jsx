@@ -3,7 +3,8 @@ import { useDataStore } from '../../stores';
 import './Panels.css';
 
 export function WhalePanel() {
-    const { whaleTransactions, isLoading } = useDataStore();
+    const { whaleTransactions, loading } = useDataStore();
+    const isLive = !loading?.whales && whaleTransactions.length > 0;
 
     const formatAmount = (amt) => {
         if (amt >= 1000) return `${(amt / 1000).toFixed(1)}K`;
@@ -22,8 +23,11 @@ export function WhalePanel() {
             collapsible
             defaultCollapsed={true}
             headerRight={<span className="panel-count">{whaleTransactions.length}</span>}
+            isLive={isLive}
+            isLoading={loading?.whales}
+            dataSource="Blockchain"
         >
-            {isLoading && whaleTransactions.length === 0 ? (
+            {loading?.whales && whaleTransactions.length === 0 ? (
                 <div className="panel-loading">Scanning blockchain...</div>
             ) : whaleTransactions.length === 0 ? (
                 <div className="panel-empty">No whale transactions detected</div>

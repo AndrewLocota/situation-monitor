@@ -81,8 +81,11 @@ export function ASCIIBox({
                             {formatRelativeTime(lastUpdated)}
                         </span>
                     )}
+                    {/* Info icon with source tooltip */}
                     {dataSource && !collapsed && (
-                        <span className="ascii-box-source">{dataSource}</span>
+                        <span className="ascii-box-info" data-tooltip={dataSource}>
+                            ⓘ
+                        </span>
                     )}
                     {headerRight}
                     {collapsible && (
