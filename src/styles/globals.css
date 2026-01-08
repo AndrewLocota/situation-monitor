@@ -1,0 +1,163 @@
+/* Situation Monitor V3 - Global Styles */
+/* Palantir Blue Design System */
+
+/* ========== CSS VARIABLES ========== */
+:root {
+  /* Backgrounds - Palantir Dark Navy */
+  --bg-primary: #0a0a0f;
+  --bg-secondary: #0c0f19;
+  --bg-surface: rgba(12, 15, 25, 0.92);
+  --bg-elevated: #141824;
+  --bg-dark: #06080c;
+  --bg-panel: rgba(12, 15, 25, 0.92);
+
+  /* Borders & Lines */
+  --border-dim: #1a2030;
+  --border-default: #2a3040;
+  --border-bright: #3a4050;
+  --border-color: #2a3040;
+  --border-active: #4da6ff;
+
+  /* Text */
+  --text-primary: #e0e4eb;
+  --text-secondary: #8892a8;
+  --text-dim: #5a6478;
+
+  /* Accent Colors - Palantir Blue Theme */
+  --accent-primary: #4da6ff;
+  --accent-glow: rgba(77, 166, 255, 0.4);
+  --accent-green: #2ed573;  /* Keep for positive indicators */
+  --accent-green-dim: #1a8040;
+  --accent-red: #ff4757;
+  --accent-red-dim: #aa2838;
+  --accent-yellow: #ffa502;
+  --accent-yellow-dim: #aa6a00;
+  --accent-blue: #4da6ff;
+  --accent-blue-dim: #2a5a8a;
+  --accent-cyan: #70c7ff;
+
+  /* Map Specific */
+  --map-bg: #060810;
+  --map-land: #0a1020;
+  --map-land-stroke: #1a2540;
+  --map-grid: rgba(40, 60, 100, 0.3);
+  --map-accent: #4da6ff;
+
+  /* Threat Levels */
+  --threat-low: #4da6ff;
+  --threat-elevated: #ffa502;
+  --threat-high: #ff4757;
+  --threat-watch: #70c7ff;
+
+  /* Typography */
+  --font-mono: 'SF Mono', 'Fira Code', 'Roboto Mono', 'Monaco', 'Consolas', monospace;
+  --font-size-xs: 0.55rem;
+  --font-size-sm: 0.65rem;
+  --font-size-base: 0.75rem;
+  --font-size-lg: 0.85rem;
+  --font-size-xl: 1rem;
+
+  /* Spacing */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 0.75rem;
+  --space-lg: 1rem;
+  --space-xl: 1.5rem;
+
+  /* Transitions */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.25s ease;
+  --transition-slow: 0.4s ease;
+
+  /* Z-indexes */
+  --z-base: 1;
+  --z-overlay: 10;
+  --z-popup: 50;
+  --z-modal: 100;
+  --z-tooltip: 200;
+}
+
+/* ========== BASE STYLES ========== */
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-mono);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 12px;
+  line-height: 1.5;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ========== TYPOGRAPHY ========== */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: bold;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+a {
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--accent-primary);
+}
+
+/* ========== SCROLLBAR ========== */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #3a4050;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #5a6070;
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #3a4050 transparent;
+}
+
+/* ========== SELECTION ========== */
+::selection {
+  background: var(--accent-primary);
+  color: var(--bg-primary);
+}
+
+/* ========== UTILITY CLASSES ========== */
+.text-dim { color: var(--text-dim); }
+.text-secondary { color: var(--text-secondary); }
+.text-primary { color: var(--text-primary); }
+.text-accent { color: var(--accent-primary); }
+.text-green { color: var(--accent-green); }
+.text-red { color: var(--accent-red); }
+.text-yellow { color: var(--accent-yellow); }
+.text-blue { color: var(--accent-blue); }
+
+.neon-text {
+  text-shadow: 0 0 8px var(--accent-glow);
+}

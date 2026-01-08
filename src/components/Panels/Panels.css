@@ -1,0 +1,755 @@
+/* Panel Component Styles - Palantir Blue Theme */
+
+/* News Filters */
+.news-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 8px;
+  border-bottom: 1px solid var(--border-dim, #1a2030);
+}
+
+.filter-btn {
+  padding: 4px 8px;
+  font-size: 10px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-dim, #5a6478);
+  background: transparent;
+  border: 1px solid var(--border-color, #2a3040);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.filter-btn:hover {
+  color: var(--text-secondary, #8892a8);
+  border-color: var(--border-bright, #3a4050);
+}
+
+.filter-btn.active {
+  color: var(--accent-primary, #4da6ff);
+  border-color: var(--accent-primary, #4da6ff);
+  background: rgba(77, 166, 255, 0.1);
+  box-shadow: 0 0 8px var(--accent-glow, rgba(77, 166, 255, 0.3));
+}
+
+.load-more-btn {
+  display: block;
+  width: 100%;
+  padding: 8px;
+  margin-top: 8px;
+  font-size: 10px;
+  font-weight: bold;
+  color: var(--text-dim, #5a6478);
+  background: var(--bg-elevated, #141824);
+  border: 1px solid var(--border-color, #2a3040);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.load-more-btn:hover {
+  color: var(--accent-primary, #4da6ff);
+  border-color: var(--accent-primary, #4da6ff);
+  box-shadow: 0 0 8px var(--accent-glow, rgba(77, 166, 255, 0.3));
+}
+
+/* News Feed */
+.news-feed {
+  display: flex;
+  flex-direction: column;
+}
+
+.news-item {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border-dim, #1a2030);
+}
+
+.news-item:last-child {
+  border-bottom: none;
+}
+
+.news-item.alert {
+  background: rgba(255, 71, 87, 0.05);
+  border-left: 2px solid var(--accent-red, #ff4757);
+}
+
+.news-meta {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 2px;
+}
+
+.news-source {
+  font-size: 9px;
+  color: var(--accent-primary, #4da6ff);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.news-time {
+  font-size: 9px;
+  color: var(--text-dim, #5a6478);
+}
+
+.news-title {
+  font-size: 11px;
+  color: var(--text-secondary, #8892a8);
+  line-height: 1.4;
+  display: block;
+  text-decoration: none;
+}
+
+.news-title:hover {
+  color: var(--text-primary, #e0e4eb);
+}
+
+.news-alert-badge {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  line-height: 14px;
+  text-align: center;
+  font-size: 10px;
+  font-weight: bold;
+  color: var(--bg-primary, #0a0a0f);
+  background: var(--accent-red, #ff4757);
+  margin-right: 4px;
+}
+
+/* Markets Grid */
+.markets-section {
+  margin-bottom: 8px;
+}
+
+.markets-section-title {
+  font-size: 9px;
+  font-weight: bold;
+  color: var(--accent-primary, #4da6ff);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--border-dim, #1a2030);
+  margin-bottom: 4px;
+}
+
+.markets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 1px;
+  background: var(--border-dim, #1a2030);
+}
+
+.market-item {
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+  background: var(--bg-surface, rgba(12, 15, 25, 0.92));
+}
+
+.market-symbol {
+  font-size: 11px;
+  font-weight: bold;
+  color: var(--text-primary, #e0e4eb);
+}
+
+.market-price {
+  font-size: 10px;
+  color: var(--text-secondary, #8892a8);
+}
+
+.market-change {
+  font-size: 10px;
+  font-weight: bold;
+}
+
+.market-change.up { color: var(--accent-green, #2ed573); }
+.market-change.down { color: var(--accent-red, #ff4757); }
+
+/* Sector Heatmap */
+.heatmap-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2px;
+  padding: 4px;
+}
+
+.heatmap-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  min-height: 50px;
+  text-align: center;
+}
+
+.heatmap-name {
+  font-size: 10px;
+  font-weight: bold;
+  margin-bottom: 2px;
+}
+
+.heatmap-change {
+  font-size: 11px;
+  font-weight: bold;
+}
+
+/* Commodities */
+.commodities-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.commodity-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border-dim, #1a2030);
+}
+
+.commodity-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.commodity-symbol {
+  font-size: 11px;
+  font-weight: bold;
+  color: var(--text-primary, #e0e4eb);
+}
+
+.commodity-name {
+  font-size: 10px;
+  color: var(--text-dim, #5a6478);
+}
+
+.commodity-values {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.commodity-price {
+  font-size: 11px;
+  color: var(--text-primary, #e0e4eb);
+}
+
+.commodity-change {
+  font-size: 10px;
+  font-weight: bold;
+}
+
+.commodity-change.up { color: var(--accent-green, #2ed573); }
+.commodity-change.down { color: var(--accent-red, #ff4757); }
+
+/* Polymarket */
+.polymarket-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.polymarket-item {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border-dim, #1a2030);
+}
+
+.polymarket-question {
+  font-size: 11px;
+  color: var(--text-secondary, #8892a8);
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+
+.polymarket-odds {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.polymarket-bar {
+  height: 4px;
+  background: var(--border-color, #2a3040);
+  overflow: hidden;
+}
+
+.polymarket-fill {
+  height: 100%;
+  background: var(--accent-primary, #4da6ff);
+  transition: width 0.3s;
+}
+
+.polymarket-values {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+}
+
+.polymarket-yes {
+  color: var(--accent-primary, #4da6ff);
+  font-weight: bold;
+}
+
+.polymarket-vol {
+  color: var(--text-dim, #5a6478);
+}
+
+/* Congress Trades */
+.congress-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.congress-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border-dim, #1a2030);
+}
+
+.congress-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.congress-top {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.congress-name {
+  font-size: 11px;
+  font-weight: bold;
+  color: var(--text-primary, #e0e4eb);
+}
+
+.congress-party {
+  font-size: 10px;
+  font-weight: bold;
+  padding: 1px 4px;
+}
+
+.congress-party.D {
+  color: #4488ff;
+  border: 1px solid #4488ff;
+}
+
+.congress-party.R {
+  color: #ff4757;
+  border: 1px solid #ff4757;
+}
+
+.congress-ticker {
+  font-size: 11px;
+  color: var(--accent-primary, #4da6ff);
+}
+
+.congress-meta {
+  font-size: 10px;
+  color: var(--text-dim, #5a6478);
+}
+
+.congress-trade {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.congress-action {
+  font-size: 10px;
+  font-weight: bold;
+  padding: 2px 6px;
+}
+
+.congress-action.buy {
+  color: var(--accent-green, #2ed573);
+  border: 1px solid rgba(46, 213, 115, 0.3);
+}
+
+.congress-action.sell {
+  color: var(--accent-red, #ff4757);
+  border: 1px solid rgba(255, 71, 87, 0.3);
+}
+
+.congress-amount {
+  font-size: 10px;
+  color: var(--text-secondary, #8892a8);
+}
+
+/* Whale Watch */
+.whale-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.whale-item {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border-dim, #1a2030);
+}
+
+.whale-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.whale-coin {
+  font-size: 11px;
+  font-weight: bold;
+  color: var(--accent-yellow, #ffa502);
+}
+
+.whale-amount {
+  font-size: 11px;
+  color: var(--text-primary, #e0e4eb);
+}
+
+.whale-flow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+}
+
+.whale-usd {
+  color: var(--accent-primary, #4da6ff);
+}
+
+.whale-arrow {
+  color: var(--text-dim, #5a6478);
+}
+
+.whale-hash {
+  color: var(--text-dim, #5a6478);
+  font-family: monospace;
+}
+
+/* Main Character */
+.mainchar-display {
+  padding: 10px;
+}
+
+.mainchar-label {
+  font-size: 10px;
+  color: var(--text-dim, #5a6478);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 4px;
+}
+
+.mainchar-name {
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--accent-primary, #4da6ff);
+  margin-bottom: 4px;
+  text-shadow: 0 0 8px var(--accent-glow, rgba(77, 166, 255, 0.4));
+}
+
+.mainchar-count {
+  font-size: 11px;
+  color: var(--text-secondary, #8892a8);
+  margin-bottom: 10px;
+}
+
+.mainchar-list {
+  border-top: 1px solid var(--border-dim, #1a2030);
+  padding-top: 8px;
+}
+
+.mainchar-row {
+  display: flex;
+  align-items: center;
+  padding: 4px 0;
+  font-size: 11px;
+}
+
+.mainchar-rank {
+  width: 20px;
+  color: var(--text-dim, #5a6478);
+}
+
+.mainchar-row-name {
+  flex: 1;
+  color: var(--text-secondary, #8892a8);
+}
+
+.mainchar-mentions {
+  color: var(--accent-primary, #4da6ff);
+}
+
+/* Money Printer */
+.printer-gauge {
+  padding: 10px;
+}
+
+.printer-label {
+  font-size: 10px;
+  color: var(--text-dim, #5a6478);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 4px;
+}
+
+.printer-value {
+  font-size: 20px;
+  font-weight: bold;
+  color: var(--text-primary, #e0e4eb);
+  margin-bottom: 4px;
+}
+
+.printer-unit {
+  font-size: 11px;
+  color: var(--text-dim, #5a6478);
+  margin-left: 4px;
+}
+
+.printer-change {
+  font-size: 11px;
+  margin-bottom: 10px;
+}
+
+.printer-change.up { color: var(--accent-green, #2ed573); }
+.printer-change.down { color: var(--accent-red, #ff4757); }
+
+.printer-bar {
+  height: 8px;
+  background: var(--border-color, #2a3040);
+  margin-bottom: 8px;
+}
+
+.printer-fill {
+  height: 100%;
+  background: var(--accent-primary, #4da6ff);
+  transition: width 0.5s;
+}
+
+.printer-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: bold;
+  color: var(--text-secondary, #8892a8);
+  margin-bottom: 10px;
+}
+
+.printer-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.printer-indicator.on {
+  background: var(--accent-green, #2ed573);
+  animation: pulse-low 1s ease-in-out infinite;
+}
+
+.printer-indicator.off {
+  background: var(--accent-red, #ff4757);
+}
+
+.printer-metrics {
+  display: flex;
+  gap: 16px;
+  border-top: 1px solid var(--border-dim, #1a2030);
+  padding-top: 8px;
+}
+
+.printer-metric {
+  display: flex;
+  flex-direction: column;
+}
+
+.printer-metric-label {
+  font-size: 9px;
+  color: var(--text-dim, #5a6478);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.printer-metric-value {
+  font-size: 12px;
+  font-weight: bold;
+  color: var(--accent-primary, #4da6ff);
+}
+
+/* Government Contracts */
+.contracts-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.contract-item {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border-dim, #1a2030);
+}
+
+.contract-agency {
+  font-size: 11px;
+  font-weight: bold;
+  color: var(--accent-primary, #4da6ff);
+  margin-bottom: 2px;
+}
+
+.contract-desc {
+  font-size: 10px;
+  color: var(--text-dim, #5a6478);
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+
+.contract-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+}
+
+.contract-vendor {
+  color: var(--text-secondary, #8892a8);
+}
+
+.contract-value {
+  color: var(--accent-green, #2ed573);
+  font-weight: bold;
+}
+
+/* Empty state */
+.panel-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  font-size: 11px;
+  color: var(--text-dim, #5a6478);
+  min-height: 80px;
+}
+
+/* Animations */
+@keyframes pulse-low {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+/* ASCII Loader Styles */
+.ascii-loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  color: var(--accent-primary, #4da6ff);
+  padding: 16px;
+  min-height: 60px;
+}
+
+.ascii-loader-md {
+  font-size: 13px;
+  min-height: 80px;
+}
+
+.ascii-loader-lg {
+  font-size: 16px;
+  min-height: 100px;
+}
+
+.ascii-spinner {
+  font-size: 14px;
+  color: var(--accent-primary, #4da6ff);
+  text-shadow: 0 0 8px var(--accent-glow, rgba(77, 166, 255, 0.5));
+}
+
+.ascii-text {
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  animation: ascii-flicker 2s ease-in-out infinite;
+}
+
+@keyframes ascii-flicker {
+  0%, 100% { opacity: 1; }
+  25% { opacity: 0.85; }
+  50% { opacity: 0.7; }
+  75% { opacity: 0.95; }
+}
+
+.ascii-bar-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.ascii-bar {
+  font-family: var(--font-mono, monospace);
+  color: var(--accent-primary, #4da6ff);
+  text-shadow: 0 0 8px var(--accent-glow, rgba(77, 166, 255, 0.5));
+  letter-spacing: 1px;
+}
+
+.ascii-matrix {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.matrix-char {
+  animation: matrix-fade 0.5s ease-in-out infinite;
+  color: var(--accent-primary, #4da6ff);
+}
+
+@keyframes matrix-fade {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+.loading-text-animated {
+  font-family: var(--font-mono, monospace);
+  color: var(--text-dim, #5a6478);
+  letter-spacing: 0.1em;
+}
+
+/* Enhanced panel loading */
+.panel-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 100px;
+  font-size: 11px;
+  color: var(--accent-primary, #4da6ff);
+  font-family: var(--font-mono, monospace);
+  letter-spacing: 0.1em;
+  gap: 8px;
+}
+
+.panel-loading::before {
+  content: '⠋';
+  font-size: 16px;
+  animation: spinner-rotate 0.8s steps(10) infinite;
+}
+
+@keyframes spinner-rotate {
+  0% { content: '⠋'; }
+  10% { content: '⠙'; }
+  20% { content: '⠹'; }
+  30% { content: '⠸'; }
+  40% { content: '⠼'; }
+  50% { content: '⠴'; }
+  60% { content: '⠦'; }
+  70% { content: '⠧'; }
+  80% { content: '⠇'; }
+  90% { content: '⠏'; }
+}
+

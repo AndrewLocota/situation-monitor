@@ -5,7 +5,6 @@ export const THEATRES = [
     name: 'Eastern Europe',
     description: 'Ukraine / Russia Conflict Zone',
     center: [35, 50],
-    // Accurate bounds: Western Europe to Urals, Scandinavia to Mediterranean
     bounds: { west: 15, east: 45, north: 60, south: 42 },
     scale: 4
   },
@@ -14,7 +13,6 @@ export const THEATRES = [
     name: 'Middle East',
     description: 'Levant / Gulf / Iran',
     center: [45, 30],
-    // Accurate bounds: Egypt to Pakistan, Turkey to Yemen
     bounds: { west: 26, east: 65, north: 42, south: 12 },
     scale: 4
   },
@@ -23,7 +21,6 @@ export const THEATRES = [
     name: 'Indo-Pacific',
     description: 'Taiwan Strait / South China Sea',
     center: [125, 20],
-    // Accurate bounds: Bay of Bengal to Japan, Mongolia to Indonesia
     bounds: { west: 95, east: 147, north: 45, south: -10 },
     scale: 3
   },
@@ -32,7 +29,6 @@ export const THEATRES = [
     name: 'Africa',
     description: 'Sahel / Horn of Africa',
     center: [20, 5],
-    // Accurate bounds: African continent
     bounds: { west: -18, east: 52, north: 37, south: -35 },
     scale: 2.5
   },
@@ -41,116 +37,237 @@ export const THEATRES = [
     name: 'Americas',
     description: 'Western Hemisphere',
     center: [-80, 15],
-    // Accurate bounds: North and South America
     bounds: { west: -150, east: -34, north: 60, south: -55 },
     scale: 2
   }
 ];
 
-// Intelligence Hotspots - accurate coordinates
+// Intelligence Hotspots - enriched with agencies and detailed info from Claude
 export const INTEL_HOTSPOTS = [
   {
-    id: 'dc', name: 'Washington DC', subtext: 'Pentagon', lat: 38.9072, lon: -77.0369,
-    keywords: ['pentagon', 'white house', 'washington'],
-    description: 'US national security hub.',
+    id: 'dc',
+    name: 'Washington DC',
+    subtext: 'Pentagon Pizza Index',
+    lat: 38.9072,
+    lon: -77.0369,
+    keywords: ['pentagon', 'white house', 'washington', 'us military', 'cia', 'nsa', 'biden', 'trump', 'congress'],
+    description: 'US national security hub. Pentagon, CIA, NSA, State Dept. Monitor for late-night activity spikes.',
+    agencies: ['Pentagon', 'CIA', 'NSA', 'State Dept'],
     status: 'Active monitoring',
-    level: 'medium'
+    level: 'watch',
+    theatre: 'US_DOMESTIC'
   },
   {
-    id: 'moscow', name: 'Moscow', subtext: 'Kremlin', lat: 55.7558, lon: 37.6173,
-    keywords: ['russia', 'putin', 'kremlin'],
-    description: 'Russian command center.',
+    id: 'moscow',
+    name: 'Moscow',
+    subtext: 'Kremlin Activity',
+    lat: 55.7558,
+    lon: 37.6173,
+    keywords: ['russia', 'putin', 'kremlin', 'moscow', 'russian', 'medvedev', 'lavrov'],
+    description: 'Russian political and military command center. FSB, GRU, Presidential Administration.',
+    agencies: ['FSB', 'GRU', 'SVR', 'Kremlin'],
     status: 'High activity',
-    level: 'high'
+    level: 'high',
+    theatre: 'EASTERN_EUROPE'
   },
   {
-    id: 'beijing', name: 'Beijing', subtext: 'PLA/MSS', lat: 39.9042, lon: 116.4074,
-    keywords: ['china', 'beijing', 'xi jinping'],
-    description: 'CCP headquarters.',
+    id: 'beijing',
+    name: 'Beijing',
+    subtext: 'PLA/MSS Activity',
+    lat: 39.9042,
+    lon: 116.4074,
+    keywords: ['china', 'beijing', 'chinese', 'xi jinping', 'taiwan strait', 'pla', 'ccp'],
+    description: 'Chinese Communist Party headquarters. PLA command, MSS intelligence operations.',
+    agencies: ['PLA', 'MSS', 'CCP Politburo'],
     status: 'Elevated posture',
-    level: 'elevated'
+    level: 'elevated',
+    theatre: 'EAST_ASIA'
   },
   {
-    id: 'kyiv', name: 'Kyiv', subtext: 'Active Conflict', lat: 50.4501, lon: 30.5234,
-    keywords: ['ukraine', 'kyiv', 'zelensky'],
-    description: 'Ukrainian capital.',
+    id: 'kyiv',
+    name: 'Kyiv',
+    subtext: 'Conflict Zone',
+    lat: 50.4501,
+    lon: 30.5234,
+    keywords: ['ukraine', 'kyiv', 'zelensky', 'ukrainian', 'donbas', 'crimea'],
+    description: 'Ukrainian capital under wartime conditions. Government, military coordination center.',
+    agencies: ['SBU', 'GUR', 'Armed Forces'],
     status: 'Active conflict',
-    level: 'high'
+    level: 'high',
+    theatre: 'EASTERN_EUROPE'
   },
   {
-    id: 'taipei', name: 'Taipei', subtext: 'Strait Watch', lat: 25.0330, lon: 121.5654,
-    keywords: ['taiwan', 'taipei'],
-    description: 'Taiwan government HQ.',
+    id: 'taipei',
+    name: 'Taipei',
+    subtext: 'Strait Watch',
+    lat: 25.0330,
+    lon: 121.5654,
+    keywords: ['taiwan', 'taipei', 'taiwanese', 'strait', 'tsmc'],
+    description: 'Taiwan government and military HQ. ADIZ violations and PLA exercises tracked.',
+    agencies: ['NSB', 'MND', 'AIT'],
     status: 'Heightened alert',
-    level: 'elevated'
+    level: 'elevated',
+    theatre: 'EAST_ASIA'
   },
   {
-    id: 'tehran', name: 'Tehran', subtext: 'IRGC', lat: 35.6892, lon: 51.3890,
-    keywords: ['iran', 'tehran', 'irgc'],
-    description: 'Iranian regime center.',
+    id: 'tehran',
+    name: 'Tehran',
+    subtext: 'IRGC Activity',
+    lat: 35.6892,
+    lon: 51.3890,
+    keywords: ['iran', 'tehran', 'iranian', 'irgc', 'hezbollah', 'nuclear', 'khamenei'],
+    description: 'Iranian regime center. IRGC Quds Force, nuclear program oversight, proxy coordination.',
+    agencies: ['IRGC', 'MOIS', 'AEOI'],
     status: 'Proxy operations active',
-    level: 'high'
+    level: 'high',
+    theatre: 'MIDDLE_EAST'
   },
   {
-    id: 'telaviv', name: 'Tel Aviv', subtext: 'IDF/Mossad', lat: 32.0853, lon: 34.7818,
-    keywords: ['israel', 'gaza', 'hamas'],
-    description: 'Israeli security apparatus.',
+    id: 'telaviv',
+    name: 'Tel Aviv',
+    subtext: 'Mossad/IDF',
+    lat: 32.0853,
+    lon: 34.7818,
+    keywords: ['israel', 'israeli', 'gaza', 'hamas', 'idf', 'netanyahu', 'mossad'],
+    description: 'Israeli security apparatus. IDF operations, Mossad intel, Shin Bet domestic security.',
+    agencies: ['Mossad', 'IDF', 'Shin Bet', 'Aman'],
     status: 'Active operations',
-    level: 'high'
+    level: 'high',
+    theatre: 'MIDDLE_EAST'
   },
   {
-    id: 'pyongyang', name: 'Pyongyang', subtext: 'DPRK', lat: 39.0392, lon: 125.7625,
-    keywords: ['north korea', 'kim jong'],
-    description: 'DPRK leadership.',
-    status: 'Missile tests',
-    level: 'elevated'
+    id: 'pyongyang',
+    name: 'Pyongyang',
+    subtext: 'DPRK Watch',
+    lat: 39.0392,
+    lon: 125.7625,
+    keywords: ['north korea', 'kim jong', 'pyongyang', 'dprk', 'korean missile', 'icbm'],
+    description: 'North Korean leadership compound. Nuclear/missile program, regime stability indicators.',
+    agencies: ['RGB', 'KPA', 'SSD'],
+    status: 'Missile tests ongoing',
+    level: 'elevated',
+    theatre: 'EAST_ASIA'
   },
   {
-    id: 'brussels', name: 'Brussels', subtext: 'NATO HQ', lat: 50.8503, lon: 4.3517,
-    keywords: ['nato', 'eu'],
-    description: 'NATO headquarters.',
+    id: 'london',
+    name: 'London',
+    subtext: 'GCHQ/MI6',
+    lat: 51.5074,
+    lon: -0.1278,
+    keywords: ['uk', 'britain', 'british', 'mi6', 'gchq', 'london'],
+    description: 'UK intelligence community hub. Five Eyes partner, SIGINT, foreign intelligence.',
+    agencies: ['MI6', 'GCHQ', 'MI5'],
+    status: 'Normal operations',
+    level: 'low',
+    theatre: 'GLOBAL'
+  },
+  {
+    id: 'brussels',
+    name: 'Brussels',
+    subtext: 'NATO HQ',
+    lat: 50.8503,
+    lon: 4.3517,
+    keywords: ['nato', 'eu', 'european union', 'brussels', 'stoltenberg'],
+    description: 'NATO headquarters and EU institutions. Alliance coordination, Article 5 readiness.',
+    agencies: ['NATO', 'EU Commission', 'EEAS'],
     status: 'Enhanced readiness',
-    level: 'medium'
+    level: 'elevated',
+    theatre: 'GLOBAL'
   },
   {
-    id: 'caracas', name: 'Caracas', subtext: 'Venezuela', lat: 10.4806, lon: -66.9036,
-    keywords: ['venezuela', 'maduro'],
-    description: 'Venezuelan crisis center.',
+    id: 'caracas',
+    name: 'Caracas',
+    subtext: 'Venezuela Crisis',
+    lat: 10.4806,
+    lon: -66.9036,
+    keywords: ['venezuela', 'maduro', 'caracas', 'guaido', 'venezuelan', 'pdvsa'],
+    description: 'Venezuelan political crisis center. Maduro regime, opposition movements, oil politics.',
+    agencies: ['SEBIN', 'DGCIM', 'GNB'],
     status: 'Political instability',
-    level: 'elevated'
+    level: 'elevated',
+    theatre: 'AMERICAS'
+  },
+  {
+    id: 'nuuk',
+    name: 'Nuuk',
+    subtext: 'Arctic Dispute',
+    lat: 64.1836,
+    lon: -51.7214,
+    keywords: ['greenland', 'denmark', 'arctic', 'nuuk', 'thule', 'rare earth'],
+    description: 'Arctic strategic territory. US military presence, rare earth minerals, sovereignty questions.',
+    agencies: ['Danish Defence', 'US Space Force', 'Arctic Council'],
+    status: 'Diplomatic tensions',
+    level: 'watch',
+    theatre: 'ARCTIC'
+  },
+  {
+    id: 'new_delhi',
+    name: 'New Delhi',
+    subtext: 'RAW/IB Activity',
+    lat: 28.6139,
+    lon: 77.2090,
+    keywords: ['india', 'indian', 'modi', 'new delhi', 'kashmir'],
+    description: 'Indian government and intelligence hub. Regional power dynamics, Pakistan/China tensions.',
+    agencies: ['RAW', 'IB', 'NSA'],
+    status: 'Regional monitoring',
+    level: 'watch',
+    theatre: 'GLOBAL'
+  },
+  {
+    id: 'islamabad',
+    name: 'Islamabad',
+    subtext: 'ISI Activity',
+    lat: 33.7294,
+    lon: 73.0931,
+    keywords: ['pakistan', 'pakistani', 'islamabad', 'isi', 'imran khan'],
+    description: 'Pakistani military and intelligence center. Nuclear state, Afghanistan border, India tensions.',
+    agencies: ['ISI', 'Military GHQ'],
+    status: 'Political flux',
+    level: 'elevated',
+    theatre: 'GLOBAL'
   }
 ];
 
-// Conflict zones with accurate polygon coordinates
+// Conflict zones enriched with parties, casualties, displaced data from Claude
 export const CONFLICT_ZONES = [
   {
     id: 'ukraine',
-    name: 'Ukraine Front',
+    name: 'Ukraine Conflict',
     intensity: 'high',
     coords: [
-      [36.0, 47.5], [37.5, 48.0], [39.5, 48.5], [40.0, 49.5],
-      [38.5, 50.0], [37.0, 49.5], [35.5, 48.5], [35.0, 47.8]
+      [37.5, 47.0], [38.5, 47.5], [39.0, 48.5], [38.0, 49.5],
+      [37.0, 49.0], [36.0, 48.5], [35.5, 47.5], [36.5, 47.0]
     ],
-    labelPos: { lat: 48.5, lon: 37.5 },
+    labelPos: { lat: 48.0, lon: 37.5 },
     startDate: 'Feb 24, 2022',
-    description: 'Active frontline in Donbas region.',
-    keywords: ['ukraine', 'russia', 'donbas']
+    parties: ['Russia', 'Ukraine', 'NATO (support)'],
+    casualties: '500,000+ (est.)',
+    displaced: '6.5M+ refugees',
+    description: 'Full-scale Russian invasion of Ukraine. Active frontlines in Donetsk, Luhansk, Zaporizhzhia, and Kherson oblasts. Heavy artillery, drone warfare, and trench combat.',
+    keyEvents: ['Battle of Bakhmut', 'Kursk incursion', 'Black Sea drone strikes', 'Infrastructure attacks'],
+    keywords: ['ukraine', 'russia', 'zelensky', 'putin', 'donbas', 'crimea', 'bakhmut', 'kursk', 'kherson', 'zaporizhzhia'],
+    theatre: 'EASTERN_EUROPE'
   },
   {
     id: 'gaza',
-    name: 'Gaza',
+    name: 'Gaza Conflict',
     intensity: 'high',
     coords: [
-      [34.22, 31.59], [34.56, 31.59], [34.56, 31.22], [34.22, 31.22]
+      [34.2, 31.6], [34.6, 31.6], [34.6, 31.2], [34.2, 31.2]
     ],
     labelPos: { lat: 31.4, lon: 34.4 },
     startDate: 'Oct 7, 2023',
-    description: 'Israeli-Hamas conflict zone.',
-    keywords: ['gaza', 'israel', 'hamas']
+    parties: ['Israel (IDF)', 'Hamas', 'Palestinian Islamic Jihad'],
+    casualties: '45,000+ (Gaza), 1,200+ (Israel)',
+    displaced: '2M+ internally displaced',
+    description: 'Israeli military operation in Gaza following Oct 7 Hamas attacks. Urban warfare, humanitarian crisis, regional escalation with Hezbollah and Houthis.',
+    keyEvents: ['Oct 7 attacks', 'Ground invasion', 'Rafah operation', 'Hostage negotiations'],
+    keywords: ['gaza', 'israel', 'hamas', 'idf', 'netanyahu', 'hostage', 'rafah', 'hezbollah', 'palestinian'],
+    theatre: 'MIDDLE_EAST'
   },
   {
     id: 'sudan',
-    name: 'Sudan',
+    name: 'Sudan Civil War',
     intensity: 'medium',
     coords: [
       [32.0, 16.0], [34.0, 16.5], [35.0, 15.0], [33.5, 13.5],
@@ -158,20 +275,85 @@ export const CONFLICT_ZONES = [
     ],
     labelPos: { lat: 15.0, lon: 32.5 },
     startDate: 'Apr 15, 2023',
-    description: 'SAF vs RSF civil war.',
-    keywords: ['sudan', 'khartoum']
+    parties: ['Sudanese Armed Forces (SAF)', 'Rapid Support Forces (RSF)'],
+    casualties: '15,000+ killed',
+    displaced: '10M+ displaced',
+    description: 'Power struggle between SAF and RSF paramilitary. Fighting centered around Khartoum, Darfur. Major humanitarian catastrophe with famine conditions.',
+    keyEvents: ['Khartoum battle', 'Darfur massacres', 'El Fasher siege', 'Famine declared'],
+    keywords: ['sudan', 'khartoum', 'rsf', 'darfur', 'burhan', 'hemedti', 'sudanese'],
+    theatre: 'AFRICA'
+  },
+  {
+    id: 'myanmar',
+    name: 'Myanmar Civil War',
+    intensity: 'medium',
+    coords: [
+      [96.0, 22.0], [98.0, 23.0], [98.5, 21.0], [97.0, 19.5], [95.5, 20.5]
+    ],
+    labelPos: { lat: 21.0, lon: 96.5 },
+    startDate: 'Feb 1, 2021',
+    parties: ['Military Junta (SAC)', 'Ethnic Armed Organizations', "People's Defense Forces"],
+    casualties: '50,000+ (est.)',
+    displaced: '3M+ internally displaced',
+    description: "Armed resistance following 2021 military coup. Multiple ethnic armies and pro-democracy forces fighting junta. Recent rebel advances in border regions.",
+    keyEvents: ['Operation 1027', 'Lashio capture', 'Myawaddy offensive', 'Junta conscription'],
+    keywords: ['myanmar', 'burma', 'junta', 'arakan', 'karen', 'kachin', 'rohingya'],
+    theatre: 'SOUTHEAST_ASIA'
   },
   {
     id: 'taiwan_strait',
     name: 'Taiwan Strait',
     intensity: 'watch',
     coords: [
-      [118.5, 26.5], [122.5, 26.5], [122.5, 22.0], [118.5, 22.0]
+      [119.0, 26.0], [121.5, 26.0], [121.5, 22.5], [119.0, 22.5]
     ],
-    labelPos: { lat: 24.0, lon: 120.5 },
-    startDate: 'Ongoing',
-    description: 'PLA exercises, tension zone.',
-    keywords: ['taiwan', 'china', 'strait']
+    labelPos: { lat: 24.5, lon: 120.0 },
+    startDate: 'Ongoing tensions',
+    parties: ['China (PLA)', 'Taiwan (ROC)', 'United States (deterrence)'],
+    casualties: 'N/A - no active combat',
+    displaced: 'N/A',
+    description: 'Heightened tensions over Taiwan sovereignty. Regular PLA exercises, airspace incursions, naval activity. Risk of flashpoint escalation.',
+    keyEvents: ['PLA exercises', 'ADIZ incursions', 'US arms sales', 'Diplomatic tensions'],
+    keywords: ['taiwan', 'china', 'strait', 'pla', 'taipei', 'invasion', 'chinese military'],
+    theatre: 'EAST_ASIA'
+  },
+  {
+    id: 'yemen',
+    name: 'Yemen / Red Sea',
+    intensity: 'medium',
+    coords: [
+      [42.5, 12.5], [45.0, 13.0], [48.0, 15.5], [52.0, 16.5],
+      [52.0, 14.0], [48.0, 12.0], [44.0, 11.5]
+    ],
+    labelPos: { lat: 14.0, lon: 47.0 },
+    startDate: '2014 (Houthi); 2023 (Red Sea)',
+    parties: ['Houthis (Ansar Allah)', 'Saudi-led Coalition', 'US/UK Naval Forces'],
+    casualties: '150,000+ (civil war)',
+    displaced: '4M+ displaced',
+    description: 'Ongoing civil war with regional proxy involvement. Houthi attacks on Red Sea shipping since Oct 2023 disrupting global trade.',
+    keyEvents: ['Red Sea attacks', 'US/UK airstrikes', 'Shipping diversions', 'Ceasefire talks'],
+    keywords: ['yemen', 'houthi', 'red sea', 'shipping', 'saudi', 'aden', 'sanaa'],
+    theatre: 'MIDDLE_EAST'
+  }
+];
+
+// Frontline data from Claude
+export const FRONTLINES = [
+  {
+    conflictId: 'ukraine',
+    name: 'Eastern Front',
+    coords: [
+      [37.0, 47.2], [37.5, 47.8], [38.0, 48.2], [38.2, 48.8], [37.8, 49.2]
+    ],
+    type: 'active'
+  },
+  {
+    conflictId: 'ukraine',
+    name: 'Southern Front',
+    coords: [
+      [35.0, 46.8], [35.5, 47.0], [36.2, 47.1], [37.0, 47.2]
+    ],
+    type: 'fortified'
   }
 ];
 

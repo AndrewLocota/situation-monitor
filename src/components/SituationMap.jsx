@@ -427,11 +427,38 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                             dashArray: '6, 3'
                         }}
                     >
-                        <Popup>
-                            <div style={{ fontFamily: 'monospace', fontSize: '11px' }}>
-                                <strong>{zone.name}</strong><br />
-                                {zone.description}<br />
-                                <span style={{ color: '#888' }}>Since: {zone.startDate}</span>
+                        <Popup maxWidth={320}>
+                            <div style={{ fontFamily: 'monospace', fontSize: '11px', maxWidth: '300px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px', borderBottom: '1px solid #2a3040', paddingBottom: '4px' }}>
+                                    <strong style={{ color: zone.intensity === 'high' ? '#ff4757' : zone.intensity === 'medium' ? '#ffa502' : '#4da6ff' }}>{zone.name}</strong>
+                                    <span style={{ fontSize: '9px', padding: '2px 6px', border: `1px solid ${zone.intensity === 'high' ? '#ff4757' : zone.intensity === 'medium' ? '#ffa502' : '#4da6ff'}`, color: zone.intensity === 'high' ? '#ff4757' : zone.intensity === 'medium' ? '#ffa502' : '#4da6ff' }}>
+                                        {zone.intensity.toUpperCase()}
+                                    </span>
+                                </div>
+                                <div style={{ color: '#8892a8', marginBottom: '6px', lineHeight: '1.4' }}>{zone.description}</div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', background: '#1a2030', padding: '6px', marginBottom: '6px' }}>
+                                    <div><span style={{ color: '#5a6478', fontSize: '9px' }}>SINCE</span><br /><span style={{ color: '#e0e4eb' }}>{zone.startDate}</span></div>
+                                    <div><span style={{ color: '#5a6478', fontSize: '9px' }}>CASUALTIES</span><br /><span style={{ color: '#ff4757' }}>{zone.casualties || 'Unknown'}</span></div>
+                                    <div style={{ gridColumn: '1 / -1' }}><span style={{ color: '#5a6478', fontSize: '9px' }}>DISPLACED</span><br /><span style={{ color: '#ffa502' }}>{zone.displaced || 'Unknown'}</span></div>
+                                </div>
+                                {zone.parties && zone.parties.length > 0 && (
+                                    <div style={{ marginBottom: '6px' }}>
+                                        <div style={{ color: '#5a6478', fontSize: '9px', marginBottom: '2px' }}>BELLIGERENTS</div>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                                            {zone.parties.map((party, i) => (
+                                                <span key={i} style={{ fontSize: '10px', padding: '2px 6px', background: '#141824', border: '1px solid #2a3040', color: '#e0e4eb' }}>{party}</span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                                {zone.keyEvents && zone.keyEvents.length > 0 && (
+                                    <div>
+                                        <div style={{ color: '#5a6478', fontSize: '9px', marginBottom: '2px' }}>KEY EVENTS</div>
+                                        {zone.keyEvents.slice(0, 4).map((event, i) => (
+                                            <div key={i} style={{ fontSize: '10px', color: '#8892a8', paddingLeft: '8px' }}>{'>'} {event}</div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         </Popup>
                     </Polygon>
@@ -471,12 +498,30 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                         position={[spot.lat, spot.lon]}
                         icon={createPulseIcon(getLevelColor(spot.level))}
                     >
-                        <Popup>
-                            <div style={{ fontFamily: 'monospace', fontSize: '11px', minWidth: '150px' }}>
-                                <strong style={{ color: getLevelColor(spot.level) }}>{spot.name}</strong><br />
-                                <span style={{ color: '#888' }}>{spot.subtext}</span><br />
-                                {spot.description}<br />
-                                <span style={{ fontSize: '9px', color: '#666' }}>Status: {spot.status}</span>
+                        <Popup maxWidth={300}>
+                            <div style={{ fontFamily: 'monospace', fontSize: '11px', minWidth: '220px', maxWidth: '280px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px', borderBottom: '1px solid #2a3040', paddingBottom: '4px' }}>
+                                    <strong style={{ color: getLevelColor(spot.level) }}>{spot.name}</strong>
+                                    <span style={{ fontSize: '9px', padding: '2px 6px', border: `1px solid ${getLevelColor(spot.level)}`, color: getLevelColor(spot.level) }}>
+                                        {spot.level.toUpperCase()}
+                                    </span>
+                                </div>
+                                <div style={{ color: '#4da6ff', fontSize: '10px', marginBottom: '4px' }}>{spot.subtext}</div>
+                                <div style={{ color: '#8892a8', marginBottom: '6px', lineHeight: '1.4' }}>{spot.description}</div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', background: '#1a2030', padding: '6px', marginBottom: '6px' }}>
+                                    <div><span style={{ color: '#5a6478', fontSize: '9px' }}>COORDS</span><br /><span style={{ color: '#e0e4eb' }}>{spot.lat.toFixed(2)}N, {Math.abs(spot.lon).toFixed(2)}{spot.lon >= 0 ? 'E' : 'W'}</span></div>
+                                    <div><span style={{ color: '#5a6478', fontSize: '9px' }}>STATUS</span><br /><span style={{ color: getLevelColor(spot.level) }}>{spot.status}</span></div>
+                                </div>
+                                {spot.agencies && spot.agencies.length > 0 && (
+                                    <div>
+                                        <div style={{ color: '#5a6478', fontSize: '9px', marginBottom: '2px' }}>KEY ENTITIES</div>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                                            {spot.agencies.map((agency, i) => (
+                                                <span key={i} style={{ fontSize: '10px', padding: '2px 6px', background: 'rgba(77, 166, 255, 0.1)', border: '1px solid rgba(77, 166, 255, 0.3)', color: '#4da6ff' }}>{agency}</span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </Popup>
                     </Marker>

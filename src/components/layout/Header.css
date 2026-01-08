@@ -1,0 +1,207 @@
+/* Header Component Styles - Palantir Blue Theme */
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: var(--bg-panel, rgba(12, 15, 25, 0.92));
+  border-bottom: 1px solid var(--border-color, #2a3040);
+  min-height: 48px;
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  backdrop-filter: blur(8px);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.header-bracket {
+  color: var(--accent-primary, #4da6ff);
+  font-size: 14px;
+}
+
+.header-title {
+  font-size: 14px;
+  font-weight: bold;
+  letter-spacing: 0.15em;
+  color: var(--text-primary, #e0e4eb);
+}
+
+.header-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 12px;
+  border-left: 1px solid var(--border-color, #2a3040);
+}
+
+.header-back {
+  padding: 4px 8px;
+  font-size: 12px;
+  color: var(--accent-primary, #4da6ff);
+  background: transparent;
+  border: 1px solid rgba(77, 166, 255, 0.3);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.header-back:hover {
+  background: rgba(77, 166, 255, 0.1);
+  color: var(--text-primary, #e0e4eb);
+}
+
+.header-theatre {
+  font-size: 11px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent-primary, #4da6ff);
+}
+
+.header-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-time {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  background: var(--bg-surface, rgba(12, 15, 25, 0.92));
+  border: 1px solid var(--border-color, #2a3040);
+}
+
+.header-time-label {
+  font-size: 10px;
+  color: var(--text-dim, #5a6478);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.header-time-value {
+  font-size: 12px;
+  color: var(--accent-primary, #4da6ff);
+  font-weight: bold;
+  font-variant-numeric: tabular-nums;
+}
+
+.header-date {
+  font-size: 11px;
+  color: var(--text-secondary, #8892a8);
+  font-variant-numeric: tabular-nums;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-btn {
+  padding: 4px 8px;
+  font-size: 10px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary, #8892a8);
+  background: transparent;
+  border: 1px solid var(--border-color, #2a3040);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.header-btn:hover {
+  color: var(--accent-primary, #4da6ff);
+  border-color: var(--accent-primary, #4da6ff);
+  box-shadow: 0 0 10px var(--accent-glow, rgba(77, 166, 255, 0.4));
+}
+
+.header-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Live Indicator - Palantir Blue */
+.live-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  background: rgba(77, 166, 255, 0.1);
+  border: 1px solid rgba(77, 166, 255, 0.3);
+}
+
+.live-indicator.syncing {
+  background: rgba(255, 165, 2, 0.1);
+  border-color: rgba(255, 165, 2, 0.3);
+}
+
+.live-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--accent-primary, #4da6ff);
+  border-radius: 50%;
+  animation: live-pulse 1.5s ease-in-out infinite;
+}
+
+.live-indicator.syncing .live-dot {
+  background: var(--accent-yellow, #ffa502);
+}
+
+.live-text {
+  font-size: 10px;
+  font-weight: bold;
+  letter-spacing: 0.15em;
+  color: var(--accent-primary, #4da6ff);
+}
+
+.live-indicator.syncing .live-text {
+  color: var(--accent-yellow, #ffa502);
+}
+
+@keyframes live-pulse {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 5px var(--accent-primary, #4da6ff);
+  }
+  50% {
+    opacity: 0.6;
+    box-shadow: 0 0 15px var(--accent-primary, #4da6ff);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .header-center {
+    order: -1;
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .header-date {
+    display: none;
+  }
+}
