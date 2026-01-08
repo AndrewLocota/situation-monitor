@@ -1,0 +1,122 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Palantir-inspired Colors */
+  --bg-color: #0a0a0f;
+  --bg-panel: rgba(12, 15, 25, 0.92);
+  --text-primary: #e0e4eb;
+  --text-secondary: #8892a8;
+  --accent-color: #4da6ff; /* Light blue - Palantir style */
+  --accent-glow: rgba(77, 166, 255, 0.4);
+  --alert-color: #ff4757;
+  --warning-color: #ffa502;
+  --success-color: #2ed573; /* Keep green for positive changes */
+  --border-color: #2a3040;
+  --border-active: #4da6ff;
+  
+  /* Fonts */
+  --font-mono: 'SF Mono', 'Fira Code', 'Roboto Mono', monospace;
+
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  overflow: hidden;
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar */
+* {
+  scroll-behavior: smooth;
+}
+
+::-webkit-scrollbar {
+  width: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #3a4050;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #5a6070;
+}
+
+/* Wireframe / Palantir Styles */
+.ascii-box {
+  border: 1px solid var(--border-color);
+  background: var(--bg-panel);
+  backdrop-filter: blur(8px);
+}
+
+.ascii-header {
+  border-bottom: 1px solid var(--border-color);
+  padding: var(--spacing-sm);
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 0.75rem;
+  color: var(--accent-color);
+  display: flex;
+  justify-content: space-between;
+}
+
+.neon-text {
+  text-shadow: 0 0 8px var(--accent-glow);
+}
+
+.alert-text {
+  color: var(--alert-color);
+  text-shadow: 0 0 5px rgba(255, 71, 87, 0.5);
+}
+
+/* Button Reset */
+button {
+  background: none;
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  cursor: pointer;
+  padding: 6px 12px;
+  transition: all 0.2s;
+  font-size: 0.7rem;
+}
+
+button:hover {
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+  box-shadow: 0 0 10px var(--accent-glow);
+}
+
+/* Pulse animation */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.animate-pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
