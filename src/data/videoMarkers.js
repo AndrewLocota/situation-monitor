@@ -15,5 +15,12 @@ export const VIDEO_MARKERS = [
     title: 'WHITE HOUSE // THE FIRE RISES',
     src: `${BASE}videos/THE_FIRE_RISES_HOI4_TRAILER_parody_480P.mp4`,
     startTime: 24
+  },
+  {
+    id: 'caracas_hills',
+    lat: 10.4806,
+    lng: -66.9036,
+    title: 'CARACAS // SKY NEWS INTEL',
+    src: 'https://www.tiktok.com/@skynews/video/7591105461860977942'
   }
 ];

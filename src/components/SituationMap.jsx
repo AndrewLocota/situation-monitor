@@ -341,13 +341,23 @@ const ClusterSpreadManager = ({ allMarkers, spreadState, setSpreadState }) => {
 };
 
 // Video popup content component with ref forwarding for video control
+// Video popup content component with ref forwarding for video control
 const VideoPopupContent = React.forwardRef(({ video, onVideoPlay, onVideoPause }, ref) => {
     const videoRef = useRef(null);
+
+    // Extract TikTok ID if applicable
+    const getTikTokId = (url) => {
+        const match = url && url.match(/video\/(\d+)/);
+        return match ? match[1] : null;
+    };
+
+    const tikTokId = getTikTokId(video.src);
+    const isIframe = !!tikTokId; // For now, only detect TikTok as iframe needs
 
     // Expose video element to parent
     React.useImperativeHandle(ref, () => ({
         play: () => {
-            if (videoRef.current) {
+            if (videoRef.current && !isIframe) {
                 // If start time configured and we are at start, seek
                 if (video.startTime && videoRef.current.currentTime < video.startTime) {
                     videoRef.current.currentTime = video.startTime;
@@ -356,12 +366,12 @@ const VideoPopupContent = React.forwardRef(({ video, onVideoPlay, onVideoPause }
             }
         },
         pause: () => {
-            if (videoRef.current) {
+            if (videoRef.current && !isIframe) {
                 videoRef.current.pause();
             }
         },
         stop: () => {
-            if (videoRef.current) {
+            if (videoRef.current && !isIframe) {
                 videoRef.current.pause();
                 videoRef.current.currentTime = video.startTime || 0;
             }
@@ -369,23 +379,31 @@ const VideoPopupContent = React.forwardRef(({ video, onVideoPlay, onVideoPause }
     }));
 
     return (
-        <div style={{ fontFamily: 'monospace', fontSize: '11px', minWidth: '280px' }}>
+        <div style={{ fontFamily: 'monospace', fontSize: '11px', minWidth: '320px' }}>
             <strong style={{ color: COLORS.video }}>VIDEO INTEL // {video.title}</strong><br />
-            <div style={{ marginTop: '6px', border: `1px solid ${COLORS.video}` }}>
-                <video
-                    ref={videoRef}
-                    src={video.src}
-                    loop
-                    playsInline
-                    muted={false}
-                    onPlay={onVideoPlay}
-                    onPause={onVideoPause}
-                    onLoadedMetadata={(e) => { e.target.volume = 0.5; }}
-                    style={{ width: '100%', display: 'block' }}
-                />
+            <div style={{ marginTop: '6px', border: `1px solid ${COLORS.video}`, background: '#000', minHeight: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {isIframe ? (
+                    <iframe
+                        src={`https://www.tiktok.com/embed/v2/${tikTokId}`}
+                        style={{ width: '100%', height: '380px', border: 'none' }}
+                        allow="encrypted-media;"
+                    ></iframe>
+                ) : (
+                    <video
+                        ref={videoRef}
+                        src={video.src}
+                        loop
+                        playsInline
+                        muted={false}
+                        onPlay={onVideoPlay}
+                        onPause={onVideoPause}
+                        onLoadedMetadata={(e) => { e.target.volume = 0.5; }}
+                        style={{ width: '100%', display: 'block' }}
+                    />
+                )}
             </div>
             <div style={{ fontSize: '9px', color: '#888', marginTop: '4px', textAlign: 'right' }}>
-                LOOP: ACTIVE // ID: {video.id.toUpperCase()}
+                {isIframe ? 'SOURCE: TIKTOK' : 'LOOP: ACTIVE'} // ID: {video.id.toUpperCase()}
             </div>
         </div>
     );
