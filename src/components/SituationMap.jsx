@@ -173,9 +173,20 @@ const NewsFocusHandler = ({ selectedNews, clearSelectedNews, setFocusedNewsId })
 
     useEffect(() => {
         if (selectedNews && selectedNews.location) {
-            const { lat, lng } = selectedNews.location;
+            const { lat, lng, label, matchedTerm } = selectedNews.location;
+
+            // Determine zoom level - closer for DC/City locations
+            let zoomLevel = 8;
+            const isDC = (label && label.toLowerCase().includes('washington')) ||
+                (label && label.toLowerCase().includes('dc')) ||
+                (matchedTerm && ['white house', 'pentagon', 'congress', 'senate', 'house', 'fed', 'biden', 'vance'].includes(matchedTerm));
+
+            if (isDC) {
+                zoomLevel = 13;
+            }
+
             // Fly to the news location
-            map.flyTo([lat, lng], 8, { duration: 1 });
+            map.flyTo([lat, lng], zoomLevel, { duration: 1 });
             // Set the focused news ID to highlight/open popup
             setFocusedNewsId(selectedNews.id);
             // Clear the selection after flying
