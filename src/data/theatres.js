@@ -51,9 +51,9 @@ export const THEATRES = [
       // North Africa (West to East): Morocco -> Egypt
       [36, -6], [37, 3], [37, 10], [33, 11], [32, 25], [31, 34],
       // East Coast (North to South): Red Sea -> Horn -> South Africa
-      [15, 40], [12, 43], [12, 51], [0, 42], [-10, 40], [-25, 33], [-35, 20],
+      [15, 40], [12, 43], [12, 51], [0, 42], [-10, 40], [-25, 33], [-30, 31], [-35, 20],
       // West Coast (South to North): South Africa -> Namibia -> West Africa -> Morocco
-      [-28, 16], [-22, 14], [-15, 12], [4, 9], [4, -8], [12, -17], [20, -17], [28, -13], [36, -6]
+      [-34, 18], [-28, 16], [-22, 14], [-15, 12], [4, 9], [4, -8], [12, -17], [20, -17], [28, -13], [36, -6]
     ]
   },
   {
@@ -63,9 +63,9 @@ export const THEATRES = [
     center: [-80, 15],
     bounds: { west: -150, east: -34, north: 60, south: -55 },
     scale: 2,
-    // Polygon covering North/Central/South America including all of Brazil and Caribbean
+    // Polygon covering North/Central/South America including Brazil, Caribbean (Puerto Rico/DR), and Bahamas
     polygon: [
-      [60, -130], [55, -55], [50, -50], [25, -80], [20, -68], [18, -68],
+      [60, -130], [55, -55], [50, -50], [30, -70], [25, -70], [20, -60], [18, -60], [15, -55],
       [5, -35], [-5, -35], [-25, -35], [-35, -40], [-55, -70], [-55, -80], [-40, -75],
       [10, -85], [20, -105], [35, -120], [50, -130]
     ]
