@@ -22,5 +22,12 @@ export const VIDEO_MARKERS = [
     lng: -66.9036,
     title: 'CARACAS // SKY NEWS INTEL',
     src: 'https://www.tiktok.com/@skynews/video/7591105461860977942'
+  },
+  {
+    id: 'caracas_palace',
+    lat: 10.5061,
+    lng: -66.9147,
+    title: 'CARACAS // MIRAFLORES PALACE',
+    src: `${BASE}videos/caracas_edit1.mp4`
   }
 ];
