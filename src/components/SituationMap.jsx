@@ -241,11 +241,9 @@ const VideoMarkerLayer = ({ onVideoStateChange, onTheatreSelect }) => {
         );
 
         if (theatre) {
-            const bounds = L.latLngBounds(
-                [theatre.bounds.south, theatre.bounds.west],
-                [theatre.bounds.north, theatre.bounds.east]
-            );
-            map.flyToBounds(bounds, { duration: 1, padding: [20, 20] });
+            // Center on the marker with a cinematic zoom
+            // Offset latitude slightly to make room for the popup if needed, but centering is usually fine
+            map.flyTo([video.lat, video.lng], 6, { duration: 1.5 });
         }
     };
 
