@@ -26,11 +26,25 @@
   --spacing-lg: 24px;
 }
 
-html, body, #root {
+html, body {
   height: 100%;
   width: 100%;
   margin: 0;
   padding: 0;
+}
+
+@keyframes zoomInEffect {
+  from { transform: scale(0.98); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+#root {
+  height: 100%;
+  width: 100%;
+}
+
+.map-zoom-entry {
+  animation: zoomInEffect 1s ease-out forwards;
 }
 
 * {

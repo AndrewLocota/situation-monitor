@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import MusicPlayer from './components/MusicPlayer';
 import SituationMap from './components/SituationMap';
 import MarketsPanel from './components/Panels/MarketsPanel';
 import NewsPanel from './components/Panels/NewsPanel';
@@ -35,7 +36,7 @@ function App() {
       backgroundColor: '#0a0a0f'
     }}>
       {/* Layer 0: The Map */}
-      <div style={{
+      <div className="map-zoom-entry" style={{
         position: 'absolute',
         top: 0, left: 0, right: 0, bottom: 0,
         zIndex: 0
@@ -86,6 +87,7 @@ function App() {
               STATUS: <span style={{ color: accentColor }}>ONLINE</span> |
               THEATRE: <span style={{ color: accentColor }}>{activeTheatre ? activeTheatre.toUpperCase() : 'GLOBAL'}</span>
             </div>
+            <MusicPlayer />
           </div>
 
           <div style={{ display: 'flex', gap: '12px' }}>
