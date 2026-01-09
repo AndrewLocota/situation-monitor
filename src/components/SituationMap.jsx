@@ -117,21 +117,14 @@ const createVideoIcon = (color) => {
 };
 
 // News marker icon (newspaper style with emoji)
-const createNewsIcon = (color, ageHours = 0) => {
-    // Opacity: 100% at 0h, decays to 10% at 24h+
-    const opacity = Math.max(0.1, 1 - (ageHours / 24) * 0.9);
-    // Glow: 10px at 0h, decays to 2px at 24h+
-    const blur = Math.max(2, 10 - (ageHours / 24) * 8);
-    // Extra brightness for very recent items (< 1h)
-    const brightness = ageHours < 1 ? 1.5 : 1;
-
+const createNewsIcon = (color, opacity = 1, blur = 6) => {
     return L.divIcon({
         className: 'custom-news-marker',
         html: `<div style="
             font-size: 16px;
             opacity: ${opacity};
             text-shadow: 0 0 ${blur}px ${color}, 0 0 3px rgba(0,0,0,0.8);
-            filter: drop-shadow(0 0 2px ${color}) brightness(${brightness});
+            filter: drop-shadow(0 0 2px ${color});
             transition: all 0.5s ease;
         ">📰</div>`,
         iconSize: [20, 20],
@@ -603,6 +596,7 @@ const VideoMarkerLayer = ({ onVideoStateChange, onTheatreSelect, getMarkerPositi
                     }}
                 >
                     <Popup
+                        autoPan={false}
                         minWidth={300}
                         maxWidth={400}
                         className="video-popup"
@@ -642,10 +636,19 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
     // Get news and selectedNews from store
     const { allNews, selectedNews, clearSelectedNews } = useDataStore();
 
-    // Geolocate news items (up to 200)
+    // Geolocate news items (up to 100)
     const geolocatedNews = useMemo(() => {
-        return geolocateNewsItems(allNews, 200);
+        return geolocateNewsItems(allNews, 100);
     }, [allNews]);
+
+    // Calculate time stats for relative styling (opacity based on dataset range)
+    const { minTime, timeRange } = useMemo(() => {
+        if (!geolocatedNews.length) return { minTime: 0, timeRange: 1 };
+        const times = geolocatedNews.map(n => new Date(n.newsItem.pubDate).getTime());
+        const max = Math.max(...times);
+        const min = Math.min(...times);
+        return { minTime: min, timeRange: max - min || 1 };
+    }, [geolocatedNews]);
 
     // Collect all markers for cluster detection
     const allMarkers = useMemo(() => {
@@ -883,7 +886,7 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                                 smoothFactor: 1.5 // Optimize performance without manual simplification
                             }}
                         >
-                            <Popup>
+                            <Popup autoPan={false}>
                                 <div style={{ fontFamily: 'monospace', fontSize: '11px' }}>
                                     <strong style={{ color: '#ff4757' }}>UKRAINE FRONTLINE</strong><br />
                                     Source: {segment.properties?.source || 'ISW/CTP'}<br />
@@ -901,7 +904,7 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                         position={getMarkerPosition(`intel-${spot.id}`, spot.lat, spot.lon)}
                         icon={createPulseIcon(getLevelColor(spot.level))}
                     >
-                        <Popup maxWidth={300}>
+                        <Popup autoPan={false} maxWidth={300}>
                             <div style={{ fontFamily: 'monospace', fontSize: '11px', minWidth: '220px', maxWidth: '280px' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px', borderBottom: '1px solid #2a3040', paddingBottom: '4px' }}>
                                     <strong style={{ color: getLevelColor(spot.level) }}>{spot.name}</strong>
@@ -947,7 +950,7 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                             position={getMarkerPosition(`base-${base.id}`, base.lat, base.lon)}
                             icon={createSquareIcon(color)}
                         >
-                            <Popup>
+                            <Popup autoPan={false}>
                                 <div style={{ fontFamily: 'monospace', fontSize: '11px' }}>
                                     <strong>{base.name}</strong><br />
                                     <span style={{ color: '#888' }}>{base.type.toUpperCase()}</span>
@@ -976,14 +979,19 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
 
                 {/* News Feed Markers */}
                 {geolocatedNews.map(({ newsItem, location }, index) => {
-                    const ageHours = (Date.now() - new Date(newsItem.pubDate).getTime()) / (1000 * 60 * 60);
+                    // Calculate relative opacity: 0.1 (oldest) to 1.0 (newest)
+                    const itemTime = new Date(newsItem.pubDate).getTime();
+                    const normalized = Math.max(0, Math.min(1, (itemTime - minTime) / timeRange));
+                    const opacity = 0.1 + (normalized * 0.9);
+                    const blur = 2 + (normalized * 8);
+
                     return (
                         <Marker
                             key={`news-${newsItem.id || index}`}
                             position={getMarkerPosition(`news-${newsItem.id || index}`, location.lat, location.lng)}
-                            icon={createNewsIcon(COLORS.news, ageHours)}
+                            icon={createNewsIcon(COLORS.news, opacity, blur)}
                         >
-                            <Popup maxWidth={300}>
+                            <Popup autoPan={false} maxWidth={300}>
                                 <div style={{ fontFamily: 'monospace', fontSize: '11px', maxWidth: '280px' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', borderBottom: '1px solid #2a3040', paddingBottom: '4px' }}>
                                         <span style={{ color: COLORS.news, fontWeight: 'bold', fontSize: '9px' }}>{newsItem.source}</span>
@@ -1021,7 +1029,7 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                                 weight: 2
                             }}
                         >
-                            <Popup>
+                            <Popup autoPan={false}>
                                 <div style={{ fontFamily: 'monospace', fontSize: '11px' }}>
                                     <strong style={{ color: style.color }}>{style.label}</strong><br />
                                     {event.title}<br />
@@ -1047,7 +1055,7 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                                 weight: 2
                             }}
                         >
-                            <Popup>
+                            <Popup autoPan={false}>
                                 <div style={{ fontFamily: 'monospace', fontSize: '11px', minWidth: '150px' }}>
                                     <strong style={{ color: style.color }}>{style.icon} {event.type.toUpperCase()}</strong><br />
                                     <span style={{ color: '#4da6ff' }}>{event.conflictName}</span><br />

@@ -69,7 +69,7 @@ export function useLiveData(options = {}) {
       // On first load, use fast mode to quickly show 20 articles
       const isFastMode = isFirstNewsLoad.current;
       const news = await fetchAllNews({
-        limit: isFastMode ? 20 : 200,
+        limit: isFastMode ? 20 : 100,
         fastMode: isFastMode
       });
 
