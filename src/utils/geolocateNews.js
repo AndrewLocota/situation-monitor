@@ -7,7 +7,7 @@
 const LOCATION_DATABASE = {
   // Countries
   'ukraine': { lat: 48.3794, lng: 31.1656, label: 'Ukraine' },
-  'russia': { lat: 55.7558, lng: 37.6173, label: 'Russia' },
+  'russia': { lat: 55.7558, lng: 37.6173, label: 'Moscow' },
   'china': { lat: 39.9042, lng: 116.4074, label: 'China' },
   'taiwan': { lat: 25.0330, lng: 121.5654, label: 'Taiwan' },
   'israel': { lat: 31.7683, lng: 35.2137, label: 'Israel' },

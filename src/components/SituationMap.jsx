@@ -117,13 +117,22 @@ const createVideoIcon = (color) => {
 };
 
 // News marker icon (newspaper style with emoji)
-const createNewsIcon = (color) => {
+const createNewsIcon = (color, ageHours = 0) => {
+    // Opacity: 100% at 0h, decays to 10% at 24h+
+    const opacity = Math.max(0.1, 1 - (ageHours / 24) * 0.9);
+    // Glow: 10px at 0h, decays to 2px at 24h+
+    const blur = Math.max(2, 10 - (ageHours / 24) * 8);
+    // Extra brightness for very recent items (< 1h)
+    const brightness = ageHours < 1 ? 1.5 : 1;
+
     return L.divIcon({
         className: 'custom-news-marker',
         html: `<div style="
             font-size: 16px;
-            text-shadow: 0 0 6px ${color}, 0 0 3px rgba(0,0,0,0.8);
-            filter: drop-shadow(0 0 2px ${color});
+            opacity: ${opacity};
+            text-shadow: 0 0 ${blur}px ${color}, 0 0 3px rgba(0,0,0,0.8);
+            filter: drop-shadow(0 0 2px ${color}) brightness(${brightness});
+            transition: all 0.5s ease;
         ">📰</div>`,
         iconSize: [20, 20],
         iconAnchor: [10, 10]
@@ -547,7 +556,8 @@ const VideoMarkerLayer = ({ onVideoStateChange, onTheatreSelect, getMarkerPositi
     const handleMarkerClick = (video) => {
         // Center on the marker with a cinematic zoom
         // Offset latitude slightly upward to account for popup height above the marker
-        const targetZoom = 8;
+        const currentZoom = map.getZoom();
+        const targetZoom = currentZoom >= 8 ? currentZoom : 8;
         const popupOffset = 0.02 * Math.pow(2, 10 - targetZoom); // Scale offset by target zoom level
         map.flyTo([video.lat + popupOffset, video.lng], targetZoom, { duration: 1 });
     };
@@ -632,9 +642,9 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
     // Get news and selectedNews from store
     const { allNews, selectedNews, clearSelectedNews } = useDataStore();
 
-    // Geolocate news items (first 20)
+    // Geolocate news items (up to 200)
     const geolocatedNews = useMemo(() => {
-        return geolocateNewsItems(allNews, 20);
+        return geolocateNewsItems(allNews, 200);
     }, [allNews]);
 
     // Collect all markers for cluster detection
@@ -965,33 +975,36 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                 ))}
 
                 {/* News Feed Markers */}
-                {geolocatedNews.map(({ newsItem, location }, index) => (
-                    <Marker
-                        key={`news-${newsItem.id || index}`}
-                        position={getMarkerPosition(`news-${newsItem.id || index}`, location.lat, location.lng)}
-                        icon={createNewsIcon(COLORS.news)}
-                    >
-                        <Popup maxWidth={300}>
-                            <div style={{ fontFamily: 'monospace', fontSize: '11px', maxWidth: '280px' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', borderBottom: '1px solid #2a3040', paddingBottom: '4px' }}>
-                                    <span style={{ color: COLORS.news, fontWeight: 'bold', fontSize: '9px' }}>{newsItem.source}</span>
-                                    <span style={{ color: '#5a6478', fontSize: '9px' }}>{timeAgo(newsItem.pubDate)}</span>
+                {geolocatedNews.map(({ newsItem, location }, index) => {
+                    const ageHours = (Date.now() - new Date(newsItem.pubDate).getTime()) / (1000 * 60 * 60);
+                    return (
+                        <Marker
+                            key={`news-${newsItem.id || index}`}
+                            position={getMarkerPosition(`news-${newsItem.id || index}`, location.lat, location.lng)}
+                            icon={createNewsIcon(COLORS.news, ageHours)}
+                        >
+                            <Popup maxWidth={300}>
+                                <div style={{ fontFamily: 'monospace', fontSize: '11px', maxWidth: '280px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', borderBottom: '1px solid #2a3040', paddingBottom: '4px' }}>
+                                        <span style={{ color: COLORS.news, fontWeight: 'bold', fontSize: '9px' }}>{newsItem.source}</span>
+                                        <span style={{ color: '#5a6478', fontSize: '9px' }}>{timeAgo(newsItem.pubDate)}</span>
+                                    </div>
+                                    <a
+                                        href={newsItem.link}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style={{ color: '#e0e4eb', textDecoration: 'none', lineHeight: '1.4', display: 'block' }}
+                                    >
+                                        {newsItem.title}
+                                    </a>
+                                    <div style={{ marginTop: '6px', fontSize: '9px', color: '#5a6478' }}>
+                                        📍 {location.label}
+                                    </div>
                                 </div>
-                                <a
-                                    href={newsItem.link}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    style={{ color: '#e0e4eb', textDecoration: 'none', lineHeight: '1.4', display: 'block' }}
-                                >
-                                    {newsItem.title}
-                                </a>
-                                <div style={{ marginTop: '6px', fontSize: '9px', color: '#5a6478' }}>
-                                    📍 {location.label}
-                                </div>
-                            </div>
-                        </Popup>
-                    </Marker>
-                ))}
+                            </Popup>
+                        </Marker>
+                    );
+                })}
 
                 {/* Live Events */}
                 {liveEvents.map(event => {
