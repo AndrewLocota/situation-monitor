@@ -9,3 +9,4 @@ export { WhalePanel } from './WhalePanel';
 export { MainCharPanel } from './MainCharPanel';
 export { MoneyPrinterPanel } from './MoneyPrinterPanel';
 export { ContractsPanel } from './ContractsPanel';
+export { TwitterIntelPanel } from './TwitterIntelPanel';

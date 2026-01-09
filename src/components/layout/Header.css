@@ -19,6 +19,34 @@
   gap: 16px;
 }
 
+
+
+.theatre-nav-btn {
+  padding: 4px 8px;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--text-secondary, #808b9c);
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.theatre-nav-btn:hover {
+  color: var(--text-primary, #e0e4eb);
+  background: rgba(42, 48, 64, 0.4);
+}
+
+.theatre-nav-btn.active {
+  color: var(--accent-primary, #4da6ff);
+  border-color: rgba(77, 166, 255, 0.3);
+  background: rgba(77, 166, 255, 0.1);
+  box-shadow: 0 0 8px rgba(77, 166, 255, 0.1);
+}
+
 .header-brand {
   display: flex;
   align-items: center;
@@ -68,10 +96,19 @@
   color: var(--accent-primary, #4da6ff);
 }
 
+.header-theatre-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none; /* Hide scrollbar */
+}
+
 .header-center {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 16px; /* Space between nav and live indicator */
 }
 
 .header-right {
@@ -218,8 +255,10 @@
   }
 
   .header-center {
-    flex: 0; /* Center is empty now, minimize */
-    display: none;
+    display: flex; /* Show center on mobile */
+    flex: 1;
+    justify-content: center;
+    gap: 8px;
   }
 
   .header-right {

@@ -35,6 +35,9 @@ export const useDataStore = create((set) => ({
   // Situation news
   venezuelaNews: [],
   greenlandNews: [],
+  
+  // Twitter Intel
+  twitterEvents: [],
 
   // Global state
   isLoading: false,
@@ -103,6 +106,8 @@ export const useDataStore = create((set) => ({
   setVenezuelaNews: (items) => set({ venezuelaNews: items }),
 
   setGreenlandNews: (items) => set({ greenlandNews: items }),
+
+  setTwitterEvents: (items) => set({ twitterEvents: items }),
 
   setLoading: (value) => set({ isLoading: value }),
 

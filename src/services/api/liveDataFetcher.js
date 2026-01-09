@@ -5,33 +5,35 @@
 
 import { fetchWithCorsProxy } from './corsProxy';
 
-// RSS Feed URLs for live news
+// RSS Feed URLs for live news with bias ratings
+// Bias scale: -3 (far left) to +3 (far right), 0 = center
+// Based on GroundNews ratings (aggregates AllSides, Ad Fontes, MBFC)
 const NEWS_FEEDS = {
-  // Breaking news
-  reuters: 'https://feeds.reuters.com/reuters/topNews',
-  ap: 'https://rsshub.app/apnews/topics/apf-topnews',
-  bbc: 'https://feeds.bbci.co.uk/news/world/rss.xml',
-  aljazeera: 'https://www.aljazeera.com/xml/rss/all.xml',
-  guardian: 'https://www.theguardian.com/world/rss',
+  // Breaking news - GroundNews verified ratings
+  reuters: { url: 'https://feeds.reuters.com/reuters/topNews', bias: 0, biasLabel: 'Center', reliability: 'High' },
+  ap: { url: 'https://rsshub.app/apnews/topics/apf-topnews', bias: -1, biasLabel: 'Lean Left', reliability: 'High' },
+  bbc: { url: 'https://feeds.bbci.co.uk/news/world/rss.xml', bias: 0, biasLabel: 'Center', reliability: 'High' },
+  aljazeera: { url: 'https://www.aljazeera.com/xml/rss/all.xml', bias: -2, biasLabel: 'Left', reliability: 'Mixed' },
+  guardian: { url: 'https://www.theguardian.com/world/rss', bias: -2, biasLabel: 'Left', reliability: 'High' },
 
   // Conflict-specific
-  kyivIndependent: 'https://kyivindependent.com/feed/',
-  defenseOne: 'https://www.defenseone.com/rss/all/',
-  warOnTheRocks: 'https://warontherocks.com/feed/',
+  kyivIndependent: { url: 'https://kyivindependent.com/feed/', bias: 0, biasLabel: 'Center', reliability: 'Mixed' },
+  defenseOne: { url: 'https://www.defenseone.com/rss/all/', bias: 0, biasLabel: 'Center', reliability: 'High' },
+  warOnTheRocks: { url: 'https://warontherocks.com/feed/', bias: 0, biasLabel: 'Center', reliability: 'High' },
 
-  // Financial/Markets
-  marketWatch: 'https://feeds.marketwatch.com/marketwatch/topstories/',
-  cnbc: 'https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=100003114',
-  bloomberg: 'https://feeds.bloomberg.com/markets/news.rss',
+  // Financial/Markets - GroundNews verified
+  marketWatch: { url: 'https://feeds.marketwatch.com/marketwatch/topstories/', bias: 0, biasLabel: 'Center', reliability: 'High' },
+  cnbc: { url: 'https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=100003114', bias: 0, biasLabel: 'Center', reliability: 'High' },
+  bloomberg: { url: 'https://feeds.bloomberg.com/markets/news.rss', bias: -1, biasLabel: 'Lean Left', reliability: 'High' },
 
-  // Tech
-  techCrunch: 'https://techcrunch.com/feed/',
-  wired: 'https://www.wired.com/feed/rss',
-  arstechnica: 'https://feeds.arstechnica.com/arstechnica/index',
+  // Tech - GroundNews verified
+  techCrunch: { url: 'https://techcrunch.com/feed/', bias: 0, biasLabel: 'Center', reliability: 'High' },
+  wired: { url: 'https://www.wired.com/feed/rss', bias: -1, biasLabel: 'Lean Left', reliability: 'High' },
+  arstechnica: { url: 'https://feeds.arstechnica.com/arstechnica/index', bias: -1, biasLabel: 'Lean Left', reliability: 'High' },
 
   // Geopolitics
-  foreignPolicy: 'https://foreignpolicy.com/feed/',
-  cfr: 'https://www.cfr.org/rss.xml',
+  foreignPolicy: { url: 'https://foreignpolicy.com/feed/', bias: 0, biasLabel: 'Center', reliability: 'High' },
+  cfr: { url: 'https://www.cfr.org/rss.xml', bias: 0, biasLabel: 'Center', reliability: 'High' },
 };
 
 // LiveUAMap-style event scraping (via their API/RSS if available)
@@ -43,10 +45,14 @@ const LIVEUAMAP_FEEDS = {
 
 /**
  * Parse RSS/Atom feed to extract news items
+ * @param {string} url - Feed URL
+ * @param {string} sourceName - Source identifier
+ * @param {Object} biasInfo - Bias rating info { bias, biasLabel, reliability }
+ * @param {AbortSignal} signal - Optional abort signal to cancel request
  */
-async function parseRSSFeed(url, sourceName) {
+async function parseRSSFeed(url, sourceName, biasInfo = {}, signal) {
   try {
-    const response = await fetchWithCorsProxy(url);
+    const response = await fetchWithCorsProxy(url, { signal });
     if (!response) return [];
 
     const text = await response.text();
@@ -56,6 +62,8 @@ async function parseRSSFeed(url, sourceName) {
     // Handle both RSS and Atom formats
     const isAtom = doc.querySelector('feed') !== null;
     const items = [];
+
+    const { bias = 0, biasLabel = 'Unknown', reliability = 'Unknown' } = biasInfo;
 
     if (isAtom) {
       const entries = doc.querySelectorAll('entry');
@@ -73,6 +81,9 @@ async function parseRSSFeed(url, sourceName) {
           link,
           pubDate: new Date(published),
           source: sourceName,
+          bias,
+          biasLabel,
+          reliability,
         });
       });
     } else {
@@ -95,30 +106,103 @@ async function parseRSSFeed(url, sourceName) {
           source: sourceName,
           category,
           imageUrl: imageUrl || undefined,
+          bias,
+          biasLabel,
+          reliability,
         });
       });
     }
 
     return items;
   } catch (error) {
-    console.error(`Failed to fetch ${sourceName} feed:`, error);
+    // Don't log abort errors
+    if (error.name !== 'AbortError') {
+      console.error(`Failed to fetch ${sourceName} feed:`, error);
+    }
     return [];
   }
 }
 
 /**
  * Fetch all news from multiple sources
+ * @param {Object} options - Options for fetching
+ * @param {number} options.limit - Max number of items to return (default: 200)
+ * @param {boolean} options.fastMode - If true, fetch from ALL sources in parallel but return as soon as we have enough
  */
-export async function fetchAllNews() {
+export async function fetchAllNews({ limit = 200, fastMode = false } = {}) {
   const feedEntries = Object.entries(NEWS_FEEDS);
-  const allItems = [];
 
-  // Fetch in batches to avoid overwhelming
+  if (fastMode) {
+    // In fast mode, fetch ALL sources in parallel and abort remaining once we have enough
+    const allItems = [];
+    let resolved = false;
+    const abortController = new AbortController();
+
+    return new Promise((resolve) => {
+      const checkAndResolve = () => {
+        if (resolved) return;
+
+        // Sort and dedupe what we have so far
+        const processed = allItems
+          .filter(item => item.title && item.pubDate)
+          .sort((a, b) => b.pubDate.getTime() - a.pubDate.getTime())
+          .filter((item, index, arr) =>
+            index === arr.findIndex(i => i.title === item.title)
+          );
+
+        if (processed.length >= limit) {
+          resolved = true;
+          // Abort all remaining requests
+          abortController.abort();
+          resolve(processed.slice(0, limit));
+        }
+      };
+
+      let completedCount = 0;
+      const totalFeeds = feedEntries.length;
+
+      // Fire off all requests in parallel
+      feedEntries.forEach(([name, feedInfo]) => {
+        const { url, bias, biasLabel, reliability } = feedInfo;
+        parseRSSFeed(url, name, { bias, biasLabel, reliability }, abortController.signal)
+          .then(items => {
+            if (!resolved) {
+              allItems.push(...items);
+              checkAndResolve();
+            }
+          })
+          .catch(() => {
+            // Ignore errors (including abort errors), just continue
+          })
+          .finally(() => {
+            completedCount++;
+            // If all feeds completed and we haven't resolved yet, resolve with what we have
+            if (completedCount === totalFeeds && !resolved) {
+              resolved = true;
+              const processed = allItems
+                .filter(item => item.title && item.pubDate)
+                .sort((a, b) => b.pubDate.getTime() - a.pubDate.getTime())
+                .filter((item, index, arr) =>
+                  index === arr.findIndex(i => i.title === item.title)
+                )
+                .slice(0, limit);
+              resolve(processed);
+            }
+          });
+      });
+    });
+  }
+
+  // Normal mode: fetch in batches
+  const allItems = [];
   const batchSize = 5;
   for (let i = 0; i < feedEntries.length; i += batchSize) {
     const batch = feedEntries.slice(i, i + batchSize);
     const results = await Promise.allSettled(
-      batch.map(([name, url]) => parseRSSFeed(url, name))
+      batch.map(([name, feedInfo]) => {
+        const { url, bias, biasLabel, reliability } = feedInfo;
+        return parseRSSFeed(url, name, { bias, biasLabel, reliability });
+      })
     );
 
     results.forEach((result) => {
@@ -135,7 +219,7 @@ export async function fetchAllNews() {
     .filter((item, index, arr) =>
       index === arr.findIndex(i => i.title === item.title)
     )
-    .slice(0, 200); // Keep latest 200 items
+    .slice(0, limit);
 }
 
 /**
@@ -236,6 +320,84 @@ export async function fetchEarthquakes() {
     console.error('Failed to fetch earthquakes:', error);
     return [];
   }
+}
+
+/**
+ * Fetch Twitter Intel from @WarMonitors via multiple RSS sources
+ * Tries XCancel, Nitter mirrors, and RSSHub as fallbacks
+ */
+export async function fetchTwitterIntel() {
+  // List of RSS sources to try (in order of preference)
+  const sources = [
+    { name: 'XCancel', url: 'https://xcancel.com/WarMonitors/rss' },
+    { name: 'Nitter.net', url: 'https://nitter.net/WarMonitors/rss' },
+    { name: 'Nitter.privacydev', url: 'https://nitter.privacydev.net/WarMonitors/rss' },
+    { name: 'RSSHub', url: 'https://rsshub.app/twitter/user/WarMonitors' },
+  ];
+
+  for (const source of sources) {
+    try {
+      console.log(`[Twitter] Trying ${source.name}...`);
+      const response = await fetchWithCorsProxy(source.url);
+      
+      if (!response) {
+        console.log(`[Twitter] ${source.name} returned null`);
+        continue;
+      }
+      
+      const text = await response.text();
+      
+      // Check if we got valid RSS/XML
+      if (!text || text.length < 100 || (!text.includes('<rss') && !text.includes('<feed') && !text.includes('<item'))) {
+        console.log(`[Twitter] ${source.name} invalid response (${text.length} chars)`);
+        continue;
+      }
+      
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(text, 'text/xml');
+
+      const items = doc.querySelectorAll('item');
+      if (items.length === 0) {
+        console.log(`[Twitter] ${source.name} has no items`);
+        continue;
+      }
+      
+      console.log(`[Twitter] ${source.name} SUCCESS - found ${items.length} items`);
+      
+      const tweets = [];
+      items.forEach((item, index) => {
+        if (tweets.length >= 25) return;
+        
+        const title = item.querySelector('title')?.textContent || '';
+        const description = item.querySelector('description')?.textContent || '';
+        const link = item.querySelector('link')?.textContent || '';
+        const pubDate = item.querySelector('pubDate')?.textContent || '';
+
+        // Extract tweet ID from link
+        const tweetIdMatch = link.match(/status\/(\d+)/);
+        const tweetId = tweetIdMatch ? tweetIdMatch[1] : null;
+
+        tweets.push({
+          id: `twitter-${tweetId || Date.now()}-${index}`,
+          tweetId,
+          title: title.trim() || description.replace(/<[^>]*>/g, '').trim().slice(0, 200),
+          description: description.replace(/<[^>]*>/g, '').trim().slice(0, 500),
+          link: link.replace('xcancel.com', 'twitter.com').replace('nitter.net', 'twitter.com'),
+          pubDate: new Date(pubDate),
+          source: 'WarMonitors',
+          username: 'WarMonitors',
+        });
+      });
+
+      return tweets;
+    } catch (error) {
+      console.log(`[Twitter] ${source.name} error:`, error.message);
+      continue;
+    }
+  }
+
+  console.warn('[Twitter] All sources failed');
+  return [];
 }
 
 /**

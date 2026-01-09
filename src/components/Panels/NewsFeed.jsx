@@ -6,7 +6,51 @@ import { geolocateNews } from '../../utils/geolocateNews';
 import './Panels.css';
 
 const CATEGORIES = ['all', 'politics', 'tech', 'finance', 'intel', 'ai'];
-const ITEMS_OPTIONS = [10, 25, 50, 100];
+const ITEMS_OPTIONS = [20, 50, 100];
+
+// Bias meter component - GroundNews style
+const BiasMeter = ({ bias = 0, biasLabel = 'Unknown', reliability = 'Unknown' }) => {
+    // bias: -3 (far left) to +3 (far right), 0 = center
+    // Convert to 0-6 scale for display (0=far left, 3=center, 6=far right)
+    const position = bias + 3;
+
+    // Color based on bias - Left=Red, Right=Blue
+    const getBiasColor = (b) => {
+        if (b <= -2) return '#ef4444'; // Red - Left
+        if (b === -1) return '#f87171'; // Light red - Lean Left
+        if (b === 0) return '#a855f7'; // Purple - Center
+        if (b === 1) return '#60a5fa'; // Light blue - Lean Right
+        return '#3b82f6'; // Blue - Right
+    };
+
+    const color = getBiasColor(bias);
+
+    return (
+        <div className="bias-meter-container" title={`${biasLabel} | Reliability: ${reliability}`}>
+            <div className="bias-meter">
+                <div className="bias-meter-track">
+                    {/* 7 segments: Far Left, Left, Lean Left, Center, Lean Right, Right, Far Right */}
+                    {[0, 1, 2, 3, 4, 5, 6].map(i => (
+                        <div
+                            key={i}
+                            className={`bias-segment ${i === position ? 'active' : ''}`}
+                            style={{
+                                backgroundColor: i === position ? color : 'var(--bg-tertiary)',
+                                opacity: i === position ? 1 : 0.3
+                            }}
+                        />
+                    ))}
+                </div>
+            </div>
+            <div className="bias-tooltip">
+                <div className="bias-tooltip-header">{biasLabel}</div>
+                <div className="bias-tooltip-reliability">
+                    Reliability: <span className={`reliability-${reliability.toLowerCase()}`}>{reliability}</span>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 // Skeleton loading component for news items
 const NewsSkeleton = ({ count = 5 }) => (
@@ -26,7 +70,7 @@ const NewsSkeleton = ({ count = 5 }) => (
 
 export function NewsFeed() {
     const [category, setCategory] = useState('all');
-    const [maxItems, setMaxItems] = useState(10);
+    const [maxItems, setMaxItems] = useState(20);
     const { allNews, loading, lastUpdated, setSelectedNews } = useDataStore();
 
     // Filter news by category (simple keyword matching)
@@ -125,44 +169,55 @@ export function NewsFeed() {
                 ) : filteredNews.length === 0 ? (
                     <div className="panel-empty">No news items</div>
                 ) : (
-                    filteredNews.map((item, i) => {
-                        const isAlert = (item.title || '').toLowerCase().includes('breaking') ||
-                            (item.title || '').toLowerCase().includes('urgent');
-                        return (
-                            <div key={item.id || i} className={`news-item ${isAlert ? 'alert' : ''}`}>
-                                <div className="news-meta">
-                                    <span className="news-source">{item.source}</span>
-                                    <span className="news-time">{timeAgo(item.pubDate)}</span>
+                    <>
+                        {filteredNews.map((item, i) => {
+                            const isAlert = (item.title || '').toLowerCase().includes('breaking') ||
+                                (item.title || '').toLowerCase().includes('urgent');
+                            return (
+                                <div key={item.id || i} className={`news-item ${isAlert ? 'alert' : ''}`}>
+                                    <div className="news-meta">
+                                        <span className="news-source">{item.source}</span>
+                                        <BiasMeter
+                                            bias={item.bias}
+                                            biasLabel={item.biasLabel}
+                                            reliability={item.reliability}
+                                        />
+                                        <span className="news-time">{timeAgo(item.pubDate)}</span>
+                                    </div>
+                                    <div className="news-title-row">
+                                        <span
+                                            className="news-title clickable"
+                                            onClick={() => {
+                                                const location = geolocateNews(item);
+                                                if (location) {
+                                                    setSelectedNews({ ...item, location });
+                                                }
+                                            }}
+                                            title={geolocateNews(item) ? `Click to view on map (${geolocateNews(item)?.label})` : 'No location detected'}
+                                        >
+                                            {isAlert && <span className="news-alert-badge">!</span>}
+                                            {item.title}
+                                            {geolocateNews(item) && <span className="news-map-icon">📍</span>}
+                                        </span>
+                                        <a
+                                            className="news-link-icon"
+                                            href={item.link}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            title="Open article"
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
+                                            ↗
+                                        </a>
+                                    </div>
                                 </div>
-                                <div className="news-title-row">
-                                    <span
-                                        className="news-title clickable"
-                                        onClick={() => {
-                                            const location = geolocateNews(item);
-                                            if (location) {
-                                                setSelectedNews({ ...item, location });
-                                            }
-                                        }}
-                                        title={geolocateNews(item) ? `Click to view on map (${geolocateNews(item)?.label})` : 'No location detected'}
-                                    >
-                                        {isAlert && <span className="news-alert-badge">!</span>}
-                                        {item.title}
-                                        {geolocateNews(item) && <span className="news-map-icon">📍</span>}
-                                    </span>
-                                    <a
-                                        className="news-link-icon"
-                                        href={item.link}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        title="Open article"
-                                        onClick={(e) => e.stopPropagation()}
-                                    >
-                                        ↗
-                                    </a>
-                                </div>
-                            </div>
-                        );
-                    })
+                            );
+                        })}
+                        {/* Show skeleton loading at bottom while more news is loading */}
+                        {loading.news && allNews.length > 0 && (
+                            <NewsSkeleton count={3} />
+                        )}
+                    </>
                 )}
             </div>
 

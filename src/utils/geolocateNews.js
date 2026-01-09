@@ -155,15 +155,39 @@ const LOCATION_DATABASE = {
  * Extract location from news item title/description
  * Returns { lat, lng, label } or null if no location found
  */
+// Terms to exclude/ignore to prevent false positives
+const EXCLUSIONS = [
+  'new york times', 'nyt', 'yorkshire', 'new york post', 'nyp',
+  'washington post', 'washington times',
+  'south china morning post',
+  'london stock exchange'
+];
+
+/**
+ * Extract location from news item title/description
+ * Returns { lat, lng, label } or null if no location found
+ */
 export function geolocateNews(newsItem) {
-  const text = `${newsItem.title || ''} ${newsItem.description || ''}`.toLowerCase();
+  let text = `${newsItem.title || ''} ${newsItem.description || ''}`.toLowerCase();
+  
+  // Remove exclusions first
+  for (const exclusion of EXCLUSIONS) {
+    if (text.includes(exclusion)) {
+      text = text.replace(exclusion, ' '.repeat(exclusion.length)); // Replace with spaces to preserve indices/boundaries if needed, or just remove
+    }
+  }
   
   // Sort keys by length (longest first) to match more specific locations first
   // e.g., "South Korea" before "Korea"
   const sortedLocations = Object.keys(LOCATION_DATABASE).sort((a, b) => b.length - a.length);
   
   for (const locationKey of sortedLocations) {
-    if (text.includes(locationKey)) {
+    // strict word boundary check to avoid substrings (e.g. "sus" matching "us")
+    // Escape special regex chars in locationKey just in case
+    const safeKey = locationKey.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`\\b${safeKey}\\b`, 'i');
+    
+    if (regex.test(text)) {
       const location = LOCATION_DATABASE[locationKey];
       return {
         lat: location.lat,

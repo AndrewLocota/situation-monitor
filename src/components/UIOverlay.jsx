@@ -12,6 +12,7 @@ import {
     MainCharPanel,
     MoneyPrinterPanel,
     ContractsPanel,
+    TwitterIntelPanel,
 } from './panels';
 import { useDataStore, useSettingsStore } from '../stores';
 import '../App.css';
@@ -183,6 +184,7 @@ __  __|__
                     </button>
 
                     <div className="sidebar-content" style={{ display: rightSidebarCollapsed ? 'none' : 'flex' }}>
+                        {panels.twitterIntel && <TwitterIntelPanel />}
                         {panels.markets && <MarketsPanel />}
                         {panels.sectors && <SectorHeatmap />}
                         {panels.commodities && <CommoditiesPanel />}

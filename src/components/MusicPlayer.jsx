@@ -6,8 +6,48 @@ const BASE = import.meta.env.BASE_URL;
 // Only include tracks that exist
 const TRACKS = [
     { title: 'MACARENA (SLOWED)', src: `${BASE}music/macarena.mp3` },
+    { title: 'PLAGUE INC THEME', src: `${BASE}music/Plague%20Inc%20OST.mp3` },
     { title: 'ARCADIA (CODY MARTIN)', src: `${BASE}music/Cody%20Martin%20-%20Arcadia%20Good%20Times%20Bad%20Times.mp3` }
 ];
+
+// ASCII Visualizer Component
+const AsciiVisualizer = ({ isPlaying }) => {
+    const [bars, setBars] = useState([' ', ' ', ' ']);
+
+    useEffect(() => {
+        if (!isPlaying) {
+            setBars(['_', '_', '_']);
+            return;
+        }
+
+        const chars = [' ', '▂', '▃', '▅', '▇'];
+        const interval = setInterval(() => {
+            setBars(prev => [
+                chars[Math.floor(Math.random() * chars.length)],
+                chars[Math.floor(Math.random() * chars.length)],
+                chars[Math.floor(Math.random() * chars.length)]
+            ]);
+        }, 250);
+
+        return () => clearInterval(interval);
+    }, [isPlaying]);
+
+    return (
+        <span style={{
+            fontFamily: 'monospace',
+            marginRight: '6px',
+            color: isPlaying ? '#4da6ff' : '#5a6478',
+            fontWeight: 'bold'
+        }}>
+
+            [{bars.map((char, i) => (
+                <span key={i}>
+                    {char === ' ' ? <span style={{ opacity: 0 }}>▇</span> : char}
+                </span>
+            ))}]
+        </span>
+    );
+};
 
 const MusicPlayer = ({ forcePause = false }) => {
     const audioRef = useRef(null);
@@ -45,7 +85,7 @@ const MusicPlayer = ({ forcePause = false }) => {
 
     // Handle play/pause based on state
     useEffect(() => {
-        if (!audioRef.current || !ready) return;
+        if (!audioRef.current) return;
 
         if (playing && !forcePause) {
             const playPromise = audioRef.current.play();
@@ -58,7 +98,7 @@ const MusicPlayer = ({ forcePause = false }) => {
         } else {
             audioRef.current.pause();
         }
-    }, [playing, ready, forcePause]);
+    }, [playing, forcePause, currentTrack, ready]); // Added currentTrack to re-trigger on skip
 
     // Handle forcePause from video popups
     useEffect(() => {
@@ -70,30 +110,25 @@ const MusicPlayer = ({ forcePause = false }) => {
     }, [forcePause]);
 
     const handlePlayPause = () => {
+        setPlaying(!playing);
         setUserInteracted(true);
-        if (!playing) {
-            setPlaying(true);
-        } else {
-            setPlaying(false);
-        }
     };
 
     const handleNext = () => {
         setCurrentTrack((prev) => (prev + 1) % TRACKS.length);
-        if (userInteracted) setPlaying(true);
+        setReady(false); // Reset ready state for new track
     };
 
     const handlePrev = () => {
         setCurrentTrack((prev) => (prev - 1 + TRACKS.length) % TRACKS.length);
-        if (userInteracted) setPlaying(true);
+        setReady(false);
     };
 
     const getStatusText = () => {
-        if (error) return 'FILE NOT FOUND';
-        if (!ready) return 'LOADING...';
-        if (actualPlaying) return 'PLAYING';
-        if (playing && !actualPlaying) return 'CLICK ▶ TO START';
-        return 'PAUSED';
+        if (error) return 'ERROR LOADING';
+        if (!ready && playing) return 'BUFFERING...';
+        if (actualPlaying) return 'BROADCASTING ACTIVE';
+        return 'TRANSMISSION PAUSED';
     };
 
     return (
@@ -110,8 +145,7 @@ const MusicPlayer = ({ forcePause = false }) => {
                 src={TRACKS[currentTrack].src}
                 loop={TRACKS.length === 1} // Loop if only one track
                 muted={false}
-                autoPlay
-                preload="auto"
+                preload="none"
                 onEnded={handleNext}
                 onCanPlay={() => { setReady(true); setError(false); }}
                 onPlay={() => setActualPlaying(true)}
@@ -185,7 +219,7 @@ const MusicPlayer = ({ forcePause = false }) => {
                 display: 'flex', alignItems: 'center', gap: '4px',
                 whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '200px'
             }}>
-                <Radio size={10} /> {TRACKS[currentTrack].title}
+                <AsciiVisualizer isPlaying={actualPlaying} /> {TRACKS[currentTrack].title}
             </div>
         </div>
     );

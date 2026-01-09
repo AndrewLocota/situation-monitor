@@ -6,16 +6,19 @@ export const CORS_PROXIES = [
   'https://api.codetabs.com/v1/proxy?quest=',
 ];
 
-export async function fetchWithCorsProxy(url) {
+export async function fetchWithCorsProxy(url, { signal } = {}) {
   // Try direct fetch first (for APIs that don't need proxy)
   try {
     const directResponse = await fetch(url, {
-      headers: { 'Accept': 'application/rss+xml, application/xml, text/xml, application/json, */*' }
+      headers: { 'Accept': 'application/rss+xml, application/xml, text/xml, application/json, */*' },
+      signal
     });
     if (directResponse.ok) {
       return directResponse;
     }
-  } catch {
+  } catch (e) {
+    // If aborted, throw immediately
+    if (e.name === 'AbortError') throw e;
     // Continue to proxy attempts
   }
 
@@ -23,12 +26,15 @@ export async function fetchWithCorsProxy(url) {
   for (const proxy of CORS_PROXIES) {
     try {
       const response = await fetch(proxy + encodeURIComponent(url), {
-        headers: { 'Accept': 'application/rss+xml, application/xml, text/xml, application/json, */*' }
+        headers: { 'Accept': 'application/rss+xml, application/xml, text/xml, application/json, */*' },
+        signal
       });
       if (response.ok) {
         return response;
       }
     } catch (e) {
+      // If aborted, throw immediately
+      if (e.name === 'AbortError') throw e;
       console.log(`Proxy ${proxy} failed, trying next...`);
     }
   }

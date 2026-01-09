@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useMapStore, useDataStore } from '../../stores';
+import { THEATRES } from '../../data/theatres';
 import './Header.css';
 
 export function Header({ onRefresh }) {
@@ -40,24 +41,37 @@ export function Header({ onRefresh }) {
                     <span className="header-bracket">]</span>
                 </div>
 
-                {!isGlobal && (
-                    <div className="header-breadcrumb">
-                        <button className="header-back" onClick={() => setTheatre('GLOBAL')}>
-                            &lt;
-                        </button>
-                        <span className="header-theatre">{currentTheatre.replace('_', ' ')}</span>
-                    </div>
-                )}
+
+
             </div>
 
             <div className="header-center">
+            </div>
+
+            <div className="header-right">
+                <div className="header-theatre-nav">
+                    <button
+                        className={`theatre-nav-btn ${currentTheatre === 'GLOBAL' ? 'active' : ''}`}
+                        onClick={() => setTheatre('GLOBAL')}
+                    >
+                        GLOBAL
+                    </button>
+                    {THEATRES.map(t => (
+                        <button
+                            key={t.id}
+                            className={`theatre-nav-btn ${currentTheatre === t.id ? 'active' : ''}`}
+                            onClick={() => setTheatre(t.id)}
+                        >
+                            {t.name.toUpperCase()}
+                        </button>
+                    ))}
+                </div>
+
                 <div className={`live-indicator ${isLoading ? 'syncing' : ''}`}>
                     <span className="live-dot" />
                     <span className="live-text">{isLoading ? 'SYNCING' : 'LIVE'}</span>
                 </div>
-            </div>
 
-            <div className="header-right">
                 <div className="header-time">
                     <span className="header-time-label">UTC</span>
                     <span className="header-time-value">{formatUTC(time)}</span>

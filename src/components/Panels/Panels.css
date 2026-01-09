@@ -870,3 +870,227 @@
   90% { content: '⠏'; }
 }
 
+/* ASCII Skeleton Styles */
+.markets-skeleton {
+  padding: 4px 0;
+}
+
+.skeleton-item {
+  opacity: 0.7;
+}
+
+.ascii-placeholder {
+  font-family: var(--font-mono, monospace);
+  color: var(--accent-primary, #4da6ff);
+  opacity: 0.5;
+  text-shadow: 0 0 4px var(--accent-glow, rgba(77, 166, 255, 0.3));
+  letter-spacing: 1px;
+}
+
+.ascii-shimmer {
+  animation: ascii-pulse 1s ease-in-out infinite;
+}
+
+@keyframes ascii-pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+/* ASCII News Skeleton Enhancement */
+.news-skeleton-item .skeleton-line {
+  position: relative;
+  overflow: hidden;
+}
+
+.news-skeleton-item .skeleton-line::after {
+  content: '░░░░░░░░░░';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  font-family: var(--font-mono, monospace);
+  font-size: 8px;
+  color: var(--accent-primary, #4da6ff);
+  opacity: 0.3;
+  overflow: hidden;
+  animation: ascii-scroll 2s linear infinite;
+}
+
+@keyframes ascii-scroll {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* Twitter Intel Panel */
+.twitter-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 8px;
+}
+
+.twitter-item {
+  border-bottom: 1px solid var(--border-dim, #1a2030);
+  padding-bottom: 8px;
+}
+
+.twitter-item:last-child {
+  border-bottom: none;
+}
+
+.twitter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.twitter-source {
+  font-size: 9px;
+  color: var(--accent-primary, #4da6ff);
+  font-weight: bold;
+}
+
+.twitter-time {
+  font-size: 9px;
+  color: var(--text-dim, #5a6478);
+}
+
+.twitter-title {
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--text-primary, #e0e4eb);
+  margin-bottom: 6px;
+}
+
+.twitter-title.clickable {
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.twitter-title.clickable:hover {
+  color: var(--accent-primary, #4da6ff);
+}
+
+.twitter-title .location-icon {
+  margin-right: 4px;
+}
+
+.twitter-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.twitter-link {
+  font-size: 9px;
+  color: var(--text-secondary, #8892a8);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.twitter-link:hover {
+  color: var(--accent-primary, #4da6ff);
+}
+
+/* Bias Meter - GroundNews Style (shows on news item hover) */
+.bias-meter-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  cursor: help;
+  margin: 0 4px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s, visibility 0.2s;
+}
+
+/* Show bias meter when hovering over news item */
+.news-item:hover .bias-meter-container {
+  opacity: 1;
+  visibility: visible;
+}
+
+.bias-meter {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+}
+
+.bias-meter-track {
+  display: flex;
+  gap: 1px;
+  padding: 2px;
+  background: var(--bg-dark, #06080c);
+  border-radius: 2px;
+}
+
+.bias-segment {
+  width: 6px;
+  height: 10px;
+  border-radius: 1px;
+  transition: all 0.2s;
+}
+
+.bias-segment.active {
+  transform: scaleY(1.3);
+  box-shadow: 0 0 4px currentColor;
+}
+
+/* Bias tooltip on hover */
+.bias-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-4px);
+  background: var(--bg-dark, #06080c);
+  border: 1px solid var(--border-color, #2a3040);
+  padding: 6px 10px;
+  border-radius: 4px;
+  min-width: 100px;
+  text-align: center;
+  font-size: 9px;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.bias-meter-container:hover .bias-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+.bias-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 4px solid transparent;
+  border-top-color: var(--border-color, #2a3040);
+}
+
+.bias-tooltip-header {
+  font-weight: bold;
+  color: var(--text-primary, #e0e4eb);
+  margin-bottom: 4px;
+}
+
+.bias-tooltip-reliability {
+  color: var(--text-dim, #5a6478);
+  margin-bottom: 4px;
+}
+
+.reliability-high {
+  color: #22c55e;
+}
+
+.reliability-mixed {
+  color: #f59e0b;
+}
+
+.reliability-low {
+  color: #ef4444;
+}

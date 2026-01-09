@@ -116,27 +116,24 @@ const createVideoIcon = (color) => {
     });
 };
 
-// News marker icon (newspaper style)
+// News marker icon (newspaper style with emoji)
 const createNewsIcon = (color) => {
     return L.divIcon({
         className: 'custom-news-marker',
         html: `<div style="
-            width: 10px;
-            height: 10px;
-            background: ${color};
-            border: 1px solid rgba(0,0,0,0.5);
-            border-radius: 2px;
-            box-shadow: 0 0 6px ${color};
-            opacity: 0.9;
-        "></div>`,
-        iconSize: [10, 10],
-        iconAnchor: [5, 5]
+            font-size: 16px;
+            text-shadow: 0 0 6px ${color}, 0 0 3px rgba(0,0,0,0.8);
+            filter: drop-shadow(0 0 2px ${color});
+        ">📰</div>`,
+        iconSize: [20, 20],
+        iconAnchor: [10, 10]
     });
 };
 
 // Map bounds controller
 const MapController = ({ activeTheatre, onTheatreSelect }) => {
     const map = useMap();
+    const hasInitialized = useRef(false);
 
     useEffect(() => {
         // Set bounds to prevent dragging out of view
@@ -147,20 +144,31 @@ const MapController = ({ activeTheatre, onTheatreSelect }) => {
         map.on('drag', () => {
             map.panInsideBounds(bounds, { animate: false });
         });
+
+        // Initial cinematic zoom-in animation on first load
+        if (!hasInitialized.current) {
+            hasInitialized.current = true;
+            // Start zoomed out and smoothly zoom in
+            map.setView([20, 0], 1, { animate: false });
+            setTimeout(() => {
+                map.flyTo([20, 0], 2.8, { duration: 1, easeLinearity: 0.25 });
+            }, 300);
+        }
     }, [map]);
 
     useEffect(() => {
-        if (activeTheatre) {
+        if (activeTheatre && activeTheatre !== 'GLOBAL') {
             const theatre = THEATRES.find(t => t.id === activeTheatre);
             if (theatre) {
                 const bounds = L.latLngBounds(
                     [theatre.bounds.south, theatre.bounds.west],
                     [theatre.bounds.north, theatre.bounds.east]
                 );
-                map.flyToBounds(bounds, { duration: 1, padding: [20, 20] });
+                map.flyToBounds(bounds, { duration: 1.5, padding: [20, 20] });
             }
-        } else {
-            map.flyTo([20, 0], 2, { duration: 1 });
+        } else if (hasInitialized.current) {
+            // Only fly back if already initialized (not on first load)
+            map.flyTo([20, 0], 2, { duration: 1.5 });
         }
     }, [activeTheatre, map]);
 
@@ -224,6 +232,111 @@ const ZoomDisplay = () => {
         </div>
     );
 };
+
+// Auto-declutter: automatically offset overlapping markers to not overlap
+const AutoDeclutter = ({ allMarkers, setDeclutteredPositions }) => {
+    const map = useMap();
+
+    const calculateDeclutteredPositions = useCallback(() => {
+        if (!map || allMarkers.length === 0) return {};
+
+        const positions = {};
+
+        // Minimum distance in pixels between markers to not overlap
+        const minSpacing = 25;
+
+        // Filter out military bases and canals - they stay at true positions
+        const declutterableMarkers = allMarkers.filter(m => m.type !== 'base' && m.type !== 'ship');
+
+        // Group markers by proximity (find clusters)
+        const processed = new Set();
+        const clusters = [];
+
+        declutterableMarkers.forEach((marker, i) => {
+            if (processed.has(marker.id)) return;
+
+            const cluster = [marker];
+            processed.add(marker.id);
+
+            const p1 = map.latLngToContainerPoint(L.latLng(marker.lat, marker.lng));
+
+            declutterableMarkers.forEach((other, j) => {
+                if (i >= j || processed.has(other.id)) return;
+
+                const p2 = map.latLngToContainerPoint(L.latLng(other.lat, other.lng));
+                const distance = p1.distanceTo(p2);
+
+                // If overlapping, add to cluster
+                if (distance < minSpacing) {
+                    cluster.push(other);
+                    processed.add(other.id);
+                }
+            });
+
+            if (cluster.length > 1) {
+                clusters.push(cluster);
+            }
+        });
+
+        // Spread each cluster just enough to not overlap
+        clusters.forEach(cluster => {
+            const count = cluster.length;
+            // Calculate center of cluster
+            const centerLat = cluster.reduce((sum, m) => sum + m.lat, 0) / count;
+            const centerLng = cluster.reduce((sum, m) => sum + m.lng, 0) / count;
+            const centerPoint = map.latLngToContainerPoint(L.latLng(centerLat, centerLng));
+
+            // Spread radius = just enough so markers are minSpacing apart
+            // For N markers in a circle: radius = minSpacing / (2 * sin(π/N))
+            const spreadRadius = count === 2
+                ? minSpacing / 2
+                : minSpacing / (2 * Math.sin(Math.PI / count));
+
+            cluster.forEach((marker, idx) => {
+                const angle = (2 * Math.PI * idx) / count - Math.PI / 2; // Start from top
+                const offsetX = Math.cos(angle) * spreadRadius;
+                const offsetY = Math.sin(angle) * spreadRadius;
+
+                const newPoint = L.point(centerPoint.x + offsetX, centerPoint.y + offsetY);
+                const newLatLng = map.containerPointToLatLng(newPoint);
+
+                positions[marker.id] = {
+                    lat: newLatLng.lat,
+                    lng: newLatLng.lng
+                };
+            });
+        });
+
+        return positions;
+    }, [map, allMarkers]);
+
+    // Recalculate on zoom change
+    useMapEvents({
+        zoomend: () => {
+            const positions = calculateDeclutteredPositions();
+            setDeclutteredPositions(positions);
+        },
+        moveend: () => {
+            const positions = calculateDeclutteredPositions();
+            setDeclutteredPositions(positions);
+        }
+    });
+
+    // Recalculate when markers change (e.g., news items load)
+    useEffect(() => {
+        // Small delay to let the render settle
+        const timeout = setTimeout(() => {
+            const positions = calculateDeclutteredPositions();
+            setDeclutteredPositions(positions);
+        }, 100);
+        return () => clearTimeout(timeout);
+    }, [allMarkers, calculateDeclutteredPositions, setDeclutteredPositions]);
+
+
+
+    return null;
+};
+
 
 // Cluster spread manager - detects overlapping markers and spreads them on click
 const ClusterSpreadManager = ({ allMarkers, spreadState, setSpreadState }) => {
@@ -505,13 +618,23 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
     const [frontlineData, setFrontlineData] = useState([]);
     const [spreadState, setSpreadState] = useState({ active: false, positions: {}, center: null });
     const [focusedNewsId, setFocusedNewsId] = useState(null);
+    const [showTheatres, setShowTheatres] = useState(false);
+    const [declutteredPositions, setDeclutteredPositions] = useState({});
+
+    // Delay showing theatre polygons until after initial zoom animation
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setShowTheatres(true);
+        }, 1300); // Matches the 300ms delay + 1s animation
+        return () => clearTimeout(timer);
+    }, []);
 
     // Get news and selectedNews from store
     const { allNews, selectedNews, clearSelectedNews } = useDataStore();
 
-    // Geolocate news items (first 10)
+    // Geolocate news items (first 20)
     const geolocatedNews = useMemo(() => {
-        return geolocateNewsItems(allNews, 10);
+        return geolocateNewsItems(allNews, 20);
     }, [allNews]);
 
     // Collect all markers for cluster detection
@@ -538,16 +661,32 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
             markers.push({ id: `ship-${point.id}`, lat: point.lat, lng: point.lon, type: 'ship', data: point });
         });
 
-        return markers;
-    }, []);
+        // News markers (geolocated)
+        geolocatedNews.forEach(({ newsItem, location }, index) => {
+            markers.push({
+                id: `news-${newsItem.id || index}`,
+                lat: location.lat,
+                lng: location.lng,
+                type: 'news',
+                data: { newsItem, location }
+            });
+        });
 
-    // Get marker position (spread or original)
+        return markers;
+    }, [geolocatedNews]);
+
+    // Get marker position (auto-decluttered, spread, or original)
     const getMarkerPosition = useCallback((markerId, originalLat, originalLng) => {
+        // First check if there's a decluttered position (auto-spread when zoomed out)
+        if (declutteredPositions[markerId]) {
+            return [declutteredPositions[markerId].lat, declutteredPositions[markerId].lng];
+        }
+        // Then check for click-spread positions
         if (spreadState.active && spreadState.positions[markerId]) {
             return [spreadState.positions[markerId].lat, spreadState.positions[markerId].lng];
         }
         return [originalLat, originalLng];
-    }, [spreadState]);
+    }, [declutteredPositions, spreadState]);
 
     // Fetch live feed data
     useEffect(() => {
@@ -637,10 +776,14 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                     spreadState={spreadState}
                     setSpreadState={setSpreadState}
                 />
+                <AutoDeclutter
+                    allMarkers={allMarkers}
+                    setDeclutteredPositions={setDeclutteredPositions}
+                />
 
 
-                {/* Theatre Zone Polygons */}
-                {THEATRES.map(theatre => (
+                {/* Theatre Zone Polygons - delayed to appear after initial zoom */}
+                {showTheatres && THEATRES.map(theatre => (
                     <Polygon
                         key={theatre.id}
                         positions={theatre.polygon
@@ -657,16 +800,8 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                             weight: 1,
                             opacity: 0.3,
                             fillOpacity: 0,
-                            dashArray: '10, 5'
-                        }}
-                        eventHandlers={{
-                            click: () => onTheatreSelect(theatre.id),
-                            mouseover: (e) => {
-                                e.target.setStyle({ opacity: 0.7, fillOpacity: 0.03 });
-                            },
-                            mouseout: (e) => {
-                                e.target.setStyle({ opacity: 0.3, fillOpacity: 0 });
-                            }
+                            dashArray: '10, 5',
+                            interactive: false
                         }}
                     />
                 ))}
@@ -833,7 +968,7 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                 {geolocatedNews.map(({ newsItem, location }, index) => (
                     <Marker
                         key={`news-${newsItem.id || index}`}
-                        position={[location.lat, location.lng]}
+                        position={getMarkerPosition(`news-${newsItem.id || index}`, location.lat, location.lng)}
                         icon={createNewsIcon(COLORS.news)}
                     >
                         <Popup maxWidth={300}>
@@ -949,6 +1084,7 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
         .leaflet-marker-icon,
         .leaflet-marker-shadow {
           will-change: transform;
+          transition: transform 0.3s ease-out;
         }
         .leaflet-pane {
           transform: translateZ(0);

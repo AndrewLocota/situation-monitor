@@ -1,7 +1,61 @@
+import { useState, useEffect } from 'react';
 import { ASCIIBox } from '../ui';
-import { ASCIILoader } from '../ui/ASCIILoader';
 import { useDataStore } from '../../stores';
 import './Panels.css';
+
+// ASCII Skeleton for Markets - shows animated placeholder items
+const MarketsSkeleton = ({ count = 5 }) => {
+    const [charIndex, setCharIndex] = useState(0);
+    const ASCII_CHARS = ['░', '▒', '▓', '█', '▓', '▒'];
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setCharIndex(i => (i + 1) % ASCII_CHARS.length);
+        }, 150);
+        return () => clearInterval(interval);
+    }, []);
+
+    return (
+        <div className="markets-skeleton">
+            <div className="markets-section">
+                <div className="markets-section-title ascii-shimmer">INDICES</div>
+                <div className="markets-grid">
+                    {Array.from({ length: count }).map((_, i) => (
+                        <div key={i} className="market-item skeleton-item">
+                            <div className="market-symbol ascii-placeholder">
+                                {ASCII_CHARS[(charIndex + i) % ASCII_CHARS.length].repeat(3)}
+                            </div>
+                            <div className="market-price ascii-placeholder">
+                                {ASCII_CHARS[(charIndex + i + 1) % ASCII_CHARS.length].repeat(6)}
+                            </div>
+                            <div className="market-change ascii-placeholder">
+                                {ASCII_CHARS[(charIndex + i + 2) % ASCII_CHARS.length].repeat(4)}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+            <div className="markets-section">
+                <div className="markets-section-title ascii-shimmer">CRYPTO</div>
+                <div className="markets-grid">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                        <div key={i} className="market-item skeleton-item">
+                            <div className="market-symbol ascii-placeholder">
+                                {ASCII_CHARS[(charIndex + i + 3) % ASCII_CHARS.length].repeat(3)}
+                            </div>
+                            <div className="market-price ascii-placeholder">
+                                {ASCII_CHARS[(charIndex + i + 4) % ASCII_CHARS.length].repeat(6)}
+                            </div>
+                            <div className="market-change ascii-placeholder">
+                                {ASCII_CHARS[(charIndex + i + 5) % ASCII_CHARS.length].repeat(4)}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+};
 
 export function MarketsPanel() {
     const { markets, crypto, loading, lastUpdated } = useDataStore();
@@ -31,7 +85,7 @@ export function MarketsPanel() {
             }
         >
             {loading.markets && markets.length === 0 ? (
-                <ASCIILoader text="FETCHING MARKETS" variant="spinner" />
+                <MarketsSkeleton count={5} />
             ) : (
                 <>
                     {/* Stock Indices */}

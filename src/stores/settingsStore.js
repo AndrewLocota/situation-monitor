@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 
 const DEFAULT_PANELS = {
   newsFeed: true,
+  twitterIntel: true,
   markets: true,
   sectors: true,
   commodities: true,
@@ -19,7 +20,7 @@ const DEFAULT_PANELS = {
 };
 
 const DEFAULT_PANEL_ORDER = [
-  'newsFeed', 'markets', 'sectors', 'commodities', 'polymarket',
+  'newsFeed', 'twitterIntel', 'markets', 'sectors', 'commodities', 'polymarket',
   'congress', 'whales', 'mainChar', 'moneyPrinter', 'contracts',
   'ai', 'layoffs', 'venezuela', 'greenland'
 ];
