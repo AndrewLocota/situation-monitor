@@ -195,7 +195,7 @@ export async function fetchAllNews({ limit = 200, fastMode = false } = {}) {
 
   // Normal mode: fetch in batches
   const allItems = [];
-  const batchSize = 5;
+  const batchSize = 10;
   for (let i = 0; i < feedEntries.length; i += batchSize) {
     const batch = feedEntries.slice(i, i + batchSize);
     const results = await Promise.allSettled(
@@ -869,8 +869,8 @@ export async function fetchMarketIndices() {
   const results = [];
 
   try {
-    // Attempt real fetch first (will failing in dev due to CORS usually)
-    for (const symbol of symbols) {
+    // Attempt real fetch first (parallelized)
+    const promises = symbols.map(async (symbol) => {
       try {
         // Encode symbol for URL (especially for ^VIX)
         const encodedSymbol = encodeURIComponent(symbol);
@@ -890,20 +890,23 @@ export async function fetchMarketIndices() {
             let change = price - referencePrice;
             let changePercent = referencePrice > 0 ? (change / referencePrice * 100) : 0;
 
-            results.push({
+            return {
               symbol: symbol === '^VIX' ? 'VIX' : symbol,
               name: meta.shortName || symbol,
               price,
               change,
               changePercent,
-            });
+            };
           }
         }
       } catch (e) {
-        // Continue with next symbol
         console.warn(`Failed to fetch/parse data for ${symbol}`, e);
       }
-    }
+      return null;
+    });
+
+    const items = await Promise.all(promises);
+    results.push(...items.filter(item => item !== null));
   } catch (error) {
     console.error('Failed to fetch market indices:', error);
   }

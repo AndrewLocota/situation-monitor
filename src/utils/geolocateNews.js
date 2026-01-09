@@ -136,19 +136,19 @@ const LOCATION_DATABASE = {
   'dallas': { lat: 32.7767, lng: -96.7970, label: 'Dallas' },
   
   // Organizations
-  'nato': { lat: 50.8503, lng: 4.3517, label: 'NATO HQ' },
-  'pentagon': { lat: 38.8719, lng: -77.0563, label: 'Pentagon' },
-  'kremlin': { lat: 55.7539, lng: 37.6208, label: 'Kremlin' },
-  'white house': { lat: 38.8977, lng: -77.0365, label: 'White House' },
-  'congress': { lat: 38.8899, lng: -77.009, label: 'US Congress' },
-  'house': { lat: 38.8899, lng: -77.009, label: 'House of Representatives' },
-  'senate': { lat: 38.8899, lng: -77.009, label: 'US Senate' },
-  'un': { lat: 40.7489, lng: -73.968, label: 'United Nations' },
-  'united nations': { lat: 40.7489, lng: -73.968, label: 'United Nations' },
-  'eu': { lat: 50.8503, lng: 4.3517, label: 'European Union' },
-  'european union': { lat: 50.8503, lng: 4.3517, label: 'European Union' },
-  'fed': { lat: 38.8928, lng: -77.0452, label: 'Federal Reserve' },
-  'federal reserve': { lat: 38.8928, lng: -77.0452, label: 'Federal Reserve' },
+  'nato': { lat: 50.8503, lng: 4.3517, label: 'NATO HQ', priority: 10 },
+  'pentagon': { lat: 38.8719, lng: -77.0563, label: 'Pentagon', priority: 10 },
+  'kremlin': { lat: 55.7539, lng: 37.6208, label: 'Kremlin', priority: 10 },
+  'white house': { lat: 38.8977, lng: -77.0365, label: 'White House', priority: 10 },
+  'congress': { lat: 38.8899, lng: -77.009, label: 'US Congress', priority: 10 },
+  'house': { lat: 38.8899, lng: -77.009, label: 'House of Representatives', priority: 10 },
+  'senate': { lat: 38.8899, lng: -77.009, label: 'US Senate', priority: 10 },
+  'un': { lat: 40.7489, lng: -73.968, label: 'United Nations', priority: 10 },
+  'united nations': { lat: 40.7489, lng: -73.968, label: 'United Nations', priority: 10 },
+  'eu': { lat: 50.8503, lng: 4.3517, label: 'European Union', priority: 10 },
+  'european union': { lat: 50.8503, lng: 4.3517, label: 'European Union', priority: 10 },
+  'fed': { lat: 38.8928, lng: -77.0452, label: 'Federal Reserve', priority: 15 },
+  'federal reserve': { lat: 38.8928, lng: -77.0452, label: 'Federal Reserve', priority: 15 },
 };
 
 /**
@@ -177,9 +177,13 @@ export function geolocateNews(newsItem) {
     }
   }
   
-  // Sort keys by length (longest first) to match more specific locations first
-  // e.g., "South Korea" before "Korea"
-  const sortedLocations = Object.keys(LOCATION_DATABASE).sort((a, b) => b.length - a.length);
+  // Sort keys by priority (desc), then length (longest first)
+  const sortedLocations = Object.keys(LOCATION_DATABASE).sort((a, b) => {
+    const pA = LOCATION_DATABASE[a].priority || 1;
+    const pB = LOCATION_DATABASE[b].priority || 1;
+    if (pA !== pB) return pB - pA;
+    return b.length - a.length;
+  });
   
   for (const locationKey of sortedLocations) {
     // strict word boundary check to avoid substrings (e.g. "sus" matching "us")

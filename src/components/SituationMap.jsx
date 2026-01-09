@@ -636,9 +636,9 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
     // Get news and selectedNews from store
     const { allNews, selectedNews, clearSelectedNews } = useDataStore();
 
-    // Geolocate news items (up to 100)
+    // Geolocate news items (up to 110)
     const geolocatedNews = useMemo(() => {
-        return geolocateNewsItems(allNews, 100);
+        return geolocateNewsItems(allNews, 110);
     }, [allNews]);
 
     // Calculate time stats for relative styling (opacity based on dataset range)
