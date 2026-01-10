@@ -4,12 +4,14 @@ const DEFAULT_LAYERS = {
   conflicts: true,
   bases: true,
   nuclear: true,
+  frontlines: true,  // Ukraine ISW, Sudan, Myanmar frontlines
   cables: false,
   sanctions: false,
   density: false,
   chokepoints: true,
   cyber: false,
-  earthquakes: true
+  earthquakes: true,
+  daynight: false
 };
 
 export const useMapStore = create((set, get) => ({

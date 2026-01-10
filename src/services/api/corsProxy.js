@@ -39,7 +39,9 @@ export async function fetchWithCorsProxy(url, { signal } = {}) {
     }
   }
 
-  console.error(`All fetches failed for ${url}`);
+  // Silent fail or warning to avoid console flooding during rapid polling
+  // frequent CORS errors are expected on public proxies
+  // console.warn(`All fetches failed for ${url}`);
   return null;
 }
 

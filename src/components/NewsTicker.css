@@ -1,0 +1,97 @@
+/* News Ticker - Footer Integration */
+.news-ticker-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 0; /* Allow flex shrink */
+    max-width: 33vw; /* One third of screen width */
+    overflow: hidden;
+}
+
+.ticker-label {
+    font-size: 9px;
+    font-weight: bold;
+    letter-spacing: 0.1em;
+    color: var(--text-dim, #5a6478);
+    text-transform: uppercase;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.news-ticker-wrapper {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    position: relative;
+    mask-image: linear-gradient(
+        to right,
+        transparent,
+        black 20px,
+        black calc(100% - 20px),
+        transparent
+    );
+    -webkit-mask-image: linear-gradient(
+        to right,
+        transparent,
+        black 20px,
+        black calc(100% - 20px),
+        transparent
+    );
+}
+
+.news-ticker-content {
+    display: flex;
+    white-space: nowrap;
+    animation-name: scroll-ticker;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    /* Hardware acceleration for smooth high-speed scroll */
+    will-change: transform;
+    transform: translateZ(0);
+}
+
+/* News Ticker - Footer Integration */
+.ticker-loop-group {
+    display: flex;
+    padding-right: 50px; /* Space between loops */
+    flex-shrink: 0; /* CRITICAL: Prevent loops from shrinking/wrapping */
+    white-space: nowrap;
+}
+
+.ticker-item {
+    font-size: 10px;
+    font-weight: bold;
+    color: var(--text-dim, #5a6478);
+    letter-spacing: 0.02em;
+    font-family: var(--font-mono);
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+}
+
+.ticker-separator {
+    margin: 0 15px;
+    opacity: 0.5;
+}
+
+@keyframes scroll-ticker {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-50%); /* Move by half (one copy) */
+    }
+}
+
+/* Pause on hover for readability */
+.news-ticker-content:hover {
+    animation-play-state: paused;
+}
+
+/* Mobile: Hide ticker completely */
+@media (max-width: 768px) {
+    .news-ticker-container {
+        display: none;
+    }
+}

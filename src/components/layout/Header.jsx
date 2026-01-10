@@ -3,7 +3,7 @@ import { useMapStore, useDataStore } from '../../stores';
 import { THEATRES } from '../../data/theatres';
 import './Header.css';
 
-export function Header({ onRefresh }) {
+export function Header({ onRefresh, musicPlayer }) {
     const [time, setTime] = useState(new Date());
     const { currentTheatre, setTheatre } = useMapStore();
     const { isLoading, lastUpdate } = useDataStore();
@@ -32,6 +32,15 @@ export function Header({ onRefresh }) {
         }
     };
 
+    const theatreConfig = {
+        'GLOBAL': { label: 'GLB' },
+        'europe': { label: 'EUR' },
+        'middle_east': { label: 'MDE' },
+        'pacific': { label: 'PAC' },
+        'africa': { label: 'AFR' },
+        'americas': { label: 'AME' }
+    };
+
     return (
         <header className="header">
             <div className="header-left">
@@ -41,31 +50,40 @@ export function Header({ onRefresh }) {
                     <span className="header-bracket">]</span>
                 </div>
 
-
-
+                {/* Music Player on the left */}
+                {musicPlayer && (
+                    <div className="header-music-player">
+                        {musicPlayer}
+                    </div>
+                )}
             </div>
 
             <div className="header-center">
             </div>
 
             <div className="header-right">
+                {/* Theatre Navigation Buttons */}
                 <div className="header-theatre-nav">
                     <button
                         className={`theatre-nav-btn ${currentTheatre === 'GLOBAL' ? 'active' : ''}`}
                         onClick={() => setTheatre('GLOBAL')}
+                        title="Global View"
                     >
-                        GLOBAL
+                        {theatreConfig['GLOBAL'].label}
                     </button>
                     {THEATRES.map(t => (
                         <button
                             key={t.id}
                             className={`theatre-nav-btn ${currentTheatre === t.id ? 'active' : ''}`}
                             onClick={() => setTheatre(t.id)}
+                            title={t.description}
                         >
-                            {t.name.toUpperCase()}
+                            {theatreConfig[t.id]?.label || t.name.substring(0, 3).toUpperCase()}
                         </button>
                     ))}
                 </div>
+
+                <div className="header-divider"></div>
 
                 <div className={`live-indicator ${isLoading ? 'syncing' : ''}`}>
                     <span className="live-dot" />
@@ -86,7 +104,7 @@ export function Header({ onRefresh }) {
                         title="Refresh Data"
                         disabled={isLoading}
                     >
-                        {isLoading ? '[...]' : '[REF]'}
+                        {isLoading ? '[...]' : '[↻ REF]'}
                     </button>
                 </div>
             </div>

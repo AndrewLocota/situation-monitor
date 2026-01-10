@@ -133,17 +133,16 @@ const MusicPlayer = ({ forcePause = false }) => {
 
     return (
         <div style={{
-            marginTop: '8px',
-            paddingTop: '8px',
-            borderTop: '1px solid #2a3040',
             display: 'flex',
             flexDirection: 'column',
-            gap: '4px'
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '2px'
         }}>
             <audio
                 ref={audioRef}
                 src={TRACKS[currentTrack].src}
-                loop={TRACKS.length === 1} // Loop if only one track
+                loop={TRACKS.length === 1}
                 muted={false}
                 preload="none"
                 onEnded={handleNext}
@@ -153,11 +152,12 @@ const MusicPlayer = ({ forcePause = false }) => {
                 onError={() => { setError(true); setReady(false); }}
             />
 
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            {/* Top row: Controls + Status + Volume */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                     {TRACKS.length > 1 && (
-                        <button onClick={handlePrev} disabled={!ready} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#4da6ff', padding: 0 }}>
-                            <SkipBack size={12} />
+                        <button onClick={handlePrev} disabled={!ready} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#4da6ff', padding: 0, display: 'flex', alignItems: 'center' }}>
+                            <SkipBack size={14} />
                         </button>
                     )}
 
@@ -175,20 +175,19 @@ const MusicPlayer = ({ forcePause = false }) => {
                     </button>
 
                     {TRACKS.length > 1 && (
-                        <button onClick={handleNext} disabled={!ready} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#4da6ff', padding: 0 }}>
-                            <SkipForward size={12} />
+                        <button onClick={handleNext} disabled={!ready} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#4da6ff', padding: 0, display: 'flex', alignItems: 'center' }}>
+                            <SkipForward size={14} />
                         </button>
                     )}
+                </div>
 
-                    <div style={{
-                        fontFamily: 'monospace',
-                        fontSize: '10px',
-                        color: error ? '#ff4444' : actualPlaying ? '#4da6ff' : '#8892a8',
-                        letterSpacing: '1px',
-                        marginLeft: '4px'
-                    }}>
-                        {getStatusText()}
-                    </div>
+                <div style={{
+                    fontFamily: 'monospace',
+                    fontSize: '10px',
+                    color: error ? '#ff4444' : actualPlaying ? '#4da6ff' : '#8892a8',
+                    letterSpacing: '1px'
+                }}>
+                    {getStatusText()}
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -201,7 +200,7 @@ const MusicPlayer = ({ forcePause = false }) => {
                         value={volume}
                         onChange={e => setVolume(parseFloat(e.target.value))}
                         style={{
-                            width: '60px',
+                            width: '50px',
                             height: '2px',
                             accentColor: '#4da6ff',
                             background: '#2a3040',
@@ -212,12 +211,19 @@ const MusicPlayer = ({ forcePause = false }) => {
                 </div>
             </div>
 
+            {/* Bottom row: ASCII Visualizer + Song Title */}
             <div style={{
                 fontFamily: 'monospace',
                 fontSize: '9px',
                 color: '#8892a8',
-                display: 'flex', alignItems: 'center', gap: '4px',
-                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '200px'
+                display: 'flex',
+                alignItems: 'center',
+                alignSelf: 'flex-start',
+                gap: '4px',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                maxWidth: '280px'
             }}>
                 <AsciiVisualizer isPlaying={actualPlaying} /> {TRACKS[currentTrack].title}
             </div>

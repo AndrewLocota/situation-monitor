@@ -7,13 +7,15 @@ import {
     INTEL_HOTSPOTS,
     CONFLICT_ZONES,
     MILITARY_BASES,
-    SHIPPING_CHOKEPOINTS
+    SHIPPING_CHOKEPOINTS,
+    NUCLEAR_FACILITIES,
+    CYBER_ZONES
 } from '../data/theatres';
 import { VIDEO_MARKERS } from '../data/videoMarkers';
-import { fetchLiveUAMapEvents, fetchUkraineFrontline, EVENT_STYLES } from '../data/liveFeeds';
+import { fetchLiveUAMapEvents, fetchUkraineFrontline, fetchSudanFrontlines, fetchMyanmarFrontlines, EVENT_STYLES } from '../data/liveFeeds';
 import { getAllConflictEvents, GLOBAL_EVENT_STYLES } from '../data/globalConflicts';
 import { geolocateNewsItems } from '../utils/geolocateNews';
-import { useDataStore } from '../stores';
+import { useDataStore, useMapStore } from '../stores';
 import { timeAgo } from '../utils/timeFormat';
 
 // Cluster spread configuration
@@ -116,15 +118,29 @@ const createVideoIcon = (color) => {
     });
 };
 
+// Nuclear facility marker icon
+const createNuclearIcon = (color) => {
+    return L.divIcon({
+        className: 'custom-nuclear-marker',
+        html: `<div style="
+            font-size: 12px;
+            text-shadow: 0 0 6px ${color}, 0 0 10px ${color}, 0 0 2px rgba(0,0,0,0.8);
+            filter: drop-shadow(0 0 3px ${color});
+        ">☢️</div>`,
+        iconSize: [12, 12],
+        iconAnchor: [6, 6]
+    });
+};
+
 // News marker icon (newspaper style with emoji)
-const createNewsIcon = (color, opacity = 1, blur = 6) => {
+const createNewsIcon = (color, opacity = 1, blur = 6, isRead = false) => {
     return L.divIcon({
         className: 'custom-news-marker',
         html: `<div style="
             font-size: 16px;
             opacity: ${opacity};
-            text-shadow: 0 0 ${blur}px ${color}, 0 0 3px rgba(0,0,0,0.8);
-            filter: drop-shadow(0 0 2px ${color});
+            text-shadow: ${isRead ? 'none' : `0 0 ${blur}px ${color}, 0 0 3px rgba(0,0,0,0.8)`};
+            filter: ${isRead ? `grayscale(100%) brightness(0.7) drop-shadow(0 0 1px ${color})` : `drop-shadow(0 0 2px ${color})`};
             transition: all 0.5s ease;
         ">📰</div>`,
         iconSize: [20, 20],
@@ -170,7 +186,7 @@ const MapController = ({ activeTheatre, onTheatreSelect }) => {
             }
         } else if (hasInitialized.current) {
             // Only fly back if already initialized (not on first load)
-            map.flyTo([20, 0], 2, { duration: 1.5 });
+            map.flyTo([20, 0], 2.8, { duration: 1.5 });
         }
     }, [activeTheatre, map]);
 
@@ -620,10 +636,16 @@ const VideoMarkerLayer = ({ onVideoStateChange, onTheatreSelect, getMarkerPositi
 const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVideoStateChange }) => {
     const [liveEvents, setLiveEvents] = useState([]);
     const [frontlineData, setFrontlineData] = useState([]);
+    const [sudanFrontlines, setSudanFrontlines] = useState([]);
+    const [myanmarFrontlines, setMyanmarFrontlines] = useState([]);
     const [spreadState, setSpreadState] = useState({ active: false, positions: {}, center: null });
     const [focusedNewsId, setFocusedNewsId] = useState(null);
     const [showTheatres, setShowTheatres] = useState(false);
+    const [readNewsIds, setReadNewsIds] = useState(new Set());
     const [declutteredPositions, setDeclutteredPositions] = useState({});
+
+    // Access map layers and currentTheatre from store
+    const { layers, currentTheatre } = useMapStore();
 
     // Delay showing theatre polygons until after initial zoom animation
     useEffect(() => {
@@ -716,14 +738,30 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
         return () => clearInterval(interval);
     }, []);
 
-    // Fetch Ukraine frontline data from ISW/ArcGIS
+    // Fetch all frontline data (Ukraine live, Sudan/Myanmar static)
     useEffect(() => {
         const loadFrontlineData = async () => {
             try {
-                const result = await fetchUkraineFrontline();
-                if (result.success && result.data.length > 0) {
-                    setFrontlineData(result.data);
-                    console.log(`Loaded ${result.data.length} frontline segments`);
+                // Fetch all frontlines in parallel
+                const [ukraineResult, sudanResult, myanmarResult] = await Promise.all([
+                    fetchUkraineFrontline(),
+                    fetchSudanFrontlines(),
+                    fetchMyanmarFrontlines()
+                ]);
+
+                if (ukraineResult.success && ukraineResult.data.length > 0) {
+                    setFrontlineData(ukraineResult.data);
+                    console.log(`Loaded ${ukraineResult.data.length} Ukraine frontline segments`);
+                }
+
+                if (sudanResult.success) {
+                    setSudanFrontlines(sudanResult.data);
+                    console.log(`Loaded ${sudanResult.data.length} Sudan frontline segments`);
+                }
+
+                if (myanmarResult.success) {
+                    setMyanmarFrontlines(myanmarResult.data);
+                    console.log(`Loaded ${myanmarResult.data.length} Myanmar frontline segments`);
                 }
             } catch (err) {
                 console.error('Failed to load frontline data:', err);
@@ -777,7 +815,7 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                     />
                 )}
 
-                <MapController activeTheatre={activeTheatre} onTheatreSelect={onTheatreSelect} />
+                <MapController activeTheatre={currentTheatre || activeTheatre} onTheatreSelect={onTheatreSelect} />
                 <ZoomDisplay />
                 <NewsFocusHandler
                     selectedNews={selectedNews}
@@ -820,7 +858,7 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                 ))}
 
                 {/* Conflict Zones */}
-                {CONFLICT_ZONES.map(zone => (
+                {layers.conflicts && CONFLICT_ZONES.map(zone => (
                     <Polygon
                         key={zone.id}
                         positions={zone.coords.map(c => [c[1], c[0]])}
@@ -870,32 +908,93 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                     </Polygon>
                 ))}
 
-                {/* Ukraine Frontline from ISW/ArcGIS */}
-                {frontlineData.map((segment, idx) => {
-                    // Convert [lon, lat] to [lat, lon] for Leaflet
-                    const positions = segment.coordinates.map(coord => [coord[1], coord[0]]);
-                    return (
-                        <Polyline
-                            key={`frontline-${segment.id || idx}`}
-                            positions={positions}
-                            pathOptions={{
-                                color: '#ff4757',
-                                weight: 3,
-                                opacity: 0.9,
-                                dashArray: null,
-                                smoothFactor: 1.5 // Optimize performance without manual simplification
-                            }}
-                        >
-                            <Popup autoPan={false}>
-                                <div style={{ fontFamily: 'monospace', fontSize: '11px' }}>
-                                    <strong style={{ color: '#ff4757' }}>UKRAINE FRONTLINE</strong><br />
-                                    Source: {segment.properties?.source || 'ISW/CTP'}<br />
-                                    <span style={{ color: '#888' }}>Updated: {segment.properties?.date}</span>
-                                </div>
-                            </Popup>
-                        </Polyline>
-                    );
-                })}
+                {/* All Frontlines - Ukraine (live), Sudan, Myanmar (static) */}
+                {layers.frontlines && (
+                    <>
+                        {/* Ukraine Frontline from ISW/ArcGIS */}
+                        {frontlineData.map((segment, idx) => {
+                            // Convert [lon, lat] to [lat, lon] for Leaflet
+                            const positions = segment.coordinates.map(coord => [coord[1], coord[0]]);
+                            return (
+                                <Polyline
+                                    key={`frontline-ukraine-${segment.id || idx}`}
+                                    positions={positions}
+                                    pathOptions={{
+                                        color: '#ff4757',
+                                        weight: 3,
+                                        opacity: 0.9,
+                                        dashArray: null,
+                                        smoothFactor: 1.5
+                                    }}
+                                >
+                                    <Popup autoPan={false}>
+                                        <div style={{ fontFamily: 'monospace', fontSize: '11px' }}>
+                                            <strong style={{ color: '#ff4757' }}>🇺🇦 UKRAINE FRONTLINE</strong><br />
+                                            Source: {segment.properties?.source || 'ISW/CTP'}<br />
+                                            <span style={{ color: '#888' }}>Updated: {segment.properties?.date}</span>
+                                        </div>
+                                    </Popup>
+                                </Polyline>
+                            );
+                        })}
+
+                        {/* Sudan Frontlines */}
+                        {sudanFrontlines.map((segment, idx) => {
+                            // Convert [lon, lat] to [lat, lon] for Leaflet
+                            const positions = segment.coordinates.map(coord => [coord[1], coord[0]]);
+                            return (
+                                <Polyline
+                                    key={`frontline-sudan-${segment.id || idx}`}
+                                    positions={positions}
+                                    pathOptions={{
+                                        color: '#ffa502',
+                                        weight: 3,
+                                        opacity: 0.85,
+                                        dashArray: '8, 4',
+                                        smoothFactor: 1.5
+                                    }}
+                                >
+                                    <Popup autoPan={false}>
+                                        <div style={{ fontFamily: 'monospace', fontSize: '11px' }}>
+                                            <strong style={{ color: '#ffa502' }}>🇸🇩 SUDAN FRONTLINE</strong><br />
+                                            {segment.properties?.name}<br />
+                                            <span style={{ color: '#888' }}>{segment.properties?.parties}</span><br />
+                                            <span style={{ fontSize: '9px', color: '#666' }}>Source: {segment.properties?.source}</span>
+                                        </div>
+                                    </Popup>
+                                </Polyline>
+                            );
+                        })}
+
+                        {/* Myanmar Frontlines */}
+                        {myanmarFrontlines.map((segment, idx) => {
+                            // Convert [lon, lat] to [lat, lon] for Leaflet
+                            const positions = segment.coordinates.map(coord => [coord[1], coord[0]]);
+                            return (
+                                <Polyline
+                                    key={`frontline-myanmar-${segment.id || idx}`}
+                                    positions={positions}
+                                    pathOptions={{
+                                        color: '#f1c40f',
+                                        weight: 3,
+                                        opacity: 0.85,
+                                        dashArray: '8, 4',
+                                        smoothFactor: 1.5
+                                    }}
+                                >
+                                    <Popup autoPan={false}>
+                                        <div style={{ fontFamily: 'monospace', fontSize: '11px' }}>
+                                            <strong style={{ color: '#f1c40f' }}>🇲🇲 MYANMAR FRONTLINE</strong><br />
+                                            {segment.properties?.name}<br />
+                                            <span style={{ color: '#888' }}>{segment.properties?.parties}</span><br />
+                                            <span style={{ fontSize: '9px', color: '#666' }}>Source: {segment.properties?.source}</span>
+                                        </div>
+                                    </Popup>
+                                </Polyline>
+                            );
+                        })}
+                    </>
+                )}
 
                 {/* Intel Hotspots */}
                 {INTEL_HOTSPOTS.map(spot => (
@@ -941,7 +1040,7 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                 />
 
                 {/* Military Bases */}
-                {MILITARY_BASES.map(base => {
+                {layers.bases && MILITARY_BASES.map(base => {
                     const color = base.type === 'us-nato' ? COLORS.usnato :
                         base.type === 'china' ? COLORS.china : COLORS.russia;
                     return (
@@ -960,8 +1059,25 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                     );
                 })}
 
+                {/* Nuclear Facilities */}
+                {layers.nuclear && NUCLEAR_FACILITIES.map(facility => (
+                    <Marker
+                        key={facility.id}
+                        position={getMarkerPosition(`nuclear-${facility.id}`, facility.lat, facility.lon)}
+                        icon={createNuclearIcon('#ffa502')}
+                    >
+                        <Popup autoPan={false}>
+                            <div style={{ fontFamily: 'monospace', fontSize: '11px' }}>
+                                <strong style={{ color: '#ffa502' }}>☢️ {facility.name}</strong><br />
+                                <span style={{ color: '#888' }}>{facility.country}</span><br />
+                                <span style={{ color: '#4da6ff' }}>{facility.type}</span>
+                            </div>
+                        </Popup>
+                    </Marker>
+                ))}
+
                 {/* Shipping Chokepoints */}
-                {SHIPPING_CHOKEPOINTS.map(point => (
+                {layers.chokepoints && SHIPPING_CHOKEPOINTS.map(point => (
                     <Marker
                         key={point.id}
                         position={getMarkerPosition(`ship-${point.id}`, point.lat, point.lon)}
@@ -977,6 +1093,23 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                     </Marker>
                 ))}
 
+                {/* Cyber Threat Zones */}
+                {layers.cyber && CYBER_ZONES.map(zone => (
+                    <Marker
+                        key={zone.id}
+                        position={getMarkerPosition(`cyber-${zone.id}`, zone.lat, zone.lon)}
+                        icon={createPulseIcon('#ff4757', 12)}
+                    >
+                        <Popup autoPan={false}>
+                            <div style={{ fontFamily: 'monospace', fontSize: '11px' }}>
+                                <strong style={{ color: '#ff4757' }}>💻 {zone.fullName}</strong><br />
+                                <span style={{ color: '#ffa502' }}>{zone.group}</span><br />
+                                <span style={{ color: '#888' }}>Targets: {zone.targets.join(', ')}</span>
+                            </div>
+                        </Popup>
+                    </Marker>
+                ))}
+
                 {/* News Feed Markers */}
                 {geolocatedNews.map(({ newsItem, location }, index) => {
                     // Calculate relative opacity: 0.1 (oldest) to 1.0 (newest)
@@ -984,12 +1117,22 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                     const normalized = Math.max(0, Math.min(1, (itemTime - minTime) / timeRange));
                     const opacity = 0.1 + (normalized * 0.9);
                     const blur = 2 + (normalized * 8);
+                    const isRead = readNewsIds.has(newsItem.id);
 
                     return (
                         <Marker
                             key={`news-${newsItem.id || index}`}
                             position={getMarkerPosition(`news-${newsItem.id || index}`, location.lat, location.lng)}
-                            icon={createNewsIcon(COLORS.news, opacity, blur)}
+                            icon={createNewsIcon(COLORS.news, opacity, blur, isRead)}
+                            eventHandlers={{
+                                click: () => {
+                                    setReadNewsIds(prev => {
+                                        const next = new Set(prev);
+                                        next.add(newsItem.id);
+                                        return next;
+                                    });
+                                }
+                            }}
                         >
                             <Popup autoPan={false} maxWidth={300}>
                                 <div style={{ fontFamily: 'monospace', fontSize: '11px', maxWidth: '280px' }}>
@@ -997,6 +1140,41 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                                         <span style={{ color: COLORS.news, fontWeight: 'bold', fontSize: '9px' }}>{newsItem.source}</span>
                                         <span style={{ color: '#5a6478', fontSize: '9px' }}>{timeAgo(newsItem.pubDate)}</span>
                                     </div>
+                                    {/* Bias Meter */}
+                                    {newsItem.bias !== undefined && (
+                                        <div style={{ marginBottom: '6px', padding: '4px', background: '#1a2030', borderRadius: '2px' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                <div style={{ display: 'flex', gap: '2px' }}>
+                                                    {[0, 1, 2, 3, 4, 5, 6].map(i => {
+                                                        const position = (newsItem.bias || 0) + 3;
+                                                        const isActive = i === position;
+                                                        const getBiasColor = (b) => {
+                                                            if (b <= -2) return '#ef4444';
+                                                            if (b === -1) return '#f87171';
+                                                            if (b === 0) return '#a855f7';
+                                                            if (b === 1) return '#60a5fa';
+                                                            return '#3b82f6';
+                                                        };
+                                                        return (
+                                                            <div
+                                                                key={i}
+                                                                style={{
+                                                                    width: '8px',
+                                                                    height: '6px',
+                                                                    borderRadius: '1px',
+                                                                    backgroundColor: isActive ? getBiasColor(newsItem.bias || 0) : '#2a3040',
+                                                                    opacity: isActive ? 1 : 0.4
+                                                                }}
+                                                            />
+                                                        );
+                                                    })}
+                                                </div>
+                                                <span style={{ fontSize: '8px', color: '#8892a8' }}>
+                                                    {newsItem.biasLabel || 'Unknown'} • Reliability: {newsItem.reliability || 'Unknown'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    )}
                                     <a
                                         href={newsItem.link}
                                         target="_blank"

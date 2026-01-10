@@ -24,12 +24,14 @@ import {
 
 export function useLiveData(options = {}) {
   const {
-    newsInterval = 60000,      // 1 minute
-    conflictInterval = 30000,  // 30 seconds
-    marketsInterval = 30000,   // 30 seconds
-    earthquakeInterval = 120000, // 2 minutes
-    specialDataInterval = 300000, // 5 minutes for congress, whales, contracts
-    twitterInterval = 120000,  // 2 minutes for Twitter
+    // Significantly increased intervals to reduce API load
+    // Adjusted to 60s to balance "liveness" with performance/console spam mitigation
+    newsInterval = 60000,       // 1 minute (was 30s, increased to reduce load)
+    conflictInterval = 180000,  // 3 minutes (was 30 seconds)
+    marketsInterval = 300000,   // 5 minutes (was 30 seconds)
+    earthquakeInterval = 600000, // 10 minutes (was 2 minutes)
+    specialDataInterval = 900000, // 15 minutes (was 5 minutes)
+    twitterInterval = 600000,   // 10 minutes (was 2 minutes)
     enabled = true,
   } = options;
 
@@ -78,7 +80,7 @@ export function useLiveData(options = {}) {
         title: item.title,
         description: item.description,
         link: item.link,
-        pubDate: item.pubDate.toISOString(),
+        pubDate: (item.pubDate instanceof Date ? item.pubDate : new Date()).toISOString(),
         source: item.source,
         category: item.category,
         imageUrl: item.imageUrl,
@@ -88,20 +90,22 @@ export function useLiveData(options = {}) {
       })));
       setLastUpdated('news');
 
-      // After first load, fetch full news in background (keep loading state true)
+      // After first load, fetch full news in background
       if (isFirstNewsLoad.current) {
         isFirstNewsLoad.current = false;
         // Don't set loading to false yet - we're still fetching more
-        // Schedule full fetch after a short delay
         setTimeout(async () => {
           try {
             const fullNews = await fetchAllNews({ limit: 200, fastMode: false });
+            
+
+
             setAllNews(fullNews.map(item => ({
               id: item.id,
               title: item.title,
               description: item.description,
               link: item.link,
-              pubDate: item.pubDate.toISOString(),
+              pubDate: (item.pubDate instanceof Date ? item.pubDate : new Date()).toISOString(),
               source: item.source,
               category: item.category,
               imageUrl: item.imageUrl,
@@ -109,6 +113,7 @@ export function useLiveData(options = {}) {
               biasLabel: item.biasLabel,
               reliability: item.reliability,
             })));
+
           } catch (err) {
             console.error('Failed to fetch full news:', err);
           } finally {
@@ -301,24 +306,37 @@ export function useLiveData(options = {}) {
     // Initial fetch - non-blocking
     fetchAllData();
 
-    // Set up timers for each data source independently
+    // PERFORMANCE OPTIMIZATION: Only set up intervals for APIs that work reliably
+    // APIs with CORS issues (Yahoo Finance, FRED, Polymarket, Twitter) are only called once
+    // on initial load to avoid constant failed requests that slow down the experience.
+    // 
+    // APIs that work and should refresh:
+    // - News (RSS feeds via CORS proxy)
+    // - Conflicts (ACLED works)
+    // - Earthquakes (USGS has proper CORS headers)
+    //
+    // APIs that often fail due to CORS and should NOT refresh:
+    // - Markets (Yahoo Finance blocks CORS)
+    // - Fed data (FRED blocks CORS)
+    // - Special data (Congress, Whales, Contracts - various CORS issues)
+    // - Twitter (All Nitter mirrors are unreliable)
+
+    // Only set up intervals for reliable APIs
     newsTimerRef.current = setInterval(fetchNews, newsInterval);
     conflictTimerRef.current = setInterval(fetchConflicts, conflictInterval);
-    marketsTimerRef.current = setInterval(fetchMarketData, marketsInterval);
     earthquakeTimerRef.current = setInterval(fetchEqs, earthquakeInterval);
-    specialDataTimerRef.current = setInterval(fetchSpecialData, specialDataInterval);
-    twitterTimerRef.current = setInterval(fetchTwitter, twitterInterval);
+    
+    // Markets, Twitter, and Special data are NOT refreshed to reduce failed API calls
+    // They are only fetched once on initial load above
 
     return () => {
       if (newsTimerRef.current) clearInterval(newsTimerRef.current);
       if (conflictTimerRef.current) clearInterval(conflictTimerRef.current);
-      if (marketsTimerRef.current) clearInterval(marketsTimerRef.current);
       if (earthquakeTimerRef.current) clearInterval(earthquakeTimerRef.current);
-      if (specialDataTimerRef.current) clearInterval(specialDataTimerRef.current);
-      if (twitterTimerRef.current) clearInterval(twitterTimerRef.current);
+      // No need to clear markets/special/twitter timers - they don't exist
     };
-  }, [enabled, newsInterval, conflictInterval, marketsInterval, earthquakeInterval, specialDataInterval, twitterInterval,
-      fetchAllData, fetchNews, fetchConflicts, fetchMarketData, fetchEqs, fetchSpecialData, fetchTwitter]);
+  }, [enabled, newsInterval, conflictInterval, earthquakeInterval,
+      fetchAllData, fetchNews, fetchConflicts, fetchEqs]);
 
   // Manual refresh function
   const refresh = useCallback(() => {

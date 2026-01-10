@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Header } from './layout/Header';
 import MusicPlayer from './MusicPlayer';
+import NewsTicker from './NewsTicker';
 import {
     NewsFeed,
     MarketsPanel,
@@ -94,45 +95,8 @@ __  __|__
                 {children}
             </div>
 
-            {/* Header with Music Player */}
-            <header className="header" style={{ position: 'relative', zIndex: 10 }}>
-                <div className="header-left">
-                    <div className="header-brand">
-                        <span className="header-bracket">[</span>
-                        <span className="header-title">SITUATION MONITOR</span>
-                        <span className="header-bracket">]</span>
-                    </div>
-                    {/* Music Player integrated in header */}
-                    <div style={{ marginLeft: '16px' }}>
-                        <MusicPlayer forcePause={videoPlaying} />
-                    </div>
-                </div>
-
-                <div className="header-center">
-                    {/* Empty center for balance, or could add tagline later */}
-                </div>
-
-                <div className="header-right">
-                    {/* LIVE indicator - to the left of time */}
-                    <div className={`live-indicator ${isLoading ? 'syncing' : ''}`}>
-                        <span className="live-dot" />
-                        <span className="live-text">{isLoading ? 'SYNCING' : 'LIVE'}</span>
-                    </div>
-                    <div className="header-time">
-                        <span className="header-time-label">UTC</span>
-                        <span className="header-time-value">{new Date().toISOString().substring(11, 19)}</span>
-                    </div>
-                    <div className="header-date desktop-only">{new Date().toISOString().substring(0, 10)}</div>
-                    <button
-                        className="header-btn desktop-only"
-                        onClick={onRefresh}
-                        title="Refresh Data"
-                        disabled={isLoading}
-                    >
-                        {isLoading ? '[...]' : '[REF]'}
-                    </button>
-                </div>
-            </header>
+            {/* Header with Theatre Navigation and Music Player */}
+            <Header onRefresh={onRefresh} musicPlayer={<MusicPlayer forcePause={videoPlaying} />} />
 
             {/* Main content area (Sidebars + Center UI) */}
             <div className="main-container" style={{ position: 'relative', zIndex: 5, pointerEvents: 'none' }}>
@@ -233,16 +197,18 @@ __  __|__
                     </span>
                 </div>
                 <div className="footer-right desktop-only">
+                    <NewsTicker news={allNews} />
+                    <span className="footer-separator">|</span>
                     {visitorCount !== null && (
                         <>
-                            <span className="stat-item" style={{ marginRight: '16px' }}>
-                                <span className="stat-label">VISITORS</span>
+                            <span className="stat-item">
+                                <span className="stat-label">VIS</span>
                                 <span className="stat-value">{visitorCount.toLocaleString()}</span>
                             </span>
                             <span className="footer-separator">|</span>
                         </>
                     )}
-                    <kbd>Ctrl+R</kbd> Refresh
+                    <kbd>Ctrl+R</kbd>
                 </div>
             </footer>
         </div>
