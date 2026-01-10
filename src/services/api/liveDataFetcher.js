@@ -81,16 +81,123 @@ async function parseRSSFeed(url, sourceName, biasInfo = {}, signal) {
         const title = entry.querySelector('title')?.textContent || '';
         const link = entry.querySelector('link')?.getAttribute('href') ||
                      entry.querySelector('link')?.textContent || '';
-        const summary = entry.querySelector('summary, content')?.textContent || '';
+
+        // Get content - try multiple Atom content fields
+        let summary = entry.querySelector('content')?.textContent ||
+                     entry.querySelector('summary')?.textContent || '';
+
         const published = entry.querySelector('published, updated')?.textContent || '';
+
+        // Enhanced image extraction for Atom feeds
+        let imageUrl = null;
+
+        // Media RSS in Atom feeds - check for image type
+        const mediaContent = entry.querySelector('media\\:content, media\\:group media\\:content');
+        if (mediaContent) {
+          const type = mediaContent.getAttribute('type') || '';
+          if (type.startsWith('image')) {
+            imageUrl = mediaContent.getAttribute('url');
+          }
+        }
+
+        if (!imageUrl) {
+          imageUrl = entry.querySelector('media\\:thumbnail')?.getAttribute('url') ||
+                    entry.querySelector('media\\:group media\\:thumbnail')?.getAttribute('url');
+        }
+
+        // Atom link with image type
+        if (!imageUrl) {
+          const imageLink = entry.querySelector('link[rel="enclosure"][type^="image"]');
+          if (imageLink) {
+            imageUrl = imageLink.getAttribute('href');
+          }
+        }
+
+        // Extract from content/summary HTML
+        if (!imageUrl && summary) {
+          const patterns = [
+            /<img[^>]+src=["']([^"']+)["']/i,
+            /<img[^>]+data-src=["']([^"']+)["']/i,
+            /src=["']([^"']+\.(jpg|jpeg|png|gif|webp)[^"']*)["']/i
+          ];
+
+          for (const pattern of patterns) {
+            const imgMatch = summary.match(pattern);
+            if (imgMatch) {
+              imageUrl = imgMatch[1];
+              break;
+            }
+          }
+        }
+
+        // Enhanced VIDEO extraction for Atom feeds
+        let videoUrl = null;
+        let videoType = null;
+
+        // Media RSS video in Atom feeds
+        const mediaVideoContent = entry.querySelector('media\\:content[type^="video"], media\\:group media\\:content[type^="video"]');
+        if (mediaVideoContent) {
+          videoUrl = mediaVideoContent.getAttribute('url');
+          videoType = 'direct';
+        }
+
+        // Atom link with video type
+        if (!videoUrl) {
+          const videoLink = entry.querySelector('link[rel="enclosure"][type^="video"]');
+          if (videoLink) {
+            videoUrl = videoLink.getAttribute('href');
+            videoType = 'direct';
+          }
+        }
+
+        // Extract YouTube URLs from content/summary
+        if (!videoUrl && summary) {
+          const youtubePatterns = [
+            /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/i,
+            /<iframe[^>]+src=["']([^"']*youtube[^"']*)["']/i,
+            /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/i
+          ];
+
+          for (const pattern of youtubePatterns) {
+            const match = summary.match(pattern);
+            if (match) {
+              const videoId = match[1].includes('youtube') ? match[1].match(/([a-zA-Z0-9_-]{11})/)?.[1] : match[1];
+              if (videoId) {
+                videoUrl = `https://www.youtube.com/embed/${videoId}`;
+                videoType = 'youtube';
+                break;
+              }
+            }
+          }
+        }
+
+        // Clean summary/content
+        let cleanSummary = summary.replace(/<[^>]*>/g, '').trim();
+        cleanSummary = cleanSummary
+          .replace(/\[CDATA\[|\]\]/g, '')
+          .replace(/\s+/g, ' ')
+          .trim();
+
+        // Log image/video extraction for debugging (first 2 items from all sources)
+        if (index < 2) {
+          console.log(`[Atom Parser] ${sourceName} #${index}:`);
+          console.log(`  - Title: ${title.substring(0, 60)}...`);
+          console.log(`  - Image: ${imageUrl || 'NONE'}`);
+          console.log(`  - Video: ${videoUrl || 'NONE'} (type: ${videoType || 'N/A'})`);
+          console.log(`  - Description length: ${cleanSummary.length} chars`);
+        }
 
         items.push({
           id: `${sourceName}-${index}-${Date.now()}`,
           title: title.trim(),
-          description: summary.trim().slice(0, 300),
+          description: cleanSummary.slice(0, 500),
+          fullDescription: cleanSummary,
           link,
           pubDate: new Date(published),
           source: sourceName,
+          imageUrl: imageUrl || undefined,
+          videoUrl: videoUrl || undefined,
+          videoType: videoType || undefined,
           bias,
           biasLabel,
           reliability,
@@ -104,18 +211,188 @@ async function parseRSSFeed(url, sourceName, biasInfo = {}, signal) {
         const description = item.querySelector('description')?.textContent || '';
         const pubDate = item.querySelector('pubDate')?.textContent || '';
         const category = item.querySelector('category')?.textContent || '';
-        const imageUrl = item.querySelector('enclosure')?.getAttribute('url') ||
-                        item.querySelector('media\\:content, content')?.getAttribute('url');
+
+        // Enhanced image extraction for various RSS formats
+        let imageUrl = null;
+
+        // Standard RSS enclosure (used by many feeds)
+        const enclosure = item.querySelector('enclosure[type^="image"]');
+        if (enclosure) {
+          imageUrl = enclosure.getAttribute('url');
+        }
+
+        // Media RSS namespace (media:content, media:thumbnail) - used by CNBC, BBC, etc.
+        if (!imageUrl) {
+          const mediaContent = item.querySelector('media\\:content, media\\:group media\\:content');
+          if (mediaContent) {
+            const type = mediaContent.getAttribute('type') || '';
+            // Only use if it's an image, not a video
+            if (type.startsWith('image')) {
+              imageUrl = mediaContent.getAttribute('url');
+            }
+          }
+        }
+
+        if (!imageUrl) {
+          const mediaThumbnail = item.querySelector('media\\:thumbnail, media\\:group media\\:thumbnail');
+          if (mediaThumbnail) {
+            imageUrl = mediaThumbnail.getAttribute('url');
+          }
+        }
+
+        // Al Jazeera uses enclosure without type attribute
+        if (!imageUrl) {
+          const anyEnclosure = item.querySelector('enclosure');
+          if (anyEnclosure) {
+            const url = anyEnclosure.getAttribute('url');
+            // Check if URL looks like an image
+            if (url && /\.(jpg|jpeg|png|gif|webp)/i.test(url)) {
+              imageUrl = url;
+            }
+          }
+        }
+
+        // Extract from description HTML (fallback for publishers embedding images)
+        if (!imageUrl && description) {
+          // Try multiple image patterns
+          const patterns = [
+            /<img[^>]+src=["']([^"']+)["']/i,
+            /<img[^>]+data-src=["']([^"']+)["']/i,
+            /src=["']([^"']+\.(jpg|jpeg|png|gif|webp)[^"']*)["']/i
+          ];
+
+          for (const pattern of patterns) {
+            const imgMatch = description.match(pattern);
+            if (imgMatch) {
+              imageUrl = imgMatch[1];
+              break;
+            }
+          }
+        }
+
+        // Get content:encoded early (needed for image and video extraction)
+        const contentEncoded = item.querySelector('content\\:encoded');
+
+        // Also try to extract image from content:encoded (often has full article HTML)
+        if (!imageUrl && contentEncoded) {
+          const contentHtml = contentEncoded.textContent || '';
+          const patterns = [
+            /<img[^>]+src=["']([^"']+)["']/i,
+            /<figure[^>]*>.*?<img[^>]+src=["']([^"']+)["']/is,
+            /src=["']([^"']+\.(jpg|jpeg|png|gif|webp)[^"']*)["']/i
+          ];
+
+          for (const pattern of patterns) {
+            const imgMatch = contentHtml.match(pattern);
+            if (imgMatch) {
+              // Use the first captured group that contains the URL
+              imageUrl = imgMatch[1] || imgMatch[2];
+              break;
+            }
+          }
+        }
+
+        // Enhanced VIDEO extraction for various RSS formats
+        let videoUrl = null;
+        let videoType = null; // 'youtube', 'direct', 'embed'
+
+        // Media RSS namespace for video content
+        const mediaVideoContent = item.querySelector('media\\:content[type^="video"], media\\:group media\\:content[type^="video"]');
+        if (mediaVideoContent) {
+          videoUrl = mediaVideoContent.getAttribute('url');
+          videoType = 'direct';
+        }
+
+        // Video enclosure
+        if (!videoUrl) {
+          const videoEnclosure = item.querySelector('enclosure[type^="video"]');
+          if (videoEnclosure) {
+            videoUrl = videoEnclosure.getAttribute('url');
+            videoType = 'direct';
+          }
+        }
+
+        // Extract YouTube URLs from description or content:encoded
+        if (!videoUrl) {
+          const contentToSearch = contentEncoded?.textContent || description || '';
+
+          // YouTube patterns
+          const youtubePatterns = [
+            /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/i,
+            /<iframe[^>]+src=["']([^"']*youtube[^"']*)["']/i,
+            /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/i
+          ];
+
+          for (const pattern of youtubePatterns) {
+            const match = contentToSearch.match(pattern);
+            if (match) {
+              // Extract video ID and create embed URL
+              const videoId = match[1].includes('youtube') ? match[1].match(/([a-zA-Z0-9_-]{11})/)?.[1] : match[1];
+              if (videoId) {
+                videoUrl = `https://www.youtube.com/embed/${videoId}`;
+                videoType = 'youtube';
+                break;
+              }
+            }
+          }
+        }
+
+        // Extract other video embeds (Vimeo, Dailymotion, etc.)
+        if (!videoUrl && description) {
+          const embedPatterns = [
+            /<iframe[^>]+src=["']([^"']*vimeo\.com\/video\/[^"']*)["']/i,
+            /<iframe[^>]+src=["']([^"']*dailymotion\.com\/embed\/[^"']*)["']/i,
+            /vimeo\.com\/(\d+)/i,
+          ];
+
+          for (const pattern of embedPatterns) {
+            const match = description.match(pattern);
+            if (match) {
+              videoUrl = match[1];
+              videoType = 'embed';
+              break;
+            }
+          }
+        }
+
+        // Clean and enhance description
+        let cleanDescription = description.replace(/<[^>]*>/g, '').trim();
+
+        // Remove common RSS artifacts
+        cleanDescription = cleanDescription
+          .replace(/\[CDATA\[|\]\]/g, '')
+          .replace(/\s+/g, ' ')
+          .trim();
+
+        // For sources like Al Jazeera, use content:encoded if it has fuller content
+        if (contentEncoded) {
+          const fullContent = contentEncoded.textContent.replace(/<[^>]*>/g, '').trim();
+          if (fullContent.length > cleanDescription.length) {
+            cleanDescription = fullContent;
+          }
+        }
+
+        // Log image/video extraction for debugging (first 2 items from all sources)
+        if (index < 2) {
+          console.log(`[RSS Parser] ${sourceName} #${index}:`);
+          console.log(`  - Title: ${title.substring(0, 60)}...`);
+          console.log(`  - Image: ${imageUrl || 'NONE'}`);
+          console.log(`  - Video: ${videoUrl || 'NONE'} (type: ${videoType || 'N/A'})`);
+          console.log(`  - Description length: ${cleanDescription.length} chars`);
+        }
 
         items.push({
           id: `${sourceName}-${index}-${Date.now()}`,
           title: title.trim(),
-          description: description.replace(/<[^>]*>/g, '').trim().slice(0, 300),
+          description: cleanDescription.slice(0, 500),
+          fullDescription: cleanDescription, // Keep full description
           link,
           pubDate: new Date(pubDate),
           source: sourceName,
           category,
           imageUrl: imageUrl || undefined,
+          videoUrl: videoUrl || undefined,
+          videoType: videoType || undefined,
           bias,
           biasLabel,
           reliability,
@@ -447,13 +724,41 @@ export async function fetchPolymarketEvents() {
 
     const data = await response.json();
 
-    return data.map((market) => ({
-      id: market.id || market.conditionId,
-      question: market.question || market.title,
-      probability: market.outcomePrices?.[0] || 0.5,
-      volume: market.volume || 0,
-      category: market.category || 'Other',
-    }));
+    return data.map((market) => {
+      // Extract probability - Polymarket returns values 0-1, already as decimal
+      // Try multiple fields in case API structure varies
+      let probability = 0.5; // Default to 50%
+
+      if (market.outcomePrices && Array.isArray(market.outcomePrices) && market.outcomePrices.length > 0) {
+        // outcomePrices[0] is typically the "Yes" price (0-1 range)
+        probability = parseFloat(market.outcomePrices[0]);
+      } else if (market.clobTokenIds && Array.isArray(market.outcomes) && market.outcomes.length > 0) {
+        // Alternative: try to get from outcomes array (only if it's actually an array)
+        const yesOutcome = market.outcomes.find(o => o?.toLowerCase() === 'yes');
+        if (yesOutcome) {
+          probability = parseFloat(market.outcomePrices?.[0] || 0.5);
+        }
+      } else if (typeof market.probability !== 'undefined') {
+        // Direct probability field if available
+        probability = parseFloat(market.probability);
+      }
+
+      // Ensure probability is in valid range 0-1
+      probability = Math.max(0, Math.min(1, probability));
+
+      return {
+        id: market.id || market.conditionId,
+        question: market.question || market.title,
+        probability: probability, // Stored as decimal (0-1), displayed as % in UI
+        volume: parseFloat(market.volume) || 0,
+        category: market.category || 'Other',
+        // Optional: store raw data for debugging
+        _debug: {
+          outcomePrices: market.outcomePrices,
+          outcomes: market.outcomes
+        }
+      };
+    });
   } catch (error) {
     console.error('Failed to fetch Polymarket:', error);
     return [];

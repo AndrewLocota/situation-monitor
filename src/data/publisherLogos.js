@@ -1,103 +1,117 @@
 /**
  * Publisher Logo URLs and Configurations
  * Small logos displayed on news markers (bottom-right corner, half height)
+ * Using local logos stored in public/logos/ folder
  */
+
+const BASE = import.meta.env.BASE_URL;
 
 export const PUBLISHER_LOGOS = {
   // Major News Agencies
   'reuters': {
-    url: 'https://logo.clearbit.com/reuters.com',
-    fallback: 'https://www.google.com/s2/favicons?domain=reuters.com&sz=32',
+    url: `${BASE}logos/reuters.png`,
     name: 'Reuters'
   },
   'ap': {
-    url: 'https://logo.clearbit.com/apnews.com',
-    fallback: 'https://www.google.com/s2/favicons?domain=apnews.com&sz=32',
+    url: `${BASE}logos/ap.png`,
     name: 'Associated Press'
   },
+  'apnews': {
+    url: `${BASE}logos/ap.png`,
+    name: 'AP News'
+  },
   'bbc': {
-    url: 'https://logo.clearbit.com/bbc.com',
-    fallback: 'https://www.google.com/s2/favicons?domain=bbc.com&sz=32',
+    url: `${BASE}logos/bbc.png`,
     name: 'BBC'
   },
   'aljazeera': {
-    url: 'https://logo.clearbit.com/aljazeera.com',
-    fallback: 'https://www.google.com/s2/favicons?domain=aljazeera.com&sz=32',
+    url: `${BASE}logos/aljazeera.png`,
     name: 'Al Jazeera'
   },
   'guardian': {
-    url: 'https://logo.clearbit.com/theguardian.com',
-    fallback: 'https://www.google.com/s2/favicons?domain=theguardian.com&sz=32',
+    url: `${BASE}logos/guardian.png`,
     name: 'The Guardian'
   },
 
   // Defense/Security
   'kyivIndependent': {
-    url: 'https://www.google.com/s2/favicons?domain=kyivindependent.com&sz=32',
-    fallback: 'https://www.google.com/s2/favicons?domain=kyivindependent.com&sz=32',
+    url: `${BASE}logos/kyivindependent.png`,
+    name: 'Kyiv Independent'
+  },
+  'kyivindependent': {
+    url: `${BASE}logos/kyivindependent.png`,
     name: 'Kyiv Independent'
   },
   'defenseOne': {
-    url: 'https://logo.clearbit.com/defenseone.com',
-    fallback: 'https://www.google.com/s2/favicons?domain=defenseone.com&sz=32',
+    url: `${BASE}logos/defenseone.png`,
+    name: 'Defense One'
+  },
+  'defenseone': {
+    url: `${BASE}logos/defenseone.png`,
     name: 'Defense One'
   },
   'warOnTheRocks': {
-    url: 'https://www.google.com/s2/favicons?domain=warontherocks.com&sz=32',
-    fallback: 'https://www.google.com/s2/favicons?domain=warontherocks.com&sz=32',
+    url: `${BASE}logos/warontherocks.png`,
+    name: 'War on the Rocks'
+  },
+  'warontherocks': {
+    url: `${BASE}logos/warontherocks.png`,
     name: 'War on the Rocks'
   },
 
   // Financial
   'marketWatch': {
-    url: 'https://logo.clearbit.com/marketwatch.com',
-    fallback: 'https://www.google.com/s2/favicons?domain=marketwatch.com&sz=32',
+    url: `${BASE}logos/marketwatch.png`,
+    name: 'MarketWatch'
+  },
+  'marketwatch': {
+    url: `${BASE}logos/marketwatch.png`,
     name: 'MarketWatch'
   },
   'cnbc': {
-    url: 'https://logo.clearbit.com/cnbc.com',
-    fallback: 'https://www.google.com/s2/favicons?domain=cnbc.com&sz=32',
+    url: `${BASE}logos/cnbc.png`,
     name: 'CNBC'
   },
   'bloomberg': {
-    url: 'https://logo.clearbit.com/bloomberg.com',
-    fallback: 'https://www.google.com/s2/favicons?domain=bloomberg.com&sz=32',
+    url: `${BASE}logos/bloomberg.png`,
     name: 'Bloomberg'
   },
 
   // Tech
   'techCrunch': {
-    url: 'https://logo.clearbit.com/techcrunch.com',
-    fallback: 'https://www.google.com/s2/favicons?domain=techcrunch.com&sz=32',
+    url: `${BASE}logos/techcrunch.png`,
+    name: 'TechCrunch'
+  },
+  'techcrunch': {
+    url: `${BASE}logos/techcrunch.png`,
     name: 'TechCrunch'
   },
   'wired': {
-    url: 'https://logo.clearbit.com/wired.com',
-    fallback: 'https://www.google.com/s2/favicons?domain=wired.com&sz=32',
+    url: `${BASE}logos/wired.png`,
     name: 'Wired'
   },
   'arstechnica': {
-    url: 'https://logo.clearbit.com/arstechnica.com',
-    fallback: 'https://www.google.com/s2/favicons?domain=arstechnica.com&sz=32',
+    url: `${BASE}logos/arstechnica.png`,
     name: 'Ars Technica'
   },
 
   // Geopolitics
   'foreignPolicy': {
-    url: 'https://logo.clearbit.com/foreignpolicy.com',
-    fallback: 'https://www.google.com/s2/favicons?domain=foreignpolicy.com&sz=32',
+    url: `${BASE}logos/foreignpolicy.png`,
+    name: 'Foreign Policy'
+  },
+  'foreignpolicy': {
+    url: `${BASE}logos/foreignpolicy.png`,
     name: 'Foreign Policy'
   },
   'cfr': {
-    url: 'https://logo.clearbit.com/cfr.org',
-    fallback: 'https://www.google.com/s2/favicons?domain=cfr.org&sz=32',
+    url: `${BASE}logos/cfr.png`,
     name: 'Council on Foreign Relations'
   },
 
   // Default fallback for unknown sources
   'default': {
-    url: 'https://www.google.com/s2/favicons?domain=news.com&sz=32',
-    fallback: null,
+    url: null,
     name: 'News'
   }
 };
@@ -105,7 +119,7 @@ export const PUBLISHER_LOGOS = {
 /**
  * Get logo URL for a news source
  * @param {string} source - Source identifier (e.g., 'reuters', 'bbc')
- * @returns {Object} - Logo configuration { url, fallback, name }
+ * @returns {Object} - Logo configuration { url, name }
  */
 export function getPublisherLogo(source) {
   // Normalize source name (remove special chars, lowercase)
@@ -125,47 +139,4 @@ export function getPublisherLogo(source) {
 
   // Default fallback
   return PUBLISHER_LOGOS.default;
-}
-
-/**
- * Create custom Leaflet icon with publisher logo overlay
- * @param {string} color - Base marker color
- * @param {string} logoUrl - Publisher logo URL
- * @returns {L.DivIcon} - Leaflet div icon
- */
-export function createMarkerWithLogo(color, logoUrl) {
-  return L.divIcon({
-    className: 'news-marker-with-logo',
-    html: `
-      <div style="position: relative; width: 12px; height: 12px;">
-        <div style="
-          width: 12px;
-          height: 12px;
-          background: ${color};
-          border: 2px solid rgba(255,255,255,0.9);
-          border-radius: 50%;
-          box-shadow: 0 0 8px ${color}aa;
-        "></div>
-        ${logoUrl ? `
-          <img
-            src="${logoUrl}"
-            style="
-              position: absolute;
-              bottom: -2px;
-              right: -2px;
-              width: 8px;
-              height: 8px;
-              border-radius: 2px;
-              border: 1px solid rgba(0,0,0,0.3);
-              background: white;
-              object-fit: contain;
-            "
-            onerror="this.style.display='none'"
-          />
-        ` : ''}
-      </div>
-    `,
-    iconSize: [12, 12],
-    iconAnchor: [6, 6]
-  });
 }

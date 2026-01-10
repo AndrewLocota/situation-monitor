@@ -28,8 +28,8 @@ export function NewsTicker({ news = [] }) {
     const animationDuration = useMemo(() => {
         if (sortedNews.length === 0) return '60s';
 
-        // Multiplied speed again by 10x (Total 150x original): 12000 pixels per second
-        const pixelsPerSecond = 12000;
+        // Multiplied speed by 15x as requested: 1200 pixels per second
+        const pixelsPerSecond = 1200;
 
         // Estimate total width: avg 8px per char + separators (40px each)
         const charCount = sortedNews.reduce((acc, item) => acc + (item.title?.length || 0), 0);
@@ -37,8 +37,7 @@ export function NewsTicker({ news = [] }) {
 
         // Calculate duration: total width / speed
         // The animation moves 50% (one full loop), so we use estimatedWidth as the distance
-        // Lowered minimum duration to 1s to support high speeds
-        const duration = Math.max(1, estimatedWidth / pixelsPerSecond);
+        const duration = Math.max(30, estimatedWidth / pixelsPerSecond);
 
         console.log(`[NewsTicker] ${sortedNews.length} items, ~${estimatedWidth}px, ${duration.toFixed(1)}s duration`);
 

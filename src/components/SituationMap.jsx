@@ -108,17 +108,32 @@ const createTriangleIcon = (color, size = 10) => {
 const createVideoIcon = (color) => {
     return L.divIcon({
         className: 'custom-video-marker',
-        html: `<div style="
-            width: 14px; 
-            height: 14px; 
-            background: ${color}; 
-            border: 2px solid #000; 
-            transform: rotate(45deg);
-            box-shadow: 0 0 10px ${color};
-            display: flex; align-items: center; justify-content: center;
-        "><div style="width: 4px; height: 4px; background: #000; border-radius: 50%;"></div></div>`,
-        iconSize: [14, 14],
-        iconAnchor: [7, 7]
+        html: `
+            <div style="
+                width: 16px;
+                height: 16px;
+                background: ${color};
+                border: 2px solid #000;
+                border-radius: 2px;
+                box-shadow: 0 0 10px ${color};
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                position: relative;
+            ">
+                <!-- Play button triangle -->
+                <div style="
+                    width: 0;
+                    height: 0;
+                    border-left: 6px solid #000;
+                    border-top: 4px solid transparent;
+                    border-bottom: 4px solid transparent;
+                    margin-left: 1px;
+                "></div>
+            </div>
+        `,
+        iconSize: [16, 16],
+        iconAnchor: [8, 8]
     });
 };
 
@@ -138,39 +153,47 @@ const createNuclearIcon = (color) => {
 
 // News marker icon (newspaper style with emoji)
 const createNewsIcon = (color, opacity = 1, blur = 6, isRead = false, logoUrl = null) => {
+    // Escape quotes in logoUrl to prevent HTML breaking
+    const safeLogo = logoUrl ? logoUrl.replace(/"/g, '&quot;').replace(/'/g, '&#39;') : null;
+
     return L.divIcon({
         className: 'custom-news-marker',
         html: `
-            <div style="position: relative; width: 20px; height: 20px;">
+            <div style="position: relative; width: 24px; height: 24px; display: inline-block;">
                 <div style="
-                    font-size: 16px;
+                    font-size: 18px;
                     opacity: ${opacity};
                     text-shadow: ${isRead ? 'none' : `0 0 ${blur}px ${color}, 0 0 3px rgba(0,0,0,0.8)`};
                     filter: ${isRead ? `grayscale(100%) brightness(0.7) drop-shadow(0 0 1px ${color})` : `drop-shadow(0 0 2px ${color})`};
                     transition: all 0.5s ease;
+                    line-height: 1;
                 ">📰</div>
-                ${logoUrl ? `
+                ${safeLogo ? `
                     <img
-                        src="${logoUrl}"
+                        src="${safeLogo}"
+                        alt="publisher"
                         style="
                             position: absolute;
-                            bottom: -3px;
-                            right: -3px;
-                            width: 10px;
-                            height: 10px;
-                            border-radius: 2px;
-                            border: 1px solid rgba(0,0,0,0.5);
-                            background: white;
+                            bottom: -2px;
+                            right: -2px;
+                            width: 14px;
+                            height: 14px;
+                            border-radius: 50%;
+                            border: none;
+                            background: transparent;
                             object-fit: contain;
-                            box-shadow: 0 0 3px rgba(0,0,0,0.8);
+                            box-shadow: 0 0 6px rgba(0,0,0,0.8), 0 2px 4px rgba(0,0,0,0.4);
+                            z-index: 100;
+                            pointer-events: none;
                         "
-                        onerror="this.style.display='none'"
+                        onerror="console.error('Logo failed:', '${safeLogo}'); this.style.display='none';"
+                        onload="console.log('Logo loaded:', '${safeLogo}');"
                     />
                 ` : ''}
             </div>
         `,
-        iconSize: [20, 20],
-        iconAnchor: [10, 10]
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
     });
 };
 
@@ -1072,6 +1095,11 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                         key={spot.id}
                         position={getMarkerPosition(`intel-${spot.id}`, spot.lat, spot.lon)}
                         icon={createPulseIcon(getLevelColor(spot.level))}
+                        eventHandlers={{
+                            mouseover: (e) => {
+                                e.target.openPopup();
+                            }
+                        }}
                     >
                         <Popup autoPan={false} maxWidth={300}>
                             <div style={{ fontFamily: 'monospace', fontSize: '11px', minWidth: '220px', maxWidth: '280px' }}>
@@ -1118,6 +1146,11 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                             key={base.id}
                             position={getMarkerPosition(`base-${base.id}`, base.lat, base.lon)}
                             icon={createSquareIcon(color)}
+                            eventHandlers={{
+                                mouseover: (e) => {
+                                    e.target.openPopup();
+                                }
+                            }}
                         >
                             <Popup autoPan={false}>
                                 <div style={{ fontFamily: 'monospace', fontSize: '11px' }}>
@@ -1135,6 +1168,11 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                         key={facility.id}
                         position={getMarkerPosition(`nuclear-${facility.id}`, facility.lat, facility.lon)}
                         icon={createNuclearIcon('#ffa502')}
+                        eventHandlers={{
+                            mouseover: (e) => {
+                                e.target.openPopup();
+                            }
+                        }}
                     >
                         <Popup autoPan={false}>
                             <div style={{ fontFamily: 'monospace', fontSize: '11px' }}>
@@ -1152,6 +1190,11 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                         key={point.id}
                         position={getMarkerPosition(`ship-${point.id}`, point.lat, point.lon)}
                         icon={createTriangleIcon('#00d4ff')}
+                        eventHandlers={{
+                            mouseover: (e) => {
+                                e.target.openPopup();
+                            }
+                        }}
                     >
                         <Popup>
                             <div style={{ fontFamily: 'monospace', fontSize: '11px' }}>
@@ -1194,6 +1237,11 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                         key={zone.id}
                         position={getMarkerPosition(`cyber-${zone.id}`, zone.lat, zone.lon)}
                         icon={createPulseIcon('#ff4757', 12)}
+                        eventHandlers={{
+                            mouseover: (e) => {
+                                e.target.openPopup();
+                            }
+                        }}
                     >
                         <Popup autoPan={false}>
                             <div style={{ fontFamily: 'monospace', fontSize: '11px' }}>
@@ -1218,12 +1266,25 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                     const publisherInfo = getPublisherLogo(newsItem.source);
                     const logoUrl = publisherInfo?.url;
 
+                    // Debug: Log image, video, and logo availability for first few items
+                    if (index < 3) {
+                        console.log(`[News #${index}] ${newsItem.source}:`);
+                        console.log(`  - Title: ${newsItem.title.substring(0, 50)}...`);
+                        console.log(`  - Image: ${newsItem.imageUrl || 'NONE'}`);
+                        console.log(`  - Video: ${newsItem.videoUrl || 'NONE'} (${newsItem.videoType || 'N/A'})`);
+                        console.log(`  - Logo: ${logoUrl || 'NONE'}`);
+                        console.log(`  - Description length: ${newsItem.description?.length || 0} chars`);
+                    }
+
                     return (
                         <Marker
                             key={`news-${newsItem.id || index}`}
                             position={getMarkerPosition(`news-${newsItem.id || index}`, location.lat, location.lng)}
                             icon={createNewsIcon(COLORS.news, opacity, blur, isRead, logoUrl)}
                             eventHandlers={{
+                                mouseover: (e) => {
+                                    e.target.openPopup();
+                                },
                                 click: () => {
                                     setReadNewsIds(prev => {
                                         const next = new Set(prev);
@@ -1235,8 +1296,23 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                         >
                             <Popup autoPan={false} maxWidth={300}>
                                 <div style={{ fontFamily: 'monospace', fontSize: '11px', maxWidth: '280px' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', borderBottom: '1px solid #2a3040', paddingBottom: '4px' }}>
-                                        <span style={{ color: COLORS.news, fontWeight: 'bold', fontSize: '9px' }}>{newsItem.source}</span>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                            {logoUrl && (
+                                                <img
+                                                    src={logoUrl}
+                                                    alt={newsItem.source}
+                                                    style={{
+                                                        width: '16px',
+                                                        height: '16px',
+                                                        borderRadius: '50%',
+                                                        objectFit: 'contain'
+                                                    }}
+                                                    onError={(e) => { e.target.style.display = 'none'; }}
+                                                />
+                                            )}
+                                            <span style={{ color: COLORS.news, fontWeight: 'bold', fontSize: '9px' }}>{newsItem.source}</span>
+                                        </div>
                                         <span style={{ color: '#5a6478', fontSize: '9px' }}>{timeAgo(newsItem.pubDate)}</span>
                                     </div>
                                     {/* Bias Meter */}
@@ -1274,16 +1350,125 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                                             </div>
                                         </div>
                                     )}
+                                    {/* Article Video - Embedded from RSS feed (YouTube, direct video, etc.) */}
+                                    {newsItem.videoUrl && (
+                                        <div style={{
+                                            marginBottom: '8px',
+                                            borderRadius: '2px',
+                                            overflow: 'hidden',
+                                            border: '1px solid #2a3040',
+                                            background: '#0d1117',
+                                            position: 'relative',
+                                            paddingBottom: newsItem.videoType === 'youtube' || newsItem.videoType === 'embed' ? '56.25%' : '0', // 16:9 aspect ratio for embeds
+                                            height: newsItem.videoType === 'direct' ? '150px' : 'auto'
+                                        }}>
+                                            {(newsItem.videoType === 'youtube' || newsItem.videoType === 'embed') ? (
+                                                <iframe
+                                                    src={newsItem.videoUrl}
+                                                    title={newsItem.title}
+                                                    style={{
+                                                        position: 'absolute',
+                                                        top: 0,
+                                                        left: 0,
+                                                        width: '100%',
+                                                        height: '100%',
+                                                        border: 'none'
+                                                    }}
+                                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                    allowFullScreen
+                                                />
+                                            ) : (
+                                                <video
+                                                    src={newsItem.videoUrl}
+                                                    controls
+                                                    style={{
+                                                        width: '100%',
+                                                        height: '100%',
+                                                        objectFit: 'contain',
+                                                        display: 'block'
+                                                    }}
+                                                    onError={(e) => {
+                                                        e.target.parentElement.style.display = 'none';
+                                                    }}
+                                                >
+                                                    Your browser does not support the video tag.
+                                                </video>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {/* Article Image - Embedded from RSS feed */}
+                                    {newsItem.imageUrl && (
+                                        <div style={{
+                                            marginBottom: '8px',
+                                            borderRadius: '2px',
+                                            overflow: 'hidden',
+                                            border: '1px solid #2a3040',
+                                            background: '#0d1117'
+                                        }}>
+                                            <img
+                                                src={newsItem.imageUrl}
+                                                alt={newsItem.title}
+                                                style={{
+                                                    width: '100%',
+                                                    height: 'auto',
+                                                    maxHeight: '150px',
+                                                    objectFit: 'cover',
+                                                    display: 'block'
+                                                }}
+                                                onError={(e) => {
+                                                    console.error(`[News Image] Failed to load: ${newsItem.imageUrl}`);
+                                                    e.target.parentElement.style.display = 'none';
+                                                }}
+                                                onLoad={() => {
+                                                    console.log(`[News Image] Successfully loaded: ${newsItem.imageUrl}`);
+                                                }}
+                                            />
+                                        </div>
+                                    )}
+
                                     <a
                                         href={newsItem.link}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        style={{ color: '#e0e4eb', textDecoration: 'none', lineHeight: '1.4', display: 'block' }}
+                                        style={{ color: '#e0e4eb', textDecoration: 'none', lineHeight: '1.4', display: 'block', marginBottom: '8px', fontWeight: 'bold' }}
                                     >
                                         {newsItem.title}
                                     </a>
-                                    <div style={{ marginTop: '6px', fontSize: '9px', color: '#5a6478' }}>
-                                        📍 {location.label}
+
+                                    {/* Article Description/Summary */}
+                                    {newsItem.description && (
+                                        <div style={{
+                                            marginBottom: '8px',
+                                            padding: '8px',
+                                            background: '#1a2030',
+                                            borderRadius: '2px',
+                                            fontSize: '10px',
+                                            lineHeight: '1.5',
+                                            color: '#8892a8',
+                                            maxHeight: '120px',
+                                            overflowY: 'auto'
+                                        }}>
+                                            {newsItem.description}
+                                        </div>
+                                    )}
+
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' }}>
+                                        <div style={{ fontSize: '9px', color: '#5a6478' }}>
+                                            📍 {location.label}
+                                        </div>
+                                        {newsItem.category && (
+                                            <div style={{
+                                                fontSize: '8px',
+                                                padding: '2px 6px',
+                                                background: 'rgba(77, 166, 255, 0.1)',
+                                                border: '1px solid rgba(77, 166, 255, 0.3)',
+                                                color: '#4da6ff',
+                                                borderRadius: '2px'
+                                            }}>
+                                                {newsItem.category}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </Popup>
