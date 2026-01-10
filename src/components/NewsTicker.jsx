@@ -16,49 +16,38 @@ export function NewsTicker({ news = [] }) {
             setSortedNews([]);
             return;
         }
-        // Sort by date
-        let items = [...news].sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+        // Sort by date (newest first) - this ensures ALL news items are included
+        const items = [...news].sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
 
-        // Create a flat string representation to check length
-        // We want the ticker loop to be physically long enough (e.g. > 2000 chars)
-        // so the animation loop is wide and seamless.
-        let currentLength = items.reduce((acc, i) => acc + (i.title?.length || 0), 0);
-
-        if (currentLength > 0 && currentLength < 2000) {
-            const originalItems = [...items];
-            while (currentLength < 2000) { // Force it to be very wide
-                const clones = originalItems.map((item, i) => ({
-                    ...item,
-                    id: `${item.id}-clone-${items.length + i}`
-                }));
-                items = [...items, ...clones];
-                currentLength += clones.reduce((acc, i) => acc + (i.title?.length || 0), 0);
-            }
-        }
-
+        // No need to duplicate items - the CSS creates the seamless loop
+        // by duplicating the content (ticker-loop-group appears twice)
         setSortedNews(items);
     }, [news]);
 
-    // Calculate animation duration
+    // Calculate animation duration based on content length
     const animationDuration = useMemo(() => {
-        if (sortedNews.length === 0) return '30s';
+        if (sortedNews.length === 0) return '60s';
 
-        const baseSpeed = 18000; // Restored high speed (18000 pixels/sec)
+        // Multiplied speed again by 10x (Total 150x original): 12000 pixels per second
+        const pixelsPerSecond = 12000;
 
-        // Estimate width more accurately
+        // Estimate total width: avg 8px per char + separators (40px each)
         const charCount = sortedNews.reduce((acc, item) => acc + (item.title?.length || 0), 0);
-        const estimatedWidth = charCount * 8 + (sortedNews.length * 40); // text + separators
+        const estimatedWidth = charCount * 8 + (sortedNews.length * 40);
 
-        // Duration = Distance / Speed
-        // Distance is the full width of the content
-        const duration = Math.max(2, estimatedWidth / baseSpeed);
+        // Calculate duration: total width / speed
+        // The animation moves 50% (one full loop), so we use estimatedWidth as the distance
+        // Lowered minimum duration to 1s to support high speeds
+        const duration = Math.max(1, estimatedWidth / pixelsPerSecond);
 
-        return `${duration}s`;
+        console.log(`[NewsTicker] ${sortedNews.length} items, ~${estimatedWidth}px, ${duration.toFixed(1)}s duration`);
+
+        return `${duration.toFixed(1)}s`;
     }, [sortedNews]);
 
     return (
         <div className="news-ticker-container">
-            <span className="ticker-label">BREAKING ({sortedNews.length}):</span>
+            <span className="ticker-label">NEWS ({sortedNews.length}):</span>
             <div className="news-ticker-wrapper">
                 <div
                     className="news-ticker-content"
@@ -66,19 +55,21 @@ export function NewsTicker({ news = [] }) {
                     key={sortedNews.length} // Force re-render and animation restart when data changes
                     style={{ animationDuration }}
                 >
-                    {/* First Loop */}
+                    {/* First Loop - All news items */}
                     <div className="ticker-loop-group">
                         {sortedNews.map((item, idx) => (
                             <span key={`t1-${item.id || idx}`} className="ticker-item">
+                                <span className="ticker-source">[{item.source}]</span>
                                 {item.title?.replace(/^\[.*?\]\s*/, '')}
                                 <span className="ticker-separator">•</span>
                             </span>
                         ))}
                     </div>
-                    {/* Second Loop (Duplicate) */}
+                    {/* Second Loop (Duplicate for seamless scrolling) */}
                     <div className="ticker-loop-group" aria-hidden="true">
                         {sortedNews.map((item, idx) => (
                             <span key={`t2-${item.id || idx}`} className="ticker-item">
+                                <span className="ticker-source">[{item.source}]</span>
                                 {item.title?.replace(/^\[.*?\]\s*/, '')}
                                 <span className="ticker-separator">•</span>
                             </span>
