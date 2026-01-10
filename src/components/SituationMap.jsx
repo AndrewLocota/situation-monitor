@@ -6,17 +6,21 @@ import {
     THEATRES,
     INTEL_HOTSPOTS,
     CONFLICT_ZONES,
+    FRONTLINES,
     MILITARY_BASES,
     SHIPPING_CHOKEPOINTS,
     NUCLEAR_FACILITIES,
-    CYBER_ZONES
+    CYBER_ZONES,
+    UNDERSEA_CABLES
 } from '../data/theatres';
 import { VIDEO_MARKERS } from '../data/videoMarkers';
 import { fetchLiveUAMapEvents, fetchUkraineFrontline, fetchSudanFrontlines, fetchMyanmarFrontlines, EVENT_STYLES } from '../data/liveFeeds';
 import { getAllConflictEvents, GLOBAL_EVENT_STYLES } from '../data/globalConflicts';
+import { getControlZones } from '../services/api/controlZoneFetcher';
 import { geolocateNewsItems } from '../utils/geolocateNews';
 import { useDataStore, useMapStore } from '../stores';
 import { timeAgo } from '../utils/timeFormat';
+import { getPublisherLogo } from '../data/publisherLogos';
 
 // Cluster spread configuration
 const CLUSTER_CONFIG = {
@@ -133,16 +137,38 @@ const createNuclearIcon = (color) => {
 };
 
 // News marker icon (newspaper style with emoji)
-const createNewsIcon = (color, opacity = 1, blur = 6, isRead = false) => {
+const createNewsIcon = (color, opacity = 1, blur = 6, isRead = false, logoUrl = null) => {
     return L.divIcon({
         className: 'custom-news-marker',
-        html: `<div style="
-            font-size: 16px;
-            opacity: ${opacity};
-            text-shadow: ${isRead ? 'none' : `0 0 ${blur}px ${color}, 0 0 3px rgba(0,0,0,0.8)`};
-            filter: ${isRead ? `grayscale(100%) brightness(0.7) drop-shadow(0 0 1px ${color})` : `drop-shadow(0 0 2px ${color})`};
-            transition: all 0.5s ease;
-        ">📰</div>`,
+        html: `
+            <div style="position: relative; width: 20px; height: 20px;">
+                <div style="
+                    font-size: 16px;
+                    opacity: ${opacity};
+                    text-shadow: ${isRead ? 'none' : `0 0 ${blur}px ${color}, 0 0 3px rgba(0,0,0,0.8)`};
+                    filter: ${isRead ? `grayscale(100%) brightness(0.7) drop-shadow(0 0 1px ${color})` : `drop-shadow(0 0 2px ${color})`};
+                    transition: all 0.5s ease;
+                ">📰</div>
+                ${logoUrl ? `
+                    <img
+                        src="${logoUrl}"
+                        style="
+                            position: absolute;
+                            bottom: -3px;
+                            right: -3px;
+                            width: 10px;
+                            height: 10px;
+                            border-radius: 2px;
+                            border: 1px solid rgba(0,0,0,0.5);
+                            background: white;
+                            object-fit: contain;
+                            box-shadow: 0 0 3px rgba(0,0,0,0.8);
+                        "
+                        onerror="this.style.display='none'"
+                    />
+                ` : ''}
+            </div>
+        `,
         iconSize: [20, 20],
         iconAnchor: [10, 10]
     });
@@ -638,6 +664,7 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
     const [frontlineData, setFrontlineData] = useState([]);
     const [sudanFrontlines, setSudanFrontlines] = useState([]);
     const [myanmarFrontlines, setMyanmarFrontlines] = useState([]);
+    const [controlZones, setControlZones] = useState([]);
     const [spreadState, setSpreadState] = useState({ active: false, positions: {}, center: null });
     const [focusedNewsId, setFocusedNewsId] = useState(null);
     const [showTheatres, setShowTheatres] = useState(false);
@@ -773,6 +800,23 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
         return () => clearInterval(interval);
     }, []);
 
+    // Fetch territorial control zones (live data with 6hr cache)
+    useEffect(() => {
+        const loadControlZones = async () => {
+            try {
+                const zones = await getControlZones();
+                setControlZones(zones);
+                console.log(`Loaded ${zones.length} territorial control zones`);
+            } catch (err) {
+                console.error('Failed to load control zones:', err);
+            }
+        };
+        loadControlZones();
+        // Refresh every 6 hours (control zones change slowly)
+        const interval = setInterval(loadControlZones, 6 * 60 * 60 * 1000);
+        return () => clearInterval(interval);
+    }, []);
+
     const getLevelColor = (level) => {
         switch (level) {
             case 'high': return COLORS.high;
@@ -855,6 +899,32 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                             interactive: false
                         }}
                     />
+                ))}
+
+                {/* Territorial Control Zones - Low opacity overlays */}
+                {layers.controlzones && controlZones.map(zone => (
+                    <Polygon
+                        key={zone.id}
+                        positions={zone.coords.map(c => [c[1], c[0]])}
+                        pathOptions={{
+                            color: zone.color,
+                            weight: 1,
+                            opacity: 0.6,
+                            fillColor: zone.color,
+                            fillOpacity: zone.opacity || 0.2,
+                            dashArray: '4, 4'
+                        }}
+                    >
+                        <Popup autoPan={false}>
+                            <div style={{ fontFamily: 'monospace', fontSize: '11px' }}>
+                                <strong style={{ color: zone.color }}>{zone.name}</strong><br />
+                                <span style={{ color: '#888' }}>Faction: {zone.faction}</span><br />
+                                <span style={{ fontSize: '10px', color: '#aaa' }}>{zone.description}</span><br />
+                                <span style={{ fontSize: '9px', color: '#666' }}>Source: {zone.source}</span>
+                                {zone.lastUpdated && <><br /><span style={{ fontSize: '9px', color: '#666' }}>Updated: {zone.lastUpdated}</span></>}
+                            </div>
+                        </Popup>
+                    </Polygon>
                 ))}
 
                 {/* Conflict Zones */}
@@ -1093,6 +1163,31 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                     </Marker>
                 ))}
 
+                {/* Undersea Cables */}
+                {layers.cables && UNDERSEA_CABLES.map(cable => (
+                    <Polyline
+                        key={cable.id}
+                        positions={cable.coords}
+                        pathOptions={{
+                            color: '#00ffcc',
+                            weight: 2,
+                            opacity: 0.7,
+                            dashArray: '4, 8',
+                            smoothFactor: 1.5
+                        }}
+                    >
+                        <Popup autoPan={false}>
+                            <div style={{ fontFamily: 'monospace', fontSize: '11px' }}>
+                                <strong style={{ color: '#00ffcc' }}>{cable.name}</strong><br />
+                                Capacity: {cable.capacity}<br />
+                                Length: {cable.length}<br />
+                                Status: <span style={{ color: '#0f0' }}>{cable.status.toUpperCase()}</span>
+                                {cable.owner && <><br />Owner: {cable.owner}</>}
+                            </div>
+                        </Popup>
+                    </Polyline>
+                ))}
+
                 {/* Cyber Threat Zones */}
                 {layers.cyber && CYBER_ZONES.map(zone => (
                     <Marker
@@ -1119,11 +1214,15 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                     const blur = 2 + (normalized * 8);
                     const isRead = readNewsIds.has(newsItem.id);
 
+                    // Get publisher logo
+                    const publisherInfo = getPublisherLogo(newsItem.source);
+                    const logoUrl = publisherInfo?.url;
+
                     return (
                         <Marker
                             key={`news-${newsItem.id || index}`}
                             position={getMarkerPosition(`news-${newsItem.id || index}`, location.lat, location.lng)}
-                            icon={createNewsIcon(COLORS.news, opacity, blur, isRead)}
+                            icon={createNewsIcon(COLORS.news, opacity, blur, isRead, logoUrl)}
                             eventHandlers={{
                                 click: () => {
                                     setReadNewsIds(prev => {

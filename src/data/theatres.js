@@ -382,13 +382,15 @@ export const CONFLICT_ZONES = [
 
 // Frontline data from Claude
 export const FRONTLINES = [
+  // Ukraine - ISW data
   {
     conflictId: 'ukraine',
     name: 'Eastern Front',
     coords: [
       [37.0, 47.2], [37.5, 47.8], [38.0, 48.2], [38.2, 48.8], [37.8, 49.2]
     ],
-    type: 'active'
+    type: 'active',
+    description: 'Donbas frontline - active Russian offensive operations'
   },
   {
     conflictId: 'ukraine',
@@ -396,7 +398,59 @@ export const FRONTLINES = [
     coords: [
       [35.0, 46.8], [35.5, 47.0], [36.2, 47.1], [37.0, 47.2]
     ],
-    type: 'fortified'
+    type: 'fortified',
+    description: 'Zaporizhzhia-Kherson axis - fortified defensive positions'
+  },
+
+  // Sudan - SAF vs RSF (Jan 2026)
+  // RSF controls Darfur (west), SAF controls east, Kordofan is contested
+  {
+    conflictId: 'sudan',
+    name: 'Kordofan Front',
+    coords: [
+      [27.5, 11.5], [29.0, 12.0], [30.5, 12.5], [31.5, 13.0], [32.0, 13.5]
+    ],
+    type: 'active',
+    description: 'SAF-RSF contested territory - North/South/West Kordofan'
+  },
+  {
+    conflictId: 'sudan',
+    name: 'Darfur Line',
+    coords: [
+      [24.0, 12.0], [25.0, 13.5], [26.0, 14.5], [27.0, 15.5]
+    ],
+    type: 'fortified',
+    description: 'RSF-controlled Darfur region boundary'
+  },
+
+  // Myanmar - Junta vs Ethnic Armed Groups & PDF (Jan 2026)
+  // AA controls Rakhine, MNDAA in Shan, PDF widespread
+  {
+    conflictId: 'myanmar',
+    name: 'Rakhine-Chin Front',
+    coords: [
+      [92.5, 20.0], [93.0, 21.0], [93.5, 22.0], [94.0, 23.0]
+    ],
+    type: 'active',
+    description: 'Arakan Army territorial control - Western Myanmar'
+  },
+  {
+    conflictId: 'myanmar',
+    name: 'Northern Shan Front',
+    coords: [
+      [97.5, 23.0], [98.0, 23.5], [98.5, 24.0], [99.0, 24.5], [99.5, 25.0]
+    ],
+    type: 'active',
+    description: 'MNDAA/TNLA operations - Shan State northern corridor'
+  },
+  {
+    conflictId: 'myanmar',
+    name: 'Central Myanmar',
+    coords: [
+      [95.0, 19.5], [95.5, 20.0], [96.0, 21.0], [96.5, 21.5]
+    ],
+    type: 'active',
+    description: 'PDF resistance zones - Sagaing/Magway regions'
   }
 ];
 
@@ -448,4 +502,105 @@ export const CYBER_ZONES = [
   { id: 'cyber_china', name: 'CN', fullName: 'China', lat: 35.0, lon: 105.0, group: 'APT41', targets: ['Tech', 'Supply Chain'] },
   { id: 'cyber_nk', name: 'NK', fullName: 'North Korea', lat: 39.0, lon: 127.0, group: 'Lazarus', targets: ['Crypto', 'Banks'] },
   { id: 'cyber_iran', name: 'IR', fullName: 'Iran', lat: 32.0, lon: 53.0, group: 'APT33/35', targets: ['Energy', 'Israel'] }
+];
+
+// Undersea cables - critical communications infrastructure
+// Major transoceanic fiber optic cables
+export const UNDERSEA_CABLES = [
+  {
+    id: 'seamewe3',
+    name: 'SEA-ME-WE 3',
+    coords: [
+      [103.85, 1.29],    // Singapore
+      [100.50, 13.75],   // Thailand
+      [88.35, 22.57],    // Bangladesh
+      [72.88, 19.07],    // India (Mumbai)
+      [58.38, 23.61],    // Oman
+      [39.23, 21.49],    // Saudi Arabia (Jeddah)
+      [32.90, 29.98],    // Egypt (Suez)
+      [25.05, 35.33],    // Crete
+      [23.73, 37.98],    // Greece
+      [12.50, 41.90],    // Italy (Rome)
+      [-5.35, 36.14],    // Spain
+      [-9.15, 38.72],    // Portugal
+      [-0.13, 51.51]     // UK (London)
+    ],
+    capacity: '1.92 Tbps',
+    length: '39,000 km',
+    status: 'active'
+  },
+  {
+    id: 'flag_ea',
+    name: 'FLAG Europe-Asia',
+    coords: [
+      [114.17, 22.28],   // Hong Kong
+      [121.05, 14.60],   // Philippines
+      [103.85, 1.29],    // Singapore
+      [80.27, 13.09],    // India (Chennai)
+      [72.88, 19.07],    // India (Mumbai)
+      [58.38, 23.61],    // Oman
+      [51.52, 25.28],    // Qatar
+      [48.50, 29.37],    // Kuwait
+      [44.40, 33.31],    // Iraq
+      [32.90, 29.98],    // Egypt
+      [-0.13, 51.51]     // UK
+    ],
+    capacity: '5.12 Tbps',
+    length: '28,000 km',
+    status: 'active'
+  },
+  {
+    id: 'tata_tgn',
+    name: 'TATA TGN-Atlantic',
+    coords: [
+      [-0.13, 51.51],    // UK
+      [-6.26, 53.35],    // Ireland
+      [-52.71, 47.56],   // Canada (Newfoundland)
+      [-73.57, 45.50],   // Canada (Montreal)
+      [-74.01, 40.71]    // USA (New York)
+    ],
+    capacity: '5.12 Tbps',
+    length: '15,000 km',
+    status: 'active'
+  },
+  {
+    id: 'pacific_light',
+    name: 'Pacific Light Cable',
+    coords: [
+      [114.17, 22.28],   // Hong Kong
+      [121.05, 14.60],   // Philippines
+      [144.96, 13.48],   // Guam
+      [151.21, -33.87],  // Australia (Sydney)
+      [-118.24, 34.05]   // USA (Los Angeles)
+    ],
+    capacity: '144 Tbps',
+    length: '12,800 km',
+    status: 'active'
+  },
+  {
+    id: 'unity',
+    name: 'UNITY',
+    coords: [
+      [139.69, 35.68],   // Japan (Tokyo)
+      [144.96, 13.48],   // Guam
+      [-118.24, 34.05]   // USA (Los Angeles)
+    ],
+    capacity: '7.68 Tbps',
+    length: '9,620 km',
+    status: 'active'
+  },
+  {
+    id: 'marea',
+    name: 'MAREA',
+    coords: [
+      [-8.62, 41.14],    // Spain (Bilbao)
+      [-9.15, 38.72],    // Portugal
+      [-38.50, 36.00],   // Mid-Atlantic
+      [-77.03, 38.90]    // USA (Virginia Beach)
+    ],
+    capacity: '200 Tbps',
+    length: '6,600 km',
+    status: 'active',
+    owner: 'Microsoft/Facebook/Telxius'
+  }
 ];

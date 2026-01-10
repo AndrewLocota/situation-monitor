@@ -20,6 +20,8 @@ export function MapLayersPanel() {
             name: 'Geopolitical',
             layers: [
                 { id: 'conflicts', label: 'Conflict Zones', icon: '⚔️' },
+                { id: 'frontlines', label: 'Active Frontlines', icon: '⚡' },
+                { id: 'controlzones', label: 'Territorial Control', icon: '🗺️' },
                 { id: 'sanctions', label: 'Sanctions', icon: '🚫' },
                 { id: 'cyber', label: 'Cyber Threats', icon: '💻' }
             ]

@@ -4,6 +4,7 @@
  */
 
 import { fetchWithCorsProxy } from './corsProxy';
+import { fetchWithCircuitBreaker } from '../../utils/circuitBreaker';
 
 // RSS Feed URLs for live news with bias ratings
 // Bias scale: -3 (far left) to +3 (far right), 0 = center
@@ -52,7 +53,16 @@ const LIVEUAMAP_FEEDS = {
  */
 async function parseRSSFeed(url, sourceName, biasInfo = {}, signal) {
   try {
-    const response = await fetchWithCorsProxy(url, { signal });
+    // Wrap with circuit breaker to prevent hammering failed endpoints
+    const response = await fetchWithCircuitBreaker(
+      `rss-${sourceName}`,
+      () => fetchWithCorsProxy(url, { signal }),
+      {
+        failureThreshold: 2, // Open after 2 failures
+        timeout: 120000, // Wait 2 minutes before retry
+        maxTimeout: 600000 // Max 10 minutes between retries
+      }
+    );
     if (!response) return [];
 
     const text = await response.text();

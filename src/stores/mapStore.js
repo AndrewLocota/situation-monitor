@@ -4,7 +4,8 @@ const DEFAULT_LAYERS = {
   conflicts: true,
   bases: true,
   nuclear: true,
-  frontlines: true,  // Ukraine ISW, Sudan, Myanmar frontlines
+  frontlines: true,  // Ukraine ISW frontlines (choppy line segments)
+  controlzones: true,  // Territorial control polygons (Sudan, Myanmar, Syria)
   cables: false,
   sanctions: false,
   density: false,

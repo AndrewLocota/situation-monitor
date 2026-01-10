@@ -16,6 +16,7 @@ import {
     TwitterIntelPanel,
 } from './panels';
 import { useDataStore, useSettingsStore } from '../stores';
+import { fetchWithCircuitBreaker } from '../utils/circuitBreaker';
 import '../App.css';
 
 /**
@@ -64,8 +65,19 @@ __  __|__
                     url = 'https://api.countapi.xyz/get/AndrewLocota/situation-monitor';
                 }
 
-                const response = await fetch(url);
-                const data = await response.json();
+                const data = await fetchWithCircuitBreaker(
+                    'visitor-count',
+                    async () => {
+                        const response = await fetch(url);
+                        return response.json();
+                    },
+                    {
+                        failureThreshold: 2,
+                        timeout: 300000, // Wait 5 minutes before retry (not critical)
+                        maxTimeout: 1800000 // Max 30 minutes
+                    }
+                );
+
                 if (data && data.value) {
                     setVisitorCount(data.value);
                     if (!hasCounted) {
@@ -73,8 +85,8 @@ __  __|__
                     }
                 }
             } catch (err) {
-                console.warn('Failed to fetch visitor count:', err);
-                // Fallback to simple local storage count if API fails? No, just hide it.
+                // Silently fail - visitor count is not critical
+                // Circuit breaker will prevent excessive retries
             }
         };
 
