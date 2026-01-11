@@ -186,8 +186,7 @@ const createNewsIcon = (color, opacity = 1, blur = 6, isRead = false, logoUrl = 
                             z-index: 100;
                             pointer-events: none;
                         "
-                        onerror="console.error('Logo failed:', '${safeLogo}'); this.style.display='none';"
-                        onload="console.log('Logo loaded:', '${safeLogo}');"
+                        onerror="this.style.display='none';"
                     />
                 ` : ''}
             </div>
@@ -1267,14 +1266,15 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                     const logoUrl = publisherInfo?.url;
 
                     // Debug: Log image, video, and logo availability for first few items
-                    if (index < 3) {
-                        console.log(`[News #${index}] ${newsItem.source}:`);
-                        console.log(`  - Title: ${newsItem.title.substring(0, 50)}...`);
-                        console.log(`  - Image: ${newsItem.imageUrl || 'NONE'}`);
-                        console.log(`  - Video: ${newsItem.videoUrl || 'NONE'} (${newsItem.videoType || 'N/A'})`);
-                        console.log(`  - Logo: ${logoUrl || 'NONE'}`);
-                        console.log(`  - Description length: ${newsItem.description?.length || 0} chars`);
-                    }
+                    // Commented out to reduce console spam - uncomment if needed for debugging
+                    // if (index < 3) {
+                    //     console.log(`[News #${index}] ${newsItem.source}:`);
+                    //     console.log(`  - Title: ${newsItem.title.substring(0, 50)}...`);
+                    //     console.log(`  - Image: ${newsItem.imageUrl || 'NONE'}`);
+                    //     console.log(`  - Video: ${newsItem.videoUrl || 'NONE'} (${newsItem.videoType || 'N/A'})`);
+                    //     console.log(`  - Logo: ${logoUrl || 'NONE'}`);
+                    //     console.log(`  - Description length: ${newsItem.description?.length || 0} chars`);
+                    // }
 
                     return (
                         <Marker

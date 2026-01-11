@@ -179,13 +179,14 @@ async function parseRSSFeed(url, sourceName, biasInfo = {}, signal) {
           .trim();
 
         // Log image/video extraction for debugging (first 2 items from all sources)
-        if (index < 2) {
-          console.log(`[Atom Parser] ${sourceName} #${index}:`);
-          console.log(`  - Title: ${title.substring(0, 60)}...`);
-          console.log(`  - Image: ${imageUrl || 'NONE'}`);
-          console.log(`  - Video: ${videoUrl || 'NONE'} (type: ${videoType || 'N/A'})`);
-          console.log(`  - Description length: ${cleanSummary.length} chars`);
-        }
+        // Commented out to reduce console spam - uncomment if needed for debugging
+        // if (index < 2) {
+        //   console.log(`[Atom Parser] ${sourceName} #${index}:`);
+        //   console.log(`  - Title: ${title.substring(0, 60)}...`);
+        //   console.log(`  - Image: ${imageUrl || 'NONE'}`);
+        //   console.log(`  - Video: ${videoUrl || 'NONE'} (type: ${videoType || 'N/A'})`);
+        //   console.log(`  - Description length: ${cleanSummary.length} chars`);
+        // }
 
         items.push({
           id: `${sourceName}-${index}-${Date.now()}`,
@@ -373,13 +374,14 @@ async function parseRSSFeed(url, sourceName, biasInfo = {}, signal) {
         }
 
         // Log image/video extraction for debugging (first 2 items from all sources)
-        if (index < 2) {
-          console.log(`[RSS Parser] ${sourceName} #${index}:`);
-          console.log(`  - Title: ${title.substring(0, 60)}...`);
-          console.log(`  - Image: ${imageUrl || 'NONE'}`);
-          console.log(`  - Video: ${videoUrl || 'NONE'} (type: ${videoType || 'N/A'})`);
-          console.log(`  - Description length: ${cleanDescription.length} chars`);
-        }
+        // Commented out to reduce console spam - uncomment if needed for debugging
+        // if (index < 2) {
+        //   console.log(`[RSS Parser] ${sourceName} #${index}:`);
+        //   console.log(`  - Title: ${title.substring(0, 60)}...`);
+        //   console.log(`  - Image: ${imageUrl || 'NONE'}`);
+        //   console.log(`  - Video: ${videoUrl || 'NONE'} (type: ${videoType || 'N/A'})`);
+        //   console.log(`  - Description length: ${cleanDescription.length} chars`);
+        // }
 
         items.push({
           id: `${sourceName}-${index}-${Date.now()}`,
