@@ -38,6 +38,17 @@ html, body {
   to { transform: scale(1); opacity: 1; }
 }
 
+@keyframes polygon-glow-pulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 4px rgba(255, 119, 0, 0.6)) drop-shadow(0 0 8px rgba(255, 119, 0, 0.4));
+    opacity: 0.7;
+  }
+  50% {
+    filter: drop-shadow(0 0 8px rgba(255, 119, 0, 0.9)) drop-shadow(0 0 16px rgba(255, 119, 0, 0.6));
+    opacity: 0.9;
+  }
+}
+
 #root {
   height: 100%;
   width: 100%;
@@ -45,6 +56,11 @@ html, body {
 
 .map-zoom-entry {
   animation: zoomInEffect 1s ease-out forwards;
+}
+
+/* Glowing polygon for high-priority theaters */
+.glowing-polygon {
+  animation: polygon-glow-pulse 2s ease-in-out infinite;
 }
 
 * {
@@ -133,4 +149,26 @@ button:hover {
 
 .animate-pulse {
   animation: pulse 2s ease-in-out infinite;
+}
+
+/* Theater Vignette Effect - respects header and footer boundaries */
+.theater-vignette {
+  position: absolute;
+  top: 48px; /* Below header (min-height: 48px) */
+  left: 0;
+  right: 0;
+  bottom: 0; /* Extend to footer edge - glow will be inset */
+  pointer-events: none;
+  z-index: 1000;
+  box-shadow: inset 0 0 120px 30px rgba(255, 119, 0, 0.25), inset 0 0 60px 15px rgba(255, 119, 0, 0.15);
+  animation: theater-vignette-pulse 3s ease-in-out infinite;
+}
+
+@keyframes theater-vignette-pulse {
+  0%, 100% {
+    box-shadow: inset 0 0 120px 30px rgba(255, 119, 0, 0.25), inset 0 0 60px 15px rgba(255, 119, 0, 0.15);
+  }
+  50% {
+    box-shadow: inset 0 0 140px 40px rgba(255, 119, 0, 0.35), inset 0 0 80px 20px rgba(255, 119, 0, 0.2);
+  }
 }

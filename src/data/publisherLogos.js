@@ -109,6 +109,52 @@ export const PUBLISHER_LOGOS = {
     name: 'Council on Foreign Relations'
   },
 
+  // Iran/Middle East Sources
+  'iranintl': {
+    url: `${BASE}logos/iranintl.svg`,
+    name: 'Iran International'
+  },
+  'iranwire': {
+    url: `${BASE}logos/iranwire.svg`,
+    name: 'Iran Wire'
+  },
+  'iran wire': {
+    url: `${BASE}logos/iranwire.svg`,
+    name: 'Iran Wire'
+  },
+  'timesofisrael': {
+    url: `${BASE}logos/timesofisrael.svg`,
+    name: 'Times of Israel'
+  },
+  'jpost': {
+    url: `${BASE}logos/jpost.svg`,
+    name: 'Jerusalem Post'
+  },
+  'haaretz': {
+    url: `${BASE}logos/haaretz.svg`,
+    name: 'Haaretz'
+  },
+  'middleeasteye': {
+    url: `${BASE}logos/middleeasteye.svg`,
+    name: 'Middle East Eye'
+  },
+  'almonitoriran': {
+    url: `${BASE}logos/almonitor.svg`,
+    name: 'Al-Monitor'
+  },
+  'almonitor': {
+    url: `${BASE}logos/almonitor.svg`,
+    name: 'Al-Monitor'
+  },
+  'rudawenglish': {
+    url: `${BASE}logos/rudaw.svg`,
+    name: 'Rudaw'
+  },
+  'rudaw': {
+    url: `${BASE}logos/rudaw.svg`,
+    name: 'Rudaw'
+  },
+
   // Default fallback for unknown sources
   'default': {
     url: null,

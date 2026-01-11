@@ -27,7 +27,8 @@
 }
 
 .theatre-nav-btn {
-  padding: 4px 8px;
+  padding: 4px 12px;
+  min-width: 60px;
   height: 24px;
   font-size: 10px;
   font-family: var(--font-mono);
@@ -41,6 +42,7 @@
   letter-spacing: 0.1em;
   display: flex;
   align-items: center;
+  justify-content: center;
 }
 
 .theatre-nav-btn:hover {
@@ -54,6 +56,32 @@
   border-color: rgba(77, 166, 255, 0.4);
   background: rgba(77, 166, 255, 0.15);
   box-shadow: 0 0 12px rgba(77, 166, 255, 0.2);
+}
+
+/* Glowing theatre button (for high-priority theaters like Middle East/Iran) */
+.theatre-nav-btn.glowing-theatre {
+  color: var(--theatre-color, #ff7700);
+  border-color: var(--theatre-color, #ff7700);
+  background: rgba(255, 119, 0, 0.15);
+  animation: theatre-glow-pulse 2s ease-in-out infinite;
+}
+
+.theatre-nav-btn.glowing-theatre.active {
+  color: var(--theatre-color, #ff7700);
+  border-color: var(--theatre-color, #ff7700);
+  background: rgba(255, 119, 0, 0.25);
+  box-shadow: 0 0 16px var(--theatre-glow, rgba(255, 119, 0, 0.6));
+}
+
+@keyframes theatre-glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 10px var(--theatre-glow, rgba(255, 119, 0, 0.4));
+    border-color: var(--theatre-color, #ff7700);
+  }
+  50% {
+    box-shadow: 0 0 20px var(--theatre-glow, rgba(255, 119, 0, 0.8)), 0 0 30px var(--theatre-glow, rgba(255, 119, 0, 0.4));
+    border-color: var(--theatre-color, #ff7700);
+  }
 }
 
 .header-brand {
@@ -118,6 +146,66 @@
   align-items: center;
   justify-content: center;
   gap: 16px; /* Space between nav and live indicator */
+  flex: 2; /* Increase flex to give more space for centering */
+  position: relative;
+}
+
+/* Theater Exit Button */
+.theater-exit-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.theater-exit-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 16px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: bold;
+  color: var(--theatre-color, #ff7700);
+  background: rgba(255, 119, 0, 0.1);
+  border: 1px solid rgba(255, 119, 0, 0.4);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0.15em;
+  box-shadow: 0 0 12px rgba(255, 119, 0, 0.2);
+  animation: theater-exit-pulse 2s ease-in-out infinite;
+}
+
+.theater-exit-btn:hover {
+  background: rgba(255, 119, 0, 0.2);
+  border-color: rgba(255, 119, 0, 0.6);
+  box-shadow: 0 0 20px rgba(255, 119, 0, 0.4);
+  transform: scale(1.05);
+}
+
+.theater-exit-label {
+  color: #ff7700;
+}
+
+.theater-exit-x {
+  font-size: 18px;
+  font-weight: normal;
+  color: #ff7700;
+  opacity: 0.8;
+}
+
+.theater-exit-btn:hover .theater-exit-x {
+  opacity: 1;
+  transform: rotate(90deg);
+  transition: transform 0.2s ease;
+}
+
+@keyframes theater-exit-pulse {
+  0%, 100% {
+    box-shadow: 0 0 12px rgba(255, 119, 0, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(255, 119, 0, 0.4);
+  }
 }
 
 .header-right {

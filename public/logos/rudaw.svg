@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40">
+  <rect width="120" height="40" fill="#c0392b"/>
+  <rect y="0" width="120" height="13" fill="#2ecc71"/>
+  <rect y="27" width="120" height="13" fill="#f39c12"/>
+  <text x="60" y="23" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="white" text-anchor="middle">RUDAW</text>
+</svg>
