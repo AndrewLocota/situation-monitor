@@ -150,14 +150,6 @@ export const useMapStore = create((set, get) => ({
 
   isGlobalView: () => {
     return get().currentTheatre === 'GLOBAL';
-  },
-
-  // New action for setting map view (center and zoom)
-  mapView: null,
-  setMapView: (view) => {
-    set({ mapView: view });
-    // Clear mapView after a short delay to allow map to react
-    setTimeout(() => set({ mapView: null }), 100);
   }
 }));
 

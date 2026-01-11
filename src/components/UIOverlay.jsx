@@ -131,6 +131,14 @@ __  __|__
 
                 {/* Center area (just for layout spacing and center UI elements) */}
                 <main className="map-area" style={{ background: 'transparent' }}>
+                    {/* Loading indicator */}
+                    {isLoading && (
+                        <div className="loading-overlay" style={{ pointerEvents: 'auto' }}>
+                            <div className="loading-spinner" />
+                            <span>SYNCING LIVE DATA...</span>
+                        </div>
+                    )}
+
                     {/* Error indicator */}
                     {error && (
                         <div className="error-banner" style={{ pointerEvents: 'auto' }}>

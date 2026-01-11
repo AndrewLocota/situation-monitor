@@ -14,12 +14,9 @@ import {
     UNDERSEA_CABLES
 } from '../data/theatres';
 import { VIDEO_MARKERS } from '../data/videoMarkers';
-import { getInstagramVideos, getActiveInstagramVideos } from '../services/api/instagramScraper';
-import { IRAN_INSTAGRAM_VIDEOS, getActiveIranVideos } from '../data/iranInstagramVideos';
 import { fetchLiveUAMapEvents, fetchUkraineFrontline, fetchSudanFrontlines, fetchMyanmarFrontlines, EVENT_STYLES } from '../data/liveFeeds';
 import { getAllConflictEvents, GLOBAL_EVENT_STYLES } from '../data/globalConflicts';
 import { getControlZones } from '../services/api/controlZoneFetcher';
-import { NEWS_FEEDS } from '../services/api/liveDataFetcher';
 import { geolocateNewsItems } from '../utils/geolocateNews';
 import { useDataStore, useMapStore } from '../stores';
 import { timeAgo } from '../utils/timeFormat';
@@ -200,71 +197,10 @@ const createNewsIcon = (color, opacity = 1, blur = 6, isRead = false, logoUrl = 
     });
 };
 
-// Protest marker icon - multiple people in red
-const createProtestIcon = (color = '#ff4757', size = 16) => {
-    return L.divIcon({
-        className: 'custom-protest-marker',
-        html: `
-            <div style="
-                width: ${size}px;
-                height: ${size}px;
-                background: ${color};
-                border-radius: 50%;
-                box-shadow: 0 0 ${size * 1.5}px ${color}, 0 0 ${size * 0.5}px rgba(255,71,87,0.8);
-                animation: protest-pulse 2s infinite;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                border: 2px solid rgba(255,255,255,0.3);
-                position: relative;
-            ">
-                <div style="
-                    font-size: ${size * 0.7}px;
-                    color: white;
-                    text-shadow: 0 0 3px rgba(0,0,0,0.8);
-                    font-weight: bold;
-                    position: relative;
-                    z-index: 2;
-                ">✊</div>
-            </div>
-            <style>
-                @keyframes protest-pulse {
-                    0% { transform: scale(1); box-shadow: 0 0 ${size * 1.5}px ${color}, 0 0 ${size * 0.5}px rgba(255,71,87,0.8); }
-                    50% { transform: scale(1.15); box-shadow: 0 0 ${size * 2.5}px ${color}, 0 0 ${size}px rgba(255,71,87,1); }
-                    100% { transform: scale(1); box-shadow: 0 0 ${size * 1.5}px ${color}, 0 0 ${size * 0.5}px rgba(255,71,87,0.8); }
-                }
-            </style>
-        `,
-        iconSize: [size, size],
-        iconAnchor: [size / 2, size / 2]
-    });
-};
-
-// Map view handler for theater popup actions
-const MapViewHandler = () => {
-    const map = useMap();
-    const { mapView } = useMapStore();
-
-    useEffect(() => {
-        if (mapView && mapView.center && mapView.zoom) {
-            // Fly to the specified location with zoom
-            map.flyTo(mapView.center, mapView.zoom, {
-                duration: 1.5,
-                easeLinearity: 0.25
-            });
-        }
-    }, [map, mapView]);
-
-    return null;
-};
-
-// Map bounds controller with zoom lock
+// Map bounds controller
 const MapController = ({ activeTheatre, onTheatreSelect }) => {
     const map = useMap();
     const hasInitialized = useRef(false);
-    const zoomOutCount = useRef(0);
-    const lastZoom = useRef(null);
-    const { setTheatre } = useMapStore();
 
     useEffect(() => {
         // Set bounds to prevent dragging out of view
@@ -287,40 +223,6 @@ const MapController = ({ activeTheatre, onTheatreSelect }) => {
         }
     }, [map]);
 
-    // Zoom lock: track zoom out events when in theater mode
-    useEffect(() => {
-        const handleZoomEnd = () => {
-            const currentZoom = map.getZoom();
-
-            // Only track when in theater mode (not global)
-            if (activeTheatre && activeTheatre !== 'GLOBAL') {
-                if (lastZoom.current !== null && currentZoom < lastZoom.current) {
-                    // User zoomed out
-                    zoomOutCount.current += 1;
-
-                    if (zoomOutCount.current >= 2) {
-                        // Exit theater mode after 2 zoom outs
-                        setTheatre('GLOBAL');
-                        zoomOutCount.current = 0;
-                    }
-                } else if (currentZoom > lastZoom.current) {
-                    // User zoomed in, reset counter
-                    zoomOutCount.current = 0;
-                }
-            } else {
-                // In global mode, reset counter
-                zoomOutCount.current = 0;
-            }
-
-            lastZoom.current = currentZoom;
-        };
-
-        map.on('zoomend', handleZoomEnd);
-        return () => {
-            map.off('zoomend', handleZoomEnd);
-        };
-    }, [map, activeTheatre, setTheatre]);
-
     useEffect(() => {
         if (activeTheatre && activeTheatre !== 'GLOBAL') {
             const theatre = THEATRES.find(t => t.id === activeTheatre);
@@ -330,13 +232,10 @@ const MapController = ({ activeTheatre, onTheatreSelect }) => {
                     [theatre.bounds.north, theatre.bounds.east]
                 );
                 map.flyToBounds(bounds, { duration: 1.5, padding: [20, 20] });
-                // Reset zoom out counter when entering theater
-                zoomOutCount.current = 0;
             }
         } else if (hasInitialized.current) {
             // Only fly back if already initialized (not on first load)
             map.flyTo([20, 0], 2.8, { duration: 1.5 });
-            zoomOutCount.current = 0;
         }
     }, [activeTheatre, map]);
 
@@ -632,10 +531,8 @@ const VideoPopupContent = React.forwardRef(({ video, onVideoPlay, onVideoPause }
         return match ? match[1] : null;
     };
 
-    // Check if this is an Instagram video
-    const isInstagram = !!video.instagramUrl;
     const tikTokId = getTikTokId(video.src);
-    const isIframe = !!tikTokId || isInstagram; // TikTok or Instagram needs iframe
+    const isIframe = !!tikTokId; // For now, only detect TikTok as iframe needs
 
     // Expose video element to parent
     React.useImperativeHandle(ref, () => ({
@@ -663,55 +560,14 @@ const VideoPopupContent = React.forwardRef(({ video, onVideoPlay, onVideoPause }
 
     return (
         <div style={{ fontFamily: 'monospace', fontSize: '11px', minWidth: '320px' }}>
-            <strong style={{ color: isInstagram ? '#ff7700' : COLORS.video }}>
-                {isInstagram ? 'INSTAGRAM INTEL' : 'VIDEO INTEL'} // {video.title}
-            </strong><br />
-            {isInstagram && video.description && (
-                <div style={{ fontSize: '10px', color: '#888', marginTop: '2px', marginBottom: '4px' }}>
-                    {video.description}
-                </div>
-            )}
-            <div style={{ marginTop: '6px', border: `1px solid ${isInstagram ? '#ff7700' : COLORS.video}`, background: '#000', minHeight: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+            <strong style={{ color: COLORS.video }}>VIDEO INTEL // {video.title}</strong><br />
+            <div style={{ marginTop: '6px', border: `1px solid ${COLORS.video}`, background: '#000', minHeight: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {isIframe ? (
-                    isInstagram ? (
-                        <>
-                            <iframe
-                                src={video.embedUrl}
-                                style={{ width: '100%', height: '480px', border: 'none' }}
-                                allow="encrypted-media; autoplay; clipboard-write;"
-                                allowFullScreen
-                                scrolling="no"
-                                frameBorder="0"
-                            ></iframe>
-                            {/* Fallback link if embed fails */}
-                            <div style={{ position: 'absolute', bottom: '8px', right: '8px', zIndex: 1000 }}>
-                                <a
-                                    href={video.instagramUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    style={{
-                                        background: 'rgba(255, 119, 0, 0.9)',
-                                        color: '#fff',
-                                        padding: '4px 8px',
-                                        fontSize: '9px',
-                                        fontWeight: 'bold',
-                                        textDecoration: 'none',
-                                        borderRadius: '2px',
-                                        border: '1px solid #ff7700'
-                                    }}
-                                >
-                                    OPEN IN INSTAGRAM ↗
-                                </a>
-                            </div>
-                        </>
-                    ) : (
-                        <iframe
-                            src={`https://www.tiktok.com/embed/v2/${tikTokId}`}
-                            style={{ width: '100%', height: '380px', border: 'none' }}
-                            allow="encrypted-media;"
-                            allowFullScreen
-                        ></iframe>
-                    )
+                    <iframe
+                        src={`https://www.tiktok.com/embed/v2/${tikTokId}`}
+                        style={{ width: '100%', height: '380px', border: 'none' }}
+                        allow="encrypted-media;"
+                    ></iframe>
                 ) : (
                     <video
                         ref={videoRef}
@@ -727,13 +583,8 @@ const VideoPopupContent = React.forwardRef(({ video, onVideoPlay, onVideoPause }
                 )}
             </div>
             <div style={{ fontSize: '9px', color: '#888', marginTop: '4px', textAlign: 'right' }}>
-                {isInstagram ? 'SOURCE: INSTAGRAM @iranintlenglish' : (isIframe ? 'SOURCE: TIKTOK' : 'LOOP: ACTIVE')} // ID: {video.id.toUpperCase()}
+                {isIframe ? 'SOURCE: TIKTOK' : 'LOOP: ACTIVE'} // ID: {video.id.toUpperCase()}
             </div>
-            {isInstagram && video.tags && (
-                <div style={{ fontSize: '9px', color: '#ff7700', marginTop: '2px' }}>
-                    TAGS: {video.tags.join(' • ')}
-                </div>
-            )}
         </div>
     );
 });
@@ -741,35 +592,7 @@ const VideoPopupContent = React.forwardRef(({ video, onVideoPlay, onVideoPause }
 const VideoMarkerLayer = ({ onVideoStateChange, onTheatreSelect, getMarkerPosition }) => {
     const map = useMap();
     const [activeVideoId, setActiveVideoId] = useState(null);
-    const [instagramVideos, setInstagramVideos] = useState([]);
     const videoRefs = useRef({});
-
-    // Fetch Instagram videos on mount
-    useEffect(() => {
-        const fetchInstagram = async () => {
-            try {
-                const videos = await getInstagramVideos();
-                const activeVideos = getActiveInstagramVideos(videos);
-                setInstagramVideos(activeVideos);
-                console.log(`Loaded ${activeVideos.length} Instagram videos from @iranintlenglish`);
-            } catch (error) {
-                console.error('Failed to fetch Instagram videos:', error);
-                setInstagramVideos([]);
-            }
-        };
-
-        fetchInstagram();
-
-        // Refresh every hour
-        const interval = setInterval(fetchInstagram, 3600000);
-        return () => clearInterval(interval);
-    }, []);
-
-    // Combine VIDEO_MARKERS with Instagram videos and manual Iran videos
-    const allVideos = useMemo(() => {
-        const manualIranVideos = getActiveIranVideos();
-        return [...VIDEO_MARKERS, ...instagramVideos, ...manualIranVideos];
-    }, [instagramVideos]);
 
     // Listen for popup close events to stop video and notify parent
     useEffect(() => {
@@ -828,38 +651,33 @@ const VideoMarkerLayer = ({ onVideoStateChange, onTheatreSelect, getMarkerPositi
 
     return (
         <>
-            {allVideos.map(video => {
-                // Use orange color for Iran Instagram videos, green for regular videos
-                const iconColor = video.instagramUrl ? '#ff7700' : COLORS.video;
-
-                return (
-                    <Marker
-                        key={video.id}
-                        position={getVideoPosition(video)}
-                        icon={createVideoIcon(iconColor)}
+            {VIDEO_MARKERS.map(video => (
+                <Marker
+                    key={video.id}
+                    position={getVideoPosition(video)}
+                    icon={createVideoIcon(COLORS.video)}
+                    eventHandlers={{
+                        click: () => handleMarkerClick(video)
+                    }}
+                >
+                    <Popup
+                        autoPan={false}
+                        minWidth={300}
+                        maxWidth={400}
+                        className="video-popup"
                         eventHandlers={{
-                            click: () => handleMarkerClick(video)
+                            add: () => handlePopupOpen(video)
                         }}
                     >
-                        <Popup
-                            autoPan={false}
-                            minWidth={300}
-                            maxWidth={400}
-                            className="video-popup"
-                            eventHandlers={{
-                                add: () => handlePopupOpen(video)
-                            }}
-                        >
-                            <VideoPopupContent
-                                ref={el => videoRefs.current[video.id] = el}
-                                video={video}
-                                onVideoPlay={handleVideoPlay}
-                                onVideoPause={handleVideoPause}
-                            />
-                        </Popup>
-                    </Marker>
-                );
-            })}
+                        <VideoPopupContent
+                            ref={el => videoRefs.current[video.id] = el}
+                            video={video}
+                            onVideoPlay={handleVideoPlay}
+                            onVideoPause={handleVideoPause}
+                        />
+                    </Popup>
+                </Marker>
+            ))}
         </>
     );
 };
@@ -890,38 +708,10 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
     // Get news and selectedNews from store
     const { allNews, selectedNews, clearSelectedNews } = useDataStore();
 
-    // Filter news based on current theater
-    // Global view: show all news (limit 110)
-    // Theater view: show global news + theater-specific news (up to 150 for Middle East)
-    const filteredNews = useMemo(() => {
-        if (currentTheatre === 'GLOBAL') {
-            // Global view: show general news only (exclude theater-specific)
-            return allNews.filter(item => {
-                const sourceKey = item.source.toLowerCase().replace(/[^a-z0-9]/g, '');
-                const newsConfig = Object.entries(NEWS_FEEDS).find(([key]) =>
-                    key.toLowerCase() === sourceKey || sourceKey.includes(key.toLowerCase())
-                );
-                // Exclude theater-specific sources
-                return !newsConfig || !newsConfig[1]?.theatre;
-            }).slice(0, 110);
-        } else {
-            // Theater view: show global news + theater-specific news
-            const theatreId = currentTheatre;
-            return allNews.filter(item => {
-                const sourceKey = item.source.toLowerCase().replace(/[^a-z0-9]/g, '');
-                const newsConfig = Object.entries(NEWS_FEEDS).find(([key]) =>
-                    key.toLowerCase() === sourceKey || sourceKey.includes(key.toLowerCase())
-                );
-                // Include: (1) non-theater news OR (2) news matching current theater
-                return !newsConfig || !newsConfig[1]?.theatre || newsConfig[1]?.theatre === theatreId;
-            }).slice(0, 150); // Allow more articles in theater view
-        }
-    }, [allNews, currentTheatre]);
-
-    // Geolocate news items
+    // Geolocate news items (up to 110)
     const geolocatedNews = useMemo(() => {
-        return geolocateNewsItems(filteredNews, filteredNews.length);
-    }, [filteredNews]);
+        return geolocateNewsItems(allNews, 110);
+    }, [allNews]);
 
     // Calculate time stats for relative styling (opacity based on dataset range)
     const { minTime, timeRange } = useMemo(() => {
@@ -1093,7 +883,6 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                 )}
 
                 <MapController activeTheatre={currentTheatre || activeTheatre} onTheatreSelect={onTheatreSelect} />
-                <MapViewHandler />
                 <ZoomDisplay />
                 <NewsFocusHandler
                     selectedNews={selectedNews}
@@ -1125,13 +914,12 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                             ]
                         }
                         pathOptions={{
-                            color: theatre.color || COLORS.accent,
-                            weight: theatre.glowing ? 2 : 1,
-                            opacity: theatre.glowing ? 0.7 : 0.3,
+                            color: COLORS.accent,
+                            weight: 1,
+                            opacity: 0.3,
                             fillOpacity: 0,
-                            dashArray: theatre.glowing ? '5, 10' : '10, 5',
-                            interactive: false,
-                            className: theatre.glowing ? 'glowing-polygon' : ''
+                            dashArray: '10, 5',
+                            interactive: false
                         }}
                     />
                 ))}
@@ -1306,7 +1094,7 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                     <Marker
                         key={spot.id}
                         position={getMarkerPosition(`intel-${spot.id}`, spot.lat, spot.lon)}
-                        icon={spot.type === 'protest' ? createProtestIcon(getLevelColor(spot.level)) : createPulseIcon(getLevelColor(spot.level))}
+                        icon={createPulseIcon(getLevelColor(spot.level))}
                         eventHandlers={{
                             mouseover: (e) => {
                                 e.target.openPopup();
@@ -1349,8 +1137,8 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                     getMarkerPosition={getMarkerPosition}
                 />
 
-                {/* Military Bases - Only show when zoomed into a theater */}
-                {layers.bases && currentTheatre && currentTheatre !== 'GLOBAL' && MILITARY_BASES.map(base => {
+                {/* Military Bases */}
+                {layers.bases && MILITARY_BASES.map(base => {
                     const color = base.type === 'us-nato' ? COLORS.usnato :
                         base.type === 'china' ? COLORS.china : COLORS.russia;
                     return (

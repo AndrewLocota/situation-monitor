@@ -9,7 +9,7 @@ import { fetchWithCircuitBreaker } from '../../utils/circuitBreaker';
 // RSS Feed URLs for live news with bias ratings
 // Bias scale: -3 (far left) to +3 (far right), 0 = center
 // Based on GroundNews ratings (aggregates AllSides, Ad Fontes, MBFC)
-export const NEWS_FEEDS = {
+const NEWS_FEEDS = {
   // Breaking news - GroundNews verified ratings
   reuters: { url: 'https://feeds.reuters.com/reuters/topNews', bias: 0, biasLabel: 'Center', reliability: 'High' },
   ap: { url: 'https://rsshub.app/apnews/topics/apf-topnews', bias: -1, biasLabel: 'Lean Left', reliability: 'High' },
@@ -35,20 +35,6 @@ export const NEWS_FEEDS = {
   // Geopolitics
   foreignPolicy: { url: 'https://foreignpolicy.com/feed/', bias: 0, biasLabel: 'Center', reliability: 'High' },
   cfr: { url: 'https://www.cfr.org/rss.xml', bias: 0, biasLabel: 'Center', reliability: 'High' },
-
-  // Iran-specific sources (theater-specific: middle_east)
-  iranIntl: { url: 'https://www.iranintl.com/en/rss', bias: 0, biasLabel: 'Center', reliability: 'Mixed', region: 'iran', theatre: 'middle_east' },
-  iranWire: { url: 'https://iranwire.com/en/feed/', bias: -1, biasLabel: 'Lean Left', reliability: 'Mixed', region: 'iran', theatre: 'middle_east' },
-  alMonitorIran: { url: 'https://www.al-monitor.com/rss/iran', bias: 0, biasLabel: 'Center', reliability: 'High', region: 'iran', theatre: 'middle_east' },
-  middleEastEye: { url: 'https://www.middleeasteye.net/rss', bias: -1, biasLabel: 'Lean Left', reliability: 'Mixed', region: 'iran', theatre: 'middle_east' },
-  rudawEnglish: { url: 'https://www.rudaw.net/english/middleeast/iran/rss', bias: 0, biasLabel: 'Center', reliability: 'Mixed', region: 'iran', theatre: 'middle_east' },
-  iranFocus: { url: 'https://www.iranfocus.com/en/feed/', bias: +1, biasLabel: 'Lean Right', reliability: 'Low', region: 'iran', theatre: 'middle_east' },
-  ncrIran: { url: 'https://www.ncr-iran.org/en/feed/', bias: +1, biasLabel: 'Lean Right', reliability: 'Low', region: 'iran', theatre: 'middle_east' },
-
-  // Middle East general (theater-specific: middle_east)
-  timesOfIsrael: { url: 'https://www.timesofisrael.com/feed/', bias: 0, biasLabel: 'Center', reliability: 'High', theatre: 'middle_east' },
-  jpost: { url: 'https://www.jpost.com/rss/rssfeedsheadlines.aspx', bias: +1, biasLabel: 'Lean Right', reliability: 'Mixed', theatre: 'middle_east' },
-  haaretz: { url: 'https://www.haaretz.com/cmlink/1.628741', bias: -2, biasLabel: 'Left', reliability: 'High', theatre: 'middle_east' },
 };
 
 // LiveUAMap-style event scraping (via their API/RSS if available)
