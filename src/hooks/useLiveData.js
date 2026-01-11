@@ -21,12 +21,13 @@ import {
   fetchCommodityData,
   fetchTwitterIntel,
 } from '../services/api/liveDataFetcher';
+import { fetchNewsFromBackend, checkBackendHealth } from '../services/api/backendClient';
 
 export function useLiveData(options = {}) {
   const {
-    // Significantly increased intervals to reduce API load
-    // Adjusted to 60s to balance "liveness" with performance/console spam mitigation
-    newsInterval = 60000,       // 1 minute (was 30s, increased to reduce load)
+    // News interval: 30s to match backend cache refresh
+    // Backend caches for 30s, so this ensures fresh data without hammering RSS feeds
+    newsInterval = 30000,       // 30 seconds (matches backend cache TTL)
     conflictInterval = 180000,  // 3 minutes (was 30 seconds)
     marketsInterval = 300000,   // 5 minutes (was 30 seconds)
     earthquakeInterval = 600000, // 10 minutes (was 2 minutes)
@@ -64,16 +65,36 @@ export function useLiveData(options = {}) {
   const twitterTimerRef = useRef(null);
   const isFirstNewsLoad = useRef(true);
 
-  // Fetch news (non-blocking) - uses fast mode for initial load
+  // Fetch news (non-blocking) - uses backend API if available, otherwise direct RSS
   const fetchNews = useCallback(async () => {
     setLoadingState('news', true);
     try {
-      // On first load, use fast mode to quickly show 20 articles
-      const isFastMode = isFirstNewsLoad.current;
-      const news = await fetchAllNews({
-        limit: isFastMode ? 20 : 110,
-        fastMode: isFastMode
-      });
+      // Check if we should use backend API
+      const useBackend = import.meta.env.VITE_USE_BACKEND_API === 'true';
+
+      let news;
+      if (useBackend) {
+        // Try backend API first
+        try {
+          news = await fetchNewsFromBackend(110);
+          console.log('[useLiveData] Using backend API for news');
+        } catch (backendError) {
+          console.warn('[useLiveData] Backend API failed, falling back to direct RSS:', backendError);
+          // Fall back to direct RSS
+          const isFastMode = isFirstNewsLoad.current;
+          news = await fetchAllNews({
+            limit: isFastMode ? 20 : 110,
+            fastMode: isFastMode
+          });
+        }
+      } else {
+        // Use direct RSS fetching
+        const isFastMode = isFirstNewsLoad.current;
+        news = await fetchAllNews({
+          limit: isFastMode ? 20 : 110,
+          fastMode: isFastMode
+        });
+      }
 
       setAllNews(news.map(item => ({
         id: item.id,
