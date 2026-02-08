@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="80" height="80" shape-rendering="geometricPrecision">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1a0a0a"/>
+      <stop offset="1" stop-color="#070303"/>
+    </linearGradient>
+    <radialGradient id="vignette" cx="50%" cy="45%" r="72%">
+      <stop offset="0" stop-color="#000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0.38"/>
+    </radialGradient>
+    <linearGradient id="skin" x1="0" y1="10" x2="0" y2="70">
+      <stop offset="0" stop-color="#e2b786"/>
+      <stop offset="0.7" stop-color="#c99a68"/>
+      <stop offset="1" stop-color="#b7865a"/>
+    </linearGradient>
+    <linearGradient id="hair" x1="14" y1="10" x2="66" y2="30">
+      <stop offset="0" stop-color="#f6d56f"/>
+      <stop offset="0.55" stop-color="#d6a21a"/>
+      <stop offset="1" stop-color="#8f5d05"/>
+    </linearGradient>
+    <pattern id="grain" width="4" height="4" patternUnits="userSpaceOnUse">
+      <path d="M0 4 L4 0" stroke="#ffffff" stroke-opacity="0.05" stroke-width="1"/>
+      <path d="M-1 1 L1 -1 M3 5 L5 3" stroke="#000000" stroke-opacity="0.08" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <!-- Background -->
+  <rect width="80" height="80" fill="url(#bg)"/>
+  <rect width="80" height="80" fill="url(#grain)" opacity="0.35"/>
+  <rect width="80" height="80" fill="url(#vignette)"/>
+
+  <!-- Suit collar -->
+  <path d="M20 72 L30 65 L40 70 L50 65 L60 72 L60 80 L20 80 Z" fill="#0e1628"/>
+  <path d="M20 72 L30 65 L40 70 L50 65 L60 72" fill="none" stroke="#ffffff" stroke-opacity="0.06" stroke-width="1"/>
+
+  <!-- Tie -->
+  <path d="M37 65 L40 80 L43 65 Z" fill="#c41e3a"/>
+  <path d="M40 64 L36.5 67.5 L40 71 L43.5 67.5 Z" fill="#a0142b"/>
+
+  <!-- Face -->
+  <ellipse cx="40" cy="38" rx="22" ry="26" fill="url(#skin)" stroke="#6f4a2f" stroke-opacity="0.18" stroke-width="1"/>
+  <ellipse cx="22.5" cy="41" rx="4.2" ry="6.2" fill="#c99a68" opacity="0.55"/>
+  <ellipse cx="57.5" cy="41" rx="4.2" ry="6.2" fill="#c99a68" opacity="0.55"/>
+
+  <!-- Hair (slightly different wave) -->
+  <path d="M16.8 29.4 Q23.6 9.4 39.6 13 Q56 8.8 63.2 29.2 Q59 19.2 40 21.2 Q20.8 19.6 16.8 29.4" fill="url(#hair)" stroke="#5b3c04" stroke-opacity="0.22" stroke-width="1"/>
+  <path d="M19.3 31.1 Q27.2 16.4 40 19.3 Q53 16.2 61.2 31.2" fill="#fff0a6" opacity="0.11"/>
+
+  <!-- Eyes (squint / blink) -->
+  <path d="M28.2 36.2 Q32 34.8 35.8 36.2" stroke="#0e111a" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+  <path d="M44.2 36.2 Q48 34.8 51.8 36.2" stroke="#0e111a" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+  <path d="M29 37 Q32 36 35 37" stroke="#4a90d9" stroke-opacity="0.25" stroke-width="1" stroke-linecap="round" fill="none"/>
+  <path d="M45 37 Q48 36 51 37" stroke="#4a90d9" stroke-opacity="0.25" stroke-width="1" stroke-linecap="round" fill="none"/>
+
+  <!-- Eyebrows (furrowed) -->
+  <path d="M26 33.2 Q32 30.8 38 34.2" stroke="#805507" stroke-width="1.8" stroke-linecap="round" fill="none" opacity="0.95"/>
+  <path d="M42 34.2 Q48 30.8 54 33.2" stroke="#805507" stroke-width="1.8" stroke-linecap="round" fill="none" opacity="0.95"/>
+
+  <!-- Nose -->
+  <path d="M40 38.6 L40 46 Q38.6 48 40 48 Q41.4 48 40 46" stroke="#9a7250" stroke-width="1.2" stroke-linecap="round" fill="none" opacity="0.85"/>
+
+  <!-- Mouth (emphatic talking) -->
+  <ellipse cx="40" cy="54.2" rx="7.6" ry="4.4" fill="#1a0c0c" opacity="0.96"/>
+  <path d="M32.8 54.1 Q40 58.1 47.2 54.1" stroke="#f3d3b0" stroke-opacity="0.3" stroke-width="0.9" fill="none"/>
+  <path d="M33.4 55.9 Q40 57.6 46.6 55.9" stroke="#000000" stroke-opacity="0.25" stroke-width="0.9" fill="none"/>
+
+  <!-- Cheek highlights + chin -->
+  <circle cx="28" cy="47" r="4.2" fill="#ffffff" opacity="0.035"/>
+  <circle cx="52" cy="47" r="4.2" fill="#ffffff" opacity="0.03"/>
+  <ellipse cx="40" cy="60" rx="8.5" ry="4.2" fill="#c99a68" opacity="0.55"/>
+  <ellipse cx="40" cy="62.5" rx="10" ry="3.2" fill="#000000" opacity="0.08"/>
+
+  <!-- Soft red glow overlay -->
+  <rect width="80" height="80" fill="#c41e3a" opacity="0.05"/>
+</svg>

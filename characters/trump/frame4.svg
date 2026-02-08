@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="80" height="80" shape-rendering="geometricPrecision">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1a0a0a"/>
+      <stop offset="1" stop-color="#070303"/>
+    </linearGradient>
+    <radialGradient id="vignette" cx="50%" cy="45%" r="72%">
+      <stop offset="0" stop-color="#000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0.38"/>
+    </radialGradient>
+    <linearGradient id="skin" x1="0" y1="10" x2="0" y2="70">
+      <stop offset="0" stop-color="#e2b786"/>
+      <stop offset="0.7" stop-color="#c99a68"/>
+      <stop offset="1" stop-color="#b7865a"/>
+    </linearGradient>
+    <linearGradient id="hair" x1="14" y1="10" x2="66" y2="30">
+      <stop offset="0" stop-color="#f6d56f"/>
+      <stop offset="0.55" stop-color="#d6a21a"/>
+      <stop offset="1" stop-color="#8f5d05"/>
+    </linearGradient>
+    <pattern id="grain" width="4" height="4" patternUnits="userSpaceOnUse">
+      <path d="M0 4 L4 0" stroke="#ffffff" stroke-opacity="0.05" stroke-width="1"/>
+      <path d="M-1 1 L1 -1 M3 5 L5 3" stroke="#000000" stroke-opacity="0.08" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <!-- Background -->
+  <rect width="80" height="80" fill="url(#bg)"/>
+  <rect width="80" height="80" fill="url(#grain)" opacity="0.35"/>
+  <rect width="80" height="80" fill="url(#vignette)"/>
+
+  <!-- Suit collar (slight shift with tilt) -->
+  <path d="M21 72 L31 65 L41 70 L51 65 L61 72 L61 80 L21 80 Z" fill="#0e1628"/>
+  <path d="M21 72 L31 65 L41 70 L51 65 L61 72" fill="none" stroke="#ffffff" stroke-opacity="0.06" stroke-width="1"/>
+
+  <!-- Tie -->
+  <path d="M38 65 L41 80 L44 65 Z" fill="#c41e3a"/>
+  <path d="M41 64 L37.5 67.5 L41 71 L44.5 67.5 Z" fill="#a0142b"/>
+
+  <!-- Face (slight tilt) -->
+  <ellipse cx="41" cy="38" rx="22" ry="26" fill="url(#skin)" stroke="#6f4a2f" stroke-opacity="0.18" stroke-width="1"/>
+  <ellipse cx="23.5" cy="41" rx="4.2" ry="6.2" fill="#c99a68" opacity="0.55"/>
+  <ellipse cx="58.5" cy="41" rx="4.2" ry="6.2" fill="#c99a68" opacity="0.55"/>
+
+  <!-- Hair -->
+  <path d="M18.8 28.7 Q26 8.6 41 12.2 Q56 8.3 63.3 28 Q58.6 18.2 41 20.4 Q24.3 18.6 18.8 28.7" fill="url(#hair)" stroke="#5b3c04" stroke-opacity="0.22" stroke-width="1"/>
+  <path d="M21.2 30.3 Q29.2 15.1 41 18.1 Q52.8 15.1 61 30.3" fill="#fff0a6" opacity="0.12"/>
+
+  <!-- Eyes -->
+  <ellipse cx="33" cy="36" rx="3.8" ry="2.4" fill="#0e111a"/>
+  <ellipse cx="49" cy="36" rx="3.8" ry="2.4" fill="#0e111a"/>
+  <circle cx="33" cy="36" r="1.1" fill="#4a90d9"/>
+  <circle cx="49" cy="36" r="1.1" fill="#4a90d9"/>
+  <circle cx="32.6" cy="35.6" r="0.35" fill="#ffffff" opacity="0.8"/>
+  <circle cx="48.6" cy="35.6" r="0.35" fill="#ffffff" opacity="0.8"/>
+
+  <!-- Eyebrows -->
+  <path d="M27 32.2 Q33 30 39 32.2" stroke="#805507" stroke-width="1.7" stroke-linecap="round" fill="none" opacity="0.9"/>
+  <path d="M43 32.2 Q49 30 55 32.2" stroke="#805507" stroke-width="1.7" stroke-linecap="round" fill="none" opacity="0.9"/>
+
+  <!-- Nose -->
+  <path d="M41 38.5 L41 46 Q39.6 48 41 48 Q42.4 48 41 46" stroke="#9a7250" stroke-width="1.2" stroke-linecap="round" fill="none" opacity="0.85"/>
+
+  <!-- Mouth (slight open) -->
+  <ellipse cx="41" cy="55" rx="6.2" ry="3.2" fill="#1e0f0f" opacity="0.92"/>
+  <path d="M35.2 54.8 Q41 53.2 46.8 54.8" stroke="#f3d3b0" stroke-opacity="0.25" stroke-width="0.8" fill="none"/>
+
+  <!-- Cheek highlights + chin -->
+  <circle cx="29" cy="47" r="4.2" fill="#ffffff" opacity="0.04"/>
+  <circle cx="53" cy="47" r="4.2" fill="#ffffff" opacity="0.03"/>
+  <ellipse cx="41" cy="60" rx="8.5" ry="4.2" fill="#c99a68" opacity="0.55"/>
+  <ellipse cx="41" cy="62.5" rx="10" ry="3.2" fill="#000000" opacity="0.08"/>
+
+  <!-- Soft red glow overlay -->
+  <rect width="80" height="80" fill="#c41e3a" opacity="0.09"/>
+</svg>
