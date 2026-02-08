@@ -28,6 +28,7 @@ export const useMapStore = create((set, get) => ({
   selectedConflict: null,
   selectedChokepoint: null,
   flashbackHours: 0,
+  mapView: null, // For programmatic map control (center, zoom)
 
   // Actions
   setTheatre: (theatreId) => {
@@ -150,6 +151,13 @@ export const useMapStore = create((set, get) => ({
 
   isGlobalView: () => {
     return get().currentTheatre === 'GLOBAL';
+  },
+
+  // Set map view (for theater popup actions)
+  setMapView: (view) => {
+    set({ mapView: view });
+    // Clear mapView after a short delay to allow map to react
+    setTimeout(() => set({ mapView: null }), 100);
   }
 }));
 

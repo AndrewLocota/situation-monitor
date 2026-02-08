@@ -1,11 +1,14 @@
 // Real conflict data feeds
 // ISW (Institute for Study of War) Ukraine data via ArcGIS/OCHA
 // All data is updated regularly by ISW analysts
+import { fetchWithCorsProxy } from '../services/api/corsProxy';
 
 // ============== ISW/OCHA API ENDPOINTS ==============
 
 // Frontline - Updated daily
 const ISW_FRONTLINE_API = 'https://services-eu1.arcgis.com/fppoCYaq7HfVFbIV/arcgis/rest/services/Ukraine_Front_Line_NEW/FeatureServer/12/query?where=1%3D1&outFields=*&f=geojson&outSR=4326';
+const ISW_FRONTLINE_API_ALT_LAYER = 'https://services-eu1.arcgis.com/fppoCYaq7HfVFbIV/arcgis/rest/services/Ukraine_Front_Line_NEW/FeatureServer/0/query?where=1%3D1&outFields=*&f=geojson&outSR=4326';
+const ISW_FRONTLINE_API_ALT_SERVICE = 'https://services-eu1.arcgis.com/fppoCYaq7HfVFbIV/ArcGIS/rest/services/UKR_Frontline_27072025/FeatureServer/0/query?where=1%3D1&outFields=*&f=geojson&outSR=4326';
 
 // Areas of Influence (Russian-controlled, contested, Ukrainian-controlled) - Polygons
 const ISW_AREAS_OF_INFLUENCE_API = 'https://services-eu1.arcgis.com/fppoCYaq7HfVFbIV/ArcGIS/rest/services/Ukraine_areas_of_influence/FeatureServer/0/query?where=1%3D1&outFields=*&f=geojson&outSR=4326';
@@ -18,45 +21,291 @@ const ISW_AIRPORTS_API = 'https://services-eu1.arcgis.com/fppoCYaq7HfVFbIV/ArcGI
 const ISW_SEAPORTS_API = 'https://services-eu1.arcgis.com/fppoCYaq7HfVFbIV/ArcGIS/rest/services/Map_Ukraine_Additional_WFL1/FeatureServer/0/query?where=1%3D1&outFields=*&f=geojson&outSR=4326';
 const ISW_BORDER_CROSSINGS_API = 'https://services-eu1.arcgis.com/fppoCYaq7HfVFbIV/ArcGIS/rest/services/Map_Ukraine_Additional_WFL1/FeatureServer/2/query?where=1%3D1&outFields=*&f=geojson&outSR=4326';
 
+// ============== UKRAINE FRONTLINE (Static Fallback) ==============
+// Approximate frontline positions based on publicly reported data (Feb 2026)
+// This serves as a fallback when the ISW API requires authentication
+// Coordinates follow the general line of contact from north to south
+const UKRAINE_FRONTLINE_FALLBACK = [
+  {
+    id: 'ukraine-frontline-north-1',
+    type: 'LineString',
+    conflict: 'ukraine',
+    // Northern sector: Kharkiv Oblast border area
+    coordinates: [
+      [36.80, 50.35], [37.00, 50.25], [37.20, 50.15], [37.40, 50.05], [37.60, 49.95]
+    ],
+    properties: { name: 'Kharkiv Oblast Front', source: 'Public reporting (approximate)', date: 'Feb 2026' }
+  },
+  {
+    id: 'ukraine-frontline-north-2',
+    type: 'LineString',
+    conflict: 'ukraine',
+    // Kupyansk-Svatove area
+    coordinates: [
+      [37.60, 49.95], [37.80, 49.75], [38.00, 49.55], [38.10, 49.35], [38.00, 49.15]
+    ],
+    properties: { name: 'Kupyansk-Svatove Front', source: 'Public reporting (approximate)', date: 'Feb 2026' }
+  },
+  {
+    id: 'ukraine-frontline-luhansk',
+    type: 'LineString',
+    conflict: 'ukraine',
+    // Luhansk Oblast - Kreminna sector
+    coordinates: [
+      [38.00, 49.15], [37.90, 49.00], [37.85, 48.85], [37.90, 48.70], [38.00, 48.55]
+    ],
+    properties: { name: 'Kreminna-Siversk Front', source: 'Public reporting (approximate)', date: 'Feb 2026' }
+  },
+  {
+    id: 'ukraine-frontline-bakhmut',
+    type: 'LineString',
+    conflict: 'ukraine',
+    // Bakhmut area - heavily contested
+    coordinates: [
+      [38.00, 48.55], [37.95, 48.45], [37.90, 48.35], [37.85, 48.25], [37.80, 48.15]
+    ],
+    properties: { name: 'Bakhmut-Chasiv Yar Front', source: 'Public reporting (approximate)', date: 'Feb 2026' }
+  },
+  {
+    id: 'ukraine-frontline-avdiivka',
+    type: 'LineString',
+    conflict: 'ukraine',
+    // Avdiivka-Pokrovsk direction
+    coordinates: [
+      [37.80, 48.15], [37.60, 48.10], [37.40, 48.05], [37.20, 48.00], [37.00, 47.95]
+    ],
+    properties: { name: 'Pokrovsk Direction Front', source: 'Public reporting (approximate)', date: 'Feb 2026' }
+  },
+  {
+    id: 'ukraine-frontline-south-donetsk',
+    type: 'LineString',
+    conflict: 'ukraine',
+    // South Donetsk - Vuhledar area
+    coordinates: [
+      [37.00, 47.95], [36.80, 47.85], [36.60, 47.75], [36.40, 47.65], [36.20, 47.55]
+    ],
+    properties: { name: 'Vuhledar Front', source: 'Public reporting (approximate)', date: 'Feb 2026' }
+  },
+  {
+    id: 'ukraine-frontline-zaporizhzhia',
+    type: 'LineString',
+    conflict: 'ukraine',
+    // Zaporizhzhia Oblast line
+    coordinates: [
+      [36.20, 47.55], [35.80, 47.45], [35.40, 47.35], [35.00, 47.25], [34.60, 47.15]
+    ],
+    properties: { name: 'Zaporizhzhia Front', source: 'Public reporting (approximate)', date: 'Feb 2026' }
+  },
+  {
+    id: 'ukraine-frontline-dnipro',
+    type: 'LineString',
+    conflict: 'ukraine',
+    // Dnipro River line - Kherson area
+    coordinates: [
+      [34.60, 47.15], [34.20, 46.95], [33.80, 46.75], [33.40, 46.60], [33.00, 46.55]
+    ],
+    properties: { name: 'Dnipro River Line', source: 'Public reporting (approximate)', date: 'Feb 2026' }
+  },
+  {
+    id: 'ukraine-frontline-crimea-border',
+    type: 'LineString',
+    conflict: 'ukraine',
+    // Northern Crimea border area
+    coordinates: [
+      [33.00, 46.55], [33.50, 46.20], [34.00, 46.00], [34.50, 45.80], [35.00, 45.60]
+    ],
+    properties: { name: 'Crimea Administrative Border', source: 'Public reporting (approximate)', date: 'Feb 2026' }
+  }
+];
+
+const ISW_FRONTLINE_ENDPOINTS = [
+  { name: 'Ukraine_Front_Line_NEW/12', url: ISW_FRONTLINE_API },
+  { name: 'Ukraine_Front_Line_NEW/0', url: ISW_FRONTLINE_API_ALT_LAYER },
+  { name: 'UKR_Frontline_27072025/0', url: ISW_FRONTLINE_API_ALT_SERVICE }
+];
+
+function parseTimestamp(value) {
+  if (value === null || value === undefined || value === '') return null;
+
+  if (typeof value === 'number') {
+    // ArcGIS epoch values are usually milliseconds.
+    if (value > 1e12) return value;
+    if (value > 1e9) return value * 1000;
+  }
+
+  const parsed = new Date(value).getTime();
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function formatDateFromTimestamp(timestamp) {
+  if (!timestamp) return 'Unknown';
+  return new Date(timestamp).toLocaleDateString();
+}
+
+function isValidLonLatPair(coord) {
+  return Array.isArray(coord) &&
+    coord.length >= 2 &&
+    Number.isFinite(coord[0]) &&
+    Number.isFinite(coord[1]) &&
+    Math.abs(coord[0]) <= 180 &&
+    Math.abs(coord[1]) <= 90;
+}
+
+function normalizeFrontlineFeatures(data, endpointName) {
+  if (!data || !Array.isArray(data.features)) return [];
+
+  const normalized = [];
+
+  data.features.forEach((feature, featureIdx) => {
+    const geometry = feature?.geometry;
+    const properties = feature?.properties || {};
+    const rawDate = properties.Date ?? properties.EditDate ?? properties.date ?? properties.CreationDa ?? null;
+    const timestamp = parseTimestamp(rawDate);
+
+    const baseProps = {
+      date: formatDateFromTimestamp(timestamp),
+      rawDate,
+      source: properties.Source || properties.source || 'ISW/CTP',
+      endpoint: endpointName
+    };
+
+    if (!geometry) return;
+
+    if (geometry.type === 'LineString' && Array.isArray(geometry.coordinates)) {
+      const coords = geometry.coordinates.filter(isValidLonLatPair);
+      if (coords.length >= 2) {
+        normalized.push({
+          id: feature.id || `ukraine-frontline-${featureIdx}`,
+          type: 'LineString',
+          coordinates: coords,
+          conflict: 'ukraine',
+          properties: baseProps
+        });
+      }
+      return;
+    }
+
+    if (geometry.type === 'MultiLineString' && Array.isArray(geometry.coordinates)) {
+      geometry.coordinates.forEach((lineCoords, lineIdx) => {
+        const coords = Array.isArray(lineCoords) ? lineCoords.filter(isValidLonLatPair) : [];
+        if (coords.length >= 2) {
+          normalized.push({
+            id: `${feature.id || featureIdx}-line-${lineIdx}`,
+            type: 'LineString',
+            coordinates: coords,
+            conflict: 'ukraine',
+            properties: baseProps
+          });
+        }
+      });
+      return;
+    }
+
+    // Esri JSON fallback (paths) if a proxy does not preserve GeoJSON formatting.
+    if (Array.isArray(geometry.paths)) {
+      geometry.paths.forEach((lineCoords, lineIdx) => {
+        const coords = Array.isArray(lineCoords) ? lineCoords.filter(isValidLonLatPair) : [];
+        if (coords.length >= 2) {
+          normalized.push({
+            id: `${feature.id || featureIdx}-path-${lineIdx}`,
+            type: 'LineString',
+            coordinates: coords,
+            conflict: 'ukraine',
+            properties: baseProps
+          });
+        }
+      });
+    }
+  });
+
+  return normalized;
+}
+
+async function fetchFrontlineEndpoint(endpoint) {
+  const response = await fetchWithCorsProxy(endpoint.url);
+  if (!response) {
+    throw new Error('No response from endpoint/proxies');
+  }
+
+  const text = await response.text();
+  let data;
+
+  try {
+    data = JSON.parse(text);
+  } catch {
+    throw new Error('Invalid JSON payload');
+  }
+
+  if (data.error) {
+    throw new Error(data.error.message || 'ArcGIS API returned error');
+  }
+
+  const segments = normalizeFrontlineFeatures(data, endpoint.name);
+  if (segments.length === 0) {
+    throw new Error('No usable frontline segments');
+  }
+
+  const latestTimestamp = segments.reduce((max, segment) => {
+    const ts = parseTimestamp(segment.properties?.rawDate) || 0;
+    return Math.max(max, ts);
+  }, 0);
+
+  return {
+    endpointName: endpoint.name,
+    endpointUrl: endpoint.url,
+    segments,
+    latestTimestamp
+  };
+}
+
 // ============== FRONTLINE DATA ==============
 /**
- * Fetch live Ukraine frontline data from ISW/ArcGIS
- * Returns GeoJSON FeatureCollection with LineString geometries
+ * Fetch live Ukraine frontline data from ISW/ArcGIS.
+ * Tries multiple ISW endpoints and proxy fallback, then chooses the best result.
  */
 export async function fetchUkraineFrontline() {
-  try {
-    const response = await fetch(ISW_FRONTLINE_API);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+  const candidates = [];
+
+  for (const endpoint of ISW_FRONTLINE_ENDPOINTS) {
+    try {
+      const result = await fetchFrontlineEndpoint(endpoint);
+      candidates.push(result);
+      console.log(`[ISW] ${endpoint.name}: ${result.segments.length} segments`);
+    } catch (error) {
+      console.warn(`[ISW] ${endpoint.name} failed:`, error.message);
     }
-    const data = await response.json();
-    
-    // Transform to Leaflet-compatible format
-    const features = data.features.map(feature => ({
-      id: feature.id,
-      type: feature.geometry.type,
-      coordinates: feature.geometry.coordinates,
-      conflict: 'ukraine',
-      properties: {
-        date: feature.properties.Date ? new Date(feature.properties.Date).toLocaleDateString() : 'Unknown',
-        source: feature.properties.Source || 'ISW/CTP',
-        length: feature.properties.Shape__Length
-      }
-    }));
-    
+  }
+
+  if (candidates.length > 0) {
+    const best = candidates
+      .sort((a, b) => {
+        const tsDiff = (b.latestTimestamp || 0) - (a.latestTimestamp || 0);
+        if (tsDiff !== 0) return tsDiff;
+        return b.segments.length - a.segments.length;
+      })[0];
+
+    console.log(
+      `[ISW] Using ${best.endpointName} (${best.segments.length} segments, ` +
+      `latest=${best.latestTimestamp ? new Date(best.latestTimestamp).toISOString() : 'unknown'})`
+    );
+
     return {
       success: true,
-      data: features,
+      data: best.segments,
+      source: `ISW/CTP (live: ${best.endpointName})`,
+      dataTimestamp: best.latestTimestamp ? new Date(best.latestTimestamp).toISOString() : null,
+      endpoint: best.endpointUrl,
       lastUpdated: new Date().toISOString()
     };
-  } catch (error) {
-    console.error('Failed to fetch frontline data:', error);
-    return {
-      success: false,
-      error: error.message,
-      data: []
-    };
   }
+
+  console.warn('[ISW] All frontline endpoints failed, using fallback approximation');
+  return {
+    success: true,
+    data: UKRAINE_FRONTLINE_FALLBACK,
+    source: 'Fallback (approximate)',
+    lastUpdated: new Date().toISOString()
+  };
 }
 
 // ============== SUDAN FRONTLINES (Static approximation) ==============

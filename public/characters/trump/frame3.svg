@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="80" height="80">
+  <defs>
+    <linearGradient id="bg3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a0a0a"/>
+      <stop offset="100%" style="stop-color:#0a0505"/>
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="80" height="80" fill="url(#bg3)"/>
+  <!-- Face shape -->
+  <ellipse cx="40" cy="38" rx="22" ry="26" fill="#d4a574" opacity="0.9"/>
+  <!-- Hair - different wave -->
+  <path d="M17 29 Q24 9 40 13 Q56 9 63 29 Q59 19 40 21 Q21 19 17 29" fill="#daa520" opacity="0.95"/>
+  <path d="M19 31 Q27 16 40 19 Q53 16 61 31" fill="#f4c430" opacity="0.8"/>
+  <!-- Eyes - squinting -->
+  <ellipse cx="32" cy="36" rx="4" ry="2" fill="#1a1a2e"/>
+  <ellipse cx="48" cy="36" rx="4" ry="2" fill="#1a1a2e"/>
+  <circle cx="32" cy="36" r="1" fill="#4a90d9"/>
+  <circle cx="48" cy="36" r="1" fill="#4a90d9"/>
+  <!-- Eyebrows - furrowed -->
+  <path d="M26 33 Q32 31 38 34" stroke="#b8860b" stroke-width="1.5" fill="none"/>
+  <path d="M42 34 Q48 31 54 33" stroke="#b8860b" stroke-width="1.5" fill="none"/>
+  <!-- Nose -->
+  <path d="M40 38 L40 46 Q38 48 40 48 Q42 48 40 46" stroke="#c49a6c" stroke-width="1" fill="none"/>
+  <!-- Mouth - emphatic talking -->
+  <ellipse cx="40" cy="54" rx="7" ry="4" fill="#2a1a1a"/>
+  <path d="M33 54 Q40 58 47 54" stroke="#d4a574" stroke-width="0.5" fill="none"/>
+  <!-- Chin -->
+  <ellipse cx="40" cy="60" rx="8" ry="4" fill="#d4a574" opacity="0.7"/>
+  <!-- Suit collar -->
+  <path d="M20 72 L30 65 L40 70 L50 65 L60 72 L60 80 L20 80 Z" fill="#1a1a2e"/>
+  <!-- Tie -->
+  <path d="M37 65 L40 80 L43 65 Z" fill="#c41e3a"/>
+  <!-- Red glow overlay -->
+  <rect width="80" height="80" fill="#c41e3a" opacity="0.06"/>
+</svg>

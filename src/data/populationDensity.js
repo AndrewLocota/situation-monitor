@@ -1,0 +1,47 @@
+// Population density cluster overlay (fallback for tile-source outages/subtle styling)
+// Approximate major high-density urban regions with weighted intensity.
+
+export const POPULATION_DENSITY_CLUSTERS = [
+  { id: 'tokyo', name: 'Tokyo', lat: 35.68, lon: 139.76, weight: 10 },
+  { id: 'osaka', name: 'Osaka-Kobe', lat: 34.69, lon: 135.50, weight: 8 },
+  { id: 'seoul', name: 'Seoul', lat: 37.56, lon: 126.98, weight: 8 },
+  { id: 'beijing', name: 'Beijing-Tianjin', lat: 39.90, lon: 116.40, weight: 8 },
+  { id: 'shanghai', name: 'Shanghai', lat: 31.23, lon: 121.47, weight: 9 },
+  { id: 'guangzhou', name: 'Pearl River Delta', lat: 23.13, lon: 113.26, weight: 9 },
+  { id: 'wuhan', name: 'Wuhan', lat: 30.59, lon: 114.30, weight: 7 },
+  { id: 'jakarta', name: 'Jakarta', lat: -6.21, lon: 106.85, weight: 9 },
+  { id: 'manila', name: 'Manila', lat: 14.60, lon: 120.98, weight: 9 },
+  { id: 'bangkok', name: 'Bangkok', lat: 13.75, lon: 100.50, weight: 7 },
+  { id: 'hanoi', name: 'Hanoi', lat: 21.03, lon: 105.85, weight: 6 },
+  { id: 'ho_chi_minh', name: 'Ho Chi Minh City', lat: 10.82, lon: 106.63, weight: 7 },
+  { id: 'dhaka', name: 'Dhaka', lat: 23.81, lon: 90.41, weight: 10 },
+  { id: 'kolkata', name: 'Kolkata', lat: 22.57, lon: 88.36, weight: 8 },
+  { id: 'delhi', name: 'Delhi NCR', lat: 28.61, lon: 77.21, weight: 10 },
+  { id: 'mumbai', name: 'Mumbai', lat: 19.08, lon: 72.88, weight: 9 },
+  { id: 'karachi', name: 'Karachi', lat: 24.86, lon: 67.01, weight: 8 },
+  { id: 'lahore', name: 'Lahore', lat: 31.55, lon: 74.34, weight: 7 },
+  { id: 'tehran', name: 'Tehran', lat: 35.69, lon: 51.39, weight: 7 },
+  { id: 'cairo', name: 'Cairo', lat: 30.04, lon: 31.24, weight: 8 },
+  { id: 'lagos', name: 'Lagos', lat: 6.52, lon: 3.38, weight: 8 },
+  { id: 'kinshasa', name: 'Kinshasa', lat: -4.32, lon: 15.31, weight: 7 },
+  { id: 'nairobi', name: 'Nairobi', lat: -1.29, lon: 36.82, weight: 5 },
+  { id: 'istanbul', name: 'Istanbul', lat: 41.01, lon: 28.97, weight: 7 },
+  { id: 'moscow', name: 'Moscow', lat: 55.76, lon: 37.62, weight: 6 },
+  { id: 'london', name: 'London', lat: 51.51, lon: -0.13, weight: 6 },
+  { id: 'paris', name: 'Paris', lat: 48.86, lon: 2.35, weight: 6 },
+  { id: 'ruhr', name: 'Ruhr', lat: 51.45, lon: 7.01, weight: 6 },
+  { id: 'madrid', name: 'Madrid', lat: 40.42, lon: -3.70, weight: 5 },
+  { id: 'milan', name: 'Milan', lat: 45.46, lon: 9.19, weight: 5 },
+  { id: 'new_york', name: 'New York', lat: 40.71, lon: -74.00, weight: 8 },
+  { id: 'boston_dc', name: 'Northeast Corridor', lat: 39.95, lon: -75.16, weight: 8 },
+  { id: 'chicago', name: 'Chicago', lat: 41.88, lon: -87.63, weight: 6 },
+  { id: 'la', name: 'Los Angeles', lat: 34.05, lon: -118.24, weight: 7 },
+  { id: 'san_fran', name: 'Bay Area', lat: 37.77, lon: -122.42, weight: 5 },
+  { id: 'mexico_city', name: 'Mexico City', lat: 19.43, lon: -99.13, weight: 8 },
+  { id: 'sao_paulo', name: 'Sao Paulo', lat: -23.55, lon: -46.63, weight: 8 },
+  { id: 'rio', name: 'Rio de Janeiro', lat: -22.90, lon: -43.20, weight: 6 },
+  { id: 'buenos_aires', name: 'Buenos Aires', lat: -34.60, lon: -58.38, weight: 6 },
+  { id: 'santiago', name: 'Santiago', lat: -33.45, lon: -70.66, weight: 5 }
+];
+
+export default POPULATION_DENSITY_CLUSTERS;

@@ -31,7 +31,7 @@ export function useLiveData(options = {}) {
     marketsInterval = 300000,   // 5 minutes (was 30 seconds)
     earthquakeInterval = 600000, // 10 minutes (was 2 minutes)
     specialDataInterval = 900000, // 15 minutes (was 5 minutes)
-    twitterInterval = 600000,   // 10 minutes (was 2 minutes)
+    twitterInterval = 30000,    // 30 seconds (incremental updates for seamless feed)
     enabled = true,
   } = options;
 
@@ -177,7 +177,7 @@ export function useLiveData(options = {}) {
     setLoadingState('twitter', true);
     try {
       const tweets = await fetchTwitterIntel();
-      setTwitterEvents(tweets.map(tweet => ({
+      const mappedTweets = tweets.map(tweet => ({
         id: tweet.id,
         tweetId: tweet.tweetId,
         title: tweet.title,
@@ -186,13 +186,42 @@ export function useLiveData(options = {}) {
         pubDate: tweet.pubDate.toISOString(),
         source: tweet.source,
         username: tweet.username,
-      })));
+      }));
+
+      const getTweetKey = (tweet) =>
+        tweet.tweetId || tweet.id || `${tweet.username || 'unknown'}-${tweet.pubDate}-${tweet.title}`;
+
+      const existingTweets = useDataStore.getState().twitterEvents || [];
+      const existingKeys = new Set(existingTweets.map(getTweetKey));
+      const newTweets = mappedTweets.filter(tweet => !existingKeys.has(getTweetKey(tweet)));
+
+      if (newTweets.length > 0) {
+        const seen = new Set();
+        const mergedTweets = [];
+
+        [...newTweets, ...existingTweets].forEach(tweet => {
+          const key = getTweetKey(tweet);
+          if (seen.has(key)) return;
+          seen.add(key);
+          mergedTweets.push(tweet);
+        });
+
+        mergedTweets.sort((a, b) => {
+          const aTs = Date.parse(a.pubDate) || 0;
+          const bTs = Date.parse(b.pubDate) || 0;
+          return bTs - aTs;
+        });
+
+        setTwitterEvents(mergedTweets.slice(0, 120));
+      }
+
+      setLastUpdated('twitter');
     } catch (error) {
       console.error('Failed to fetch Twitter intel:', error);
     } finally {
       setLoadingState('twitter', false);
     }
-  }, [setTwitterEvents, setLoadingState]);
+  }, [setTwitterEvents, setLoadingState, setLastUpdated]);
 
   // Fetch market data (non-blocking, each source independent)
   const fetchMarketData = useCallback(async () => {
@@ -307,36 +336,37 @@ export function useLiveData(options = {}) {
     fetchAllData();
 
     // PERFORMANCE OPTIMIZATION: Only set up intervals for APIs that work reliably
-    // APIs with CORS issues (Yahoo Finance, FRED, Polymarket, Twitter) are only called once
+    // APIs with CORS issues (Yahoo Finance, FRED, Polymarket) are only called once
     // on initial load to avoid constant failed requests that slow down the experience.
-    // 
+    //
     // APIs that work and should refresh:
     // - News (RSS feeds via CORS proxy)
     // - Conflicts (ACLED works)
     // - Earthquakes (USGS has proper CORS headers)
+    // - Twitter (multi-source with proxy health tracking - now reliable)
     //
     // APIs that often fail due to CORS and should NOT refresh:
     // - Markets (Yahoo Finance blocks CORS)
     // - Fed data (FRED blocks CORS)
     // - Special data (Congress, Whales, Contracts - various CORS issues)
-    // - Twitter (All Nitter mirrors are unreliable)
 
-    // Only set up intervals for reliable APIs
+    // Set up intervals for reliable APIs
     newsTimerRef.current = setInterval(fetchNews, newsInterval);
     conflictTimerRef.current = setInterval(fetchConflicts, conflictInterval);
     earthquakeTimerRef.current = setInterval(fetchEqs, earthquakeInterval);
-    
-    // Markets, Twitter, and Special data are NOT refreshed to reduce failed API calls
+    twitterTimerRef.current = setInterval(fetchTwitter, twitterInterval);
+
+    // Markets and Special data are NOT refreshed to reduce failed API calls
     // They are only fetched once on initial load above
 
     return () => {
       if (newsTimerRef.current) clearInterval(newsTimerRef.current);
       if (conflictTimerRef.current) clearInterval(conflictTimerRef.current);
       if (earthquakeTimerRef.current) clearInterval(earthquakeTimerRef.current);
-      // No need to clear markets/special/twitter timers - they don't exist
+      if (twitterTimerRef.current) clearInterval(twitterTimerRef.current);
     };
-  }, [enabled, newsInterval, conflictInterval, earthquakeInterval,
-      fetchAllData, fetchNews, fetchConflicts, fetchEqs]);
+  }, [enabled, newsInterval, conflictInterval, earthquakeInterval, twitterInterval,
+      fetchAllData, fetchNews, fetchConflicts, fetchEqs, fetchTwitter]);
 
   // Manual refresh function
   const refresh = useCallback(() => {

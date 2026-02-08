@@ -44,9 +44,25 @@ export const GDELT_QUERIES = {
 
 // ============== MOCK GLOBAL CONFLICT DATA ==============
 // Used when APIs require authentication or are unavailable
-// Based on real conflict data from ACLED/UCDP as of early 2025
+// Based on publicly reported hotspots (updated Feb 2026)
 
 export const GLOBAL_CONFLICT_EVENTS = {
+  ukraine: {
+    id: 'ukraine',
+    name: 'Ukraine War',
+    startDate: 'Feb 24, 2022',
+    status: 'Active',
+    parties: ['Ukraine', 'Russian Federation'],
+    casualties: '>500,000 combined (est.)',
+    displaced: '>10 million',
+    events: [
+      { lat: 48.2824, lon: 37.1786, city: 'Pokrovsk Axis', type: 'ground_op', intensity: 'high', date: '2026-02-07' },
+      { lat: 48.5861, lon: 37.8313, city: 'Chasiv Yar', type: 'shelling', intensity: 'high', date: '2026-02-07' },
+      { lat: 49.7106, lon: 37.6152, city: 'Kupyansk', type: 'clashes', intensity: 'high', date: '2026-02-06' },
+      { lat: 47.5679, lon: 35.7852, city: 'Orikhiv Sector', type: 'drone_activity', intensity: 'elevated', date: '2026-02-06' },
+      { lat: 46.6354, lon: 32.6169, city: 'Kherson Dnipro Bank', type: 'shelling', intensity: 'elevated', date: '2026-02-05' }
+    ]
+  },
   sudan: {
     id: 'sudan',
     name: 'Sudan Civil War',
@@ -56,11 +72,11 @@ export const GLOBAL_CONFLICT_EVENTS = {
     casualties: '>15,000',
     displaced: '>10 million',
     events: [
-      { lat: 15.5007, lon: 32.5599, city: 'Khartoum', type: 'shelling', intensity: 'high', date: '2026-01-07' },
-      { lat: 13.6333, lon: 25.3500, city: 'El Fasher', type: 'siege', intensity: 'high', date: '2026-01-06' },
-      { lat: 12.0547, lon: 24.8833, city: 'El Geneina', type: 'attack', intensity: 'high', date: '2026-01-05' },
-      { lat: 15.1167, lon: 32.5500, city: 'Omdurman', type: 'clashes', intensity: 'medium', date: '2026-01-07' },
-      { lat: 14.3833, lon: 35.3833, city: 'Kassala', type: 'displacement', intensity: 'elevated', date: '2026-01-04' }
+      { lat: 15.5007, lon: 32.5599, city: 'Khartoum', type: 'shelling', intensity: 'high', date: '2026-02-07' },
+      { lat: 15.6445, lon: 32.4777, city: 'Omdurman', type: 'clashes', intensity: 'high', date: '2026-02-07' },
+      { lat: 13.6258, lon: 25.3558, city: 'El Fasher', type: 'siege', intensity: 'high', date: '2026-02-06' },
+      { lat: 12.0547, lon: 24.8800, city: 'Nyala', type: 'attack', intensity: 'high', date: '2026-02-06' },
+      { lat: 14.4012, lon: 33.5199, city: 'Wad Madani', type: 'displacement', intensity: 'elevated', date: '2026-02-05' }
     ]
   },
   gaza: {
@@ -72,11 +88,11 @@ export const GLOBAL_CONFLICT_EVENTS = {
     casualties: '>45,000 (Gaza)',
     displaced: '>1.9 million',
     events: [
-      { lat: 31.5069, lon: 34.4565, city: 'Gaza City', type: 'airstrike', intensity: 'high', date: '2026-01-07' },
-      { lat: 31.3461, lon: 34.3120, city: 'Khan Yunis', type: 'ground_op', intensity: 'high', date: '2026-01-06' },
-      { lat: 31.2437, lon: 34.2408, city: 'Rafah', type: 'crossing_closure', intensity: 'elevated', date: '2026-01-07' },
-      { lat: 31.5500, lon: 34.4900, city: 'Jabalia', type: 'shelling', intensity: 'high', date: '2026-01-05' },
-      { lat: 31.4200, lon: 34.3700, city: 'Deir al-Balah', type: 'humanitarian', intensity: 'medium', date: '2026-01-07' }
+      { lat: 31.5069, lon: 34.4565, city: 'Gaza City', type: 'airstrike', intensity: 'high', date: '2026-02-07' },
+      { lat: 31.3461, lon: 34.3120, city: 'Khan Yunis', type: 'ground_op', intensity: 'high', date: '2026-02-06' },
+      { lat: 31.2437, lon: 34.2408, city: 'Rafah', type: 'crossing_closure', intensity: 'elevated', date: '2026-02-07' },
+      { lat: 31.5500, lon: 34.4900, city: 'Jabalia', type: 'shelling', intensity: 'high', date: '2026-02-05' },
+      { lat: 31.4180, lon: 34.3500, city: 'Deir al-Balah', type: 'humanitarian', intensity: 'medium', date: '2026-02-06' }
     ]
   },
   venezuela: {
@@ -86,10 +102,10 @@ export const GLOBAL_CONFLICT_EVENTS = {
     status: 'Elevated',
     parties: ['Maduro Government', 'Opposition Coalition'],
     events: [
-      { lat: 10.4806, lon: -66.9036, city: 'Caracas', type: 'protest', intensity: 'elevated', date: '2026-01-06' },
-      { lat: 10.1621, lon: -67.9978, city: 'Valencia', type: 'unrest', intensity: 'medium', date: '2026-01-05' },
-      { lat: 10.4758, lon: -66.7861, city: 'Petare', type: 'security_ops', intensity: 'elevated', date: '2026-01-04' },
-      { lat: 8.1167, lon: -63.5500, city: 'Ciudad Guayana', type: 'protest', intensity: 'medium', date: '2026-01-03' }
+      { lat: 10.4806, lon: -66.9036, city: 'Caracas', type: 'protest', intensity: 'elevated', date: '2026-02-06' },
+      { lat: 10.1667, lon: -68.0000, city: 'Valencia', type: 'unrest', intensity: 'medium', date: '2026-02-05' },
+      { lat: 10.4840, lon: -66.8060, city: 'Petare', type: 'security_ops', intensity: 'elevated', date: '2026-02-04' },
+      { lat: 8.3512, lon: -62.6410, city: 'Ciudad Guayana', type: 'protest', intensity: 'medium', date: '2026-02-03' }
     ]
   },
   taiwan_strait: {
@@ -99,11 +115,11 @@ export const GLOBAL_CONFLICT_EVENTS = {
     status: 'Elevated',
     parties: ['PRC/PLA', 'Taiwan/ROC', 'US Military'],
     events: [
-      { lat: 24.1477, lon: 120.6736, city: 'Taichung', type: 'air_incursion', intensity: 'elevated', date: '2026-01-07' },
-      { lat: 22.6273, lon: 120.3014, city: 'Kaohsiung', type: 'naval_activity', intensity: 'medium', date: '2026-01-06' },
-      { lat: 25.0330, lon: 121.5654, city: 'Taipei', type: 'exercise', intensity: 'medium', date: '2026-01-05' },
-      { lat: 24.4500, lon: 118.3833, city: 'Kinmen', type: 'drone_activity', intensity: 'elevated', date: '2026-01-04' },
-      { lat: 23.5833, lon: 119.5833, city: 'Penghu', type: 'naval_patrol', intensity: 'medium', date: '2026-01-03' }
+      { lat: 25.2000, lon: 119.7000, city: 'North Strait', type: 'air_incursion', intensity: 'elevated', date: '2026-02-07' },
+      { lat: 24.0500, lon: 119.9000, city: 'Central Strait', type: 'naval_activity', intensity: 'elevated', date: '2026-02-06' },
+      { lat: 22.8500, lon: 120.0000, city: 'Southwest ADIZ', type: 'drone_activity', intensity: 'elevated', date: '2026-02-06' },
+      { lat: 24.4333, lon: 118.3167, city: 'Kinmen', type: 'exercise', intensity: 'medium', date: '2026-02-05' },
+      { lat: 23.5667, lon: 119.5667, city: 'Penghu', type: 'naval_patrol', intensity: 'medium', date: '2026-02-05' }
     ]
   },
   iran: {
@@ -113,10 +129,10 @@ export const GLOBAL_CONFLICT_EVENTS = {
     status: 'Elevated',
     parties: ['Iran/IRGC', 'Israel', 'Houthis', 'Hezbollah'],
     events: [
-      { lat: 35.6892, lon: 51.3890, city: 'Tehran', type: 'military_build', intensity: 'elevated', date: '2026-01-07' },
-      { lat: 32.6539, lon: 51.6660, city: 'Isfahan (Natanz)', type: 'nuclear_activity', intensity: 'high', date: '2026-01-06' },
-      { lat: 27.1832, lon: 56.2667, city: 'Bandar Abbas', type: 'naval_deploy', intensity: 'elevated', date: '2026-01-05' },
-      { lat: 29.4963, lon: 60.8629, city: 'Chabahar', type: 'port_activity', intensity: 'medium', date: '2026-01-04' }
+      { lat: 35.6892, lon: 51.3890, city: 'Tehran', type: 'military_build', intensity: 'elevated', date: '2026-02-07' },
+      { lat: 33.7242, lon: 51.7266, city: 'Natanz', type: 'nuclear_activity', intensity: 'high', date: '2026-02-06' },
+      { lat: 27.1832, lon: 56.2667, city: 'Bandar Abbas', type: 'naval_deploy', intensity: 'elevated', date: '2026-02-06' },
+      { lat: 29.4963, lon: 60.8629, city: 'Chabahar', type: 'port_activity', intensity: 'medium', date: '2026-02-05' }
     ]
   }
 };

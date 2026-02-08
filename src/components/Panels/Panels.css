@@ -234,6 +234,28 @@
   color: var(--accent-primary, #4da6ff);
 }
 
+/* HoloCall Button - triggers AI character reaction */
+.news-holocall-btn {
+  font-size: 11px;
+  color: var(--text-dim, #5a6478);
+  background: transparent;
+  border: none;
+  padding: 2px 4px;
+  cursor: pointer;
+  flex-shrink: 0;
+  opacity: 0.6;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.news-holocall-btn:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.news-holocall-btn:active {
+  transform: scale(0.95);
+}
+
 /* Markets Grid */
 .markets-section {
   margin-bottom: 8px;
@@ -947,7 +969,7 @@
 }
 
 .twitter-source {
-  font-size: 9px;
+  font-size: 8px;
   color: var(--accent-primary, #4da6ff);
   font-weight: bold;
 }
@@ -991,6 +1013,53 @@
 
 .twitter-link:hover {
   color: var(--accent-primary, #4da6ff);
+}
+
+/* Twitter Panel Compact Mode */
+.twitter-feed-compact {
+  gap: 6px;
+  padding: 6px;
+}
+
+.twitter-item-compact {
+  padding-bottom: 6px;
+}
+
+.twitter-item-compact .twitter-header {
+  margin-bottom: 2px;
+}
+
+.twitter-item-compact .twitter-title {
+  font-size: 10px;
+  line-height: 1.3;
+  margin-bottom: 4px;
+}
+
+.twitter-item-compact .twitter-actions {
+  display: none; /* Hide actions in compact mode to save space */
+}
+
+.twitter-item-compact:hover .twitter-actions {
+  display: flex; /* Show on hover */
+}
+
+.twitter-load-more {
+  font-family: var(--font-mono, monospace);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: all 0.15s ease;
+}
+
+.twitter-load-more:hover {
+  background: rgba(29, 161, 242, 0.1);
+  color: #00acee;
+}
+
+.twitter-show-more-btn {
+  padding: 6px 8px;
+  margin-top: 6px;
+  font-size: 9px;
+  line-height: 1.1;
 }
 
 /* Bias Meter - GroundNews Style (shows on news item hover) */

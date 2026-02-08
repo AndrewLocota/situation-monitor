@@ -45,6 +45,16 @@ export const useDataStore = create((set) => ({
   lastUpdate: null,
   selectedNews: null, // Selected news item for map focus
 
+  // HoloCall state (Phase 10: AI Character Reactions)
+  holoCall: {
+    isOpen: false,
+    characterId: 'trump',
+    message: '',
+    isLoading: false,
+    newsItem: null,
+    error: null
+  },
+
   // Loading states
   loading: {
     news: false,
@@ -128,8 +138,37 @@ export const useDataStore = create((set) => ({
   },
 
   setSelectedNews: (newsItem) => set({ selectedNews: newsItem }),
-  
-  clearSelectedNews: () => set({ selectedNews: null })
+
+  clearSelectedNews: () => set({ selectedNews: null }),
+
+  // HoloCall actions
+  openHoloCall: (characterId, newsItem) => set({
+    holoCall: {
+      isOpen: true,
+      characterId,
+      message: '',
+      isLoading: true,
+      newsItem,
+      error: null
+    }
+  }),
+
+  setHoloCallMessage: (message, error = null) => set(state => ({
+    holoCall: {
+      ...state.holoCall,
+      message,
+      isLoading: false,
+      error
+    }
+  })),
+
+  closeHoloCall: () => set(state => ({
+    holoCall: {
+      ...state.holoCall,
+      isOpen: false,
+      isLoading: false
+    }
+  }))
 }));
 
 export default useDataStore;

@@ -71,7 +71,7 @@ const NewsSkeleton = ({ count = 5 }) => (
 export function NewsFeed() {
     const [category, setCategory] = useState('all');
     const [maxItems, setMaxItems] = useState(20);
-    const { allNews, loading, lastUpdated, setSelectedNews } = useDataStore();
+    const { allNews, loading, lastUpdated, setSelectedNews, openHoloCall } = useDataStore();
 
     // Filter news by category (simple keyword matching)
     const filteredNews = allNews.filter(item => {
@@ -209,6 +209,16 @@ export function NewsFeed() {
                                         >
                                             ↗
                                         </a>
+                                        <button
+                                            className="news-holocall-btn"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                openHoloCall('trump', item);
+                                            }}
+                                            title="Get Trump's reaction"
+                                        >
+                                            📞
+                                        </button>
                                     </div>
                                 </div>
                             );

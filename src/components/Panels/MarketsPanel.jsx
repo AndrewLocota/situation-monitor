@@ -4,7 +4,7 @@ import { useDataStore } from '../../stores';
 import './Panels.css';
 
 // ASCII Skeleton for Markets - shows animated placeholder items
-const MarketsSkeleton = ({ count = 5 }) => {
+const MarketsSkeleton = ({ count = 4 }) => {
     const [charIndex, setCharIndex] = useState(0);
     const ASCII_CHARS = ['░', '▒', '▓', '█', '▓', '▒'];
 
@@ -85,7 +85,7 @@ export function MarketsPanel() {
             }
         >
             {loading.markets && markets.length === 0 ? (
-                <MarketsSkeleton count={5} />
+                <MarketsSkeleton count={4} />
             ) : (
                 <>
                     {/* Stock Indices */}

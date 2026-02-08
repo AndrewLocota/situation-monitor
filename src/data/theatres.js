@@ -271,93 +271,156 @@ export const INTEL_HOTSPOTS = [
   }
 ];
 
-// Conflict zones enriched with parties, casualties, displaced data from Claude
+// Conflict zones - Updated Feb 2026 with current data from public sources
+// Intensity: high (active major combat), medium (ongoing conflict), watch (tensions/risk)
 export const CONFLICT_ZONES = [
   {
     id: 'ukraine',
-    name: 'Ukraine Conflict',
+    name: 'Ukraine War',
     intensity: 'high',
     coords: [
-      [37.5, 47.0], [38.5, 47.5], [39.0, 48.5], [38.0, 49.5],
-      [37.0, 49.0], [36.0, 48.5], [35.5, 47.5], [36.5, 47.0]
+      // Eastern Ukraine conflict zone - Donetsk, Luhansk, Zaporizhzhia, Kherson oblasts
+      [36.5, 46.5], [37.5, 47.0], [38.5, 48.0], [38.0, 49.5],
+      [37.0, 50.0], [35.5, 49.5], [34.5, 48.0], [35.0, 47.0]
     ],
-    labelPos: { lat: 48.0, lon: 37.5 },
+    labelPos: { lat: 48.5, lon: 37.0 },
     startDate: 'Feb 24, 2022',
-    parties: ['Russia', 'Ukraine', 'NATO (support)'],
-    casualties: '500,000+ (est.)',
-    displaced: '6.5M+ refugees',
-    description: 'Full-scale Russian invasion of Ukraine. Active frontlines in Donetsk, Luhansk, Zaporizhzhia, and Kherson oblasts. Heavy artillery, drone warfare, and trench combat.',
-    keyEvents: ['Battle of Bakhmut', 'Kursk incursion', 'Black Sea drone strikes', 'Infrastructure attacks'],
-    keywords: ['ukraine', 'russia', 'zelensky', 'putin', 'donbas', 'crimea', 'bakhmut', 'kursk', 'kherson', 'zaporizhzhia'],
+    parties: ['Russian Federation', 'Ukraine', 'NATO (materiel support)'],
+    casualties: '700,000+ combined (est.)',
+    displaced: '6.5M+ refugees, 4M+ IDP',
+    description: 'Full-scale Russian invasion. Attritional warfare along 1,000km front. Russian advances in Donetsk, Ukrainian cross-border operations in Kursk. FPV drone warfare dominates.',
+    keyEvents: ['Pokrovsk offensive', 'Kursk incursion', 'Crimea strikes', 'Energy infrastructure attacks', 'North Korean troops deployment'],
+    keywords: ['ukraine', 'russia', 'zelensky', 'putin', 'donbas', 'crimea', 'bakhmut', 'kursk', 'kherson', 'zaporizhzhia', 'pokrovsk'],
     theatre: 'EASTERN_EUROPE'
   },
   {
     id: 'gaza',
-    name: 'Gaza Conflict',
+    name: 'Gaza War',
     intensity: 'high',
     coords: [
-      [34.2, 31.6], [34.6, 31.6], [34.6, 31.2], [34.2, 31.2]
+      // Gaza Strip
+      [34.22, 31.60], [34.58, 31.60], [34.58, 31.22], [34.22, 31.22]
     ],
     labelPos: { lat: 31.4, lon: 34.4 },
     startDate: 'Oct 7, 2023',
-    parties: ['Israel (IDF)', 'Hamas', 'Palestinian Islamic Jihad'],
-    casualties: '45,000+ (Gaza), 1,200+ (Israel)',
-    displaced: '2M+ internally displaced',
-    description: 'Israeli military operation in Gaza following Oct 7 Hamas attacks. Urban warfare, humanitarian crisis, regional escalation with Hezbollah and Houthis.',
-    keyEvents: ['Oct 7 attacks', 'Ground invasion', 'Rafah operation', 'Hostage negotiations'],
-    keywords: ['gaza', 'israel', 'hamas', 'idf', 'netanyahu', 'hostage', 'rafah', 'hezbollah', 'palestinian'],
+    parties: ['Israel (IDF)', 'Hamas', 'Palestinian Islamic Jihad', 'Hezbollah (Lebanon front)'],
+    casualties: '50,000+ Gaza, 1,500+ Israel',
+    displaced: '2.3M displaced (90% of population)',
+    description: 'Israeli military operation following Oct 7 attacks. Extensive urban destruction, severe humanitarian crisis. Regional escalation with Hezbollah, Houthis.',
+    keyEvents: ['Oct 7 attacks', 'Ground invasion', 'Rafah operation', 'Lebanon front', 'Ceasefire negotiations', 'ICJ proceedings'],
+    keywords: ['gaza', 'israel', 'hamas', 'idf', 'netanyahu', 'hostage', 'rafah', 'hezbollah', 'palestinian', 'khan younis'],
     theatre: 'MIDDLE_EAST'
   },
   {
     id: 'sudan',
     name: 'Sudan Civil War',
-    intensity: 'medium',
+    intensity: 'high',
     coords: [
-      [32.0, 16.0], [34.0, 16.5], [35.0, 15.0], [33.5, 13.5],
-      [31.5, 14.0], [31.0, 15.5]
+      // Greater Khartoum + Darfur conflict zones
+      [29.0, 16.5], [34.0, 17.0], [35.5, 15.5], [34.0, 13.0],
+      [30.0, 12.0], [26.0, 13.5], [25.0, 15.5], [27.0, 16.0]
     ],
-    labelPos: { lat: 15.0, lon: 32.5 },
+    labelPos: { lat: 14.5, lon: 30.0 },
     startDate: 'Apr 15, 2023',
-    parties: ['Sudanese Armed Forces (SAF)', 'Rapid Support Forces (RSF)'],
-    casualties: '15,000+ killed',
-    displaced: '10M+ displaced',
-    description: 'Power struggle between SAF and RSF paramilitary. Fighting centered around Khartoum, Darfur. Major humanitarian catastrophe with famine conditions.',
-    keyEvents: ['Khartoum battle', 'Darfur massacres', 'El Fasher siege', 'Famine declared'],
-    keywords: ['sudan', 'khartoum', 'rsf', 'darfur', 'burhan', 'hemedti', 'sudanese'],
+    parties: ['Sudanese Armed Forces (SAF)', 'Rapid Support Forces (RSF)', 'Various militias'],
+    casualties: '25,000+ killed (est.)',
+    displaced: '12M+ displaced (world\'s largest displacement crisis)',
+    description: 'Catastrophic civil war between SAF and RSF. Ethnic cleansing in Darfur. Famine conditions affecting millions. Both sides accused of war crimes.',
+    keyEvents: ['Khartoum destruction', 'Darfur massacres', 'El Fasher siege', 'Famine declared', 'Port Sudan relocation'],
+    keywords: ['sudan', 'khartoum', 'rsf', 'darfur', 'burhan', 'hemedti', 'sudanese', 'el fasher', 'famine'],
     theatre: 'AFRICA'
   },
   {
     id: 'myanmar',
     name: 'Myanmar Civil War',
+    intensity: 'high',
+    coords: [
+      // Multiple fronts across Myanmar
+      [94.0, 20.0], [97.0, 22.5], [99.0, 24.0], [98.5, 20.5],
+      [97.0, 17.0], [95.0, 18.0], [93.5, 19.5]
+    ],
+    labelPos: { lat: 20.5, lon: 96.0 },
+    startDate: 'Feb 1, 2021',
+    parties: ['Military Junta (SAC/Tatmadaw)', 'Three Brotherhood Alliance', 'PDF/NUG', 'Ethnic Armed Organizations'],
+    casualties: '60,000+ (est.)',
+    displaced: '3.5M+ internally displaced',
+    description: 'Junta losing control of border regions. Resistance forces control ~60% of territory. Economic collapse, conscription crisis. Multiple ethnic armies coordinating.',
+    keyEvents: ['Operation 1027', 'Lashio capture', 'Myawaddy seizure', 'Rakhine offensive', 'Conscription law', 'Capital threats'],
+    keywords: ['myanmar', 'burma', 'junta', 'arakan', 'karen', 'kachin', 'rohingya', 'shan', 'pdf', 'operation 1027'],
+    theatre: 'SOUTHEAST_ASIA'
+  },
+  {
+    id: 'drc',
+    name: 'DRC Eastern Conflict',
+    intensity: 'high',
+    coords: [
+      // North Kivu, South Kivu, Ituri
+      [28.5, 0.5], [30.0, 1.0], [30.5, -0.5], [29.5, -2.5],
+      [28.0, -2.0], [27.5, -0.5]
+    ],
+    labelPos: { lat: -0.5, lon: 29.0 },
+    startDate: '2022 (M23 resurgence)',
+    parties: ['DRC Army (FARDC)', 'M23 (Rwanda-backed)', 'ADF', '100+ armed groups'],
+    casualties: '10,000+ (recent), 6M+ (1996-present)',
+    displaced: '7M+ internally displaced',
+    description: 'M23 rebel advance in North Kivu with Rwandan military support. Goma under threat. Regional tensions with Rwanda. Deadliest ongoing conflict globally.',
+    keyEvents: ['M23 resurgence', 'Goma siege', 'EAC force deployment', 'Rwanda tensions', 'Mass displacement'],
+    keywords: ['drc', 'congo', 'm23', 'goma', 'rwanda', 'kivu', 'tshisekedi', 'kagame'],
+    theatre: 'AFRICA'
+  },
+  {
+    id: 'sahel',
+    name: 'Sahel Insurgency',
     intensity: 'medium',
     coords: [
-      [96.0, 22.0], [98.0, 23.0], [98.5, 21.0], [97.0, 19.5], [95.5, 20.5]
+      // Mali, Burkina Faso, Niger tri-border region
+      [-4.0, 15.0], [2.0, 17.0], [8.0, 16.0], [10.0, 14.0],
+      [5.0, 12.0], [-2.0, 12.0], [-5.0, 13.5]
     ],
-    labelPos: { lat: 21.0, lon: 96.5 },
-    startDate: 'Feb 1, 2021',
-    parties: ['Military Junta (SAC)', 'Ethnic Armed Organizations', "People's Defense Forces"],
-    casualties: '50,000+ (est.)',
-    displaced: '3M+ internally displaced',
-    description: "Armed resistance following 2021 military coup. Multiple ethnic armies and pro-democracy forces fighting junta. Recent rebel advances in border regions.",
-    keyEvents: ['Operation 1027', 'Lashio capture', 'Myawaddy offensive', 'Junta conscription'],
-    keywords: ['myanmar', 'burma', 'junta', 'arakan', 'karen', 'kachin', 'rohingya'],
-    theatre: 'SOUTHEAST_ASIA'
+    labelPos: { lat: 14.5, lon: 2.0 },
+    startDate: '2012 (escalated)',
+    parties: ['JNIM (al-Qaeda)', 'ISGS (ISIS)', 'Military juntas', 'Wagner/Africa Corps'],
+    casualties: '20,000+ (2023-present)',
+    displaced: '4M+ displaced',
+    description: 'Jihadist insurgency expanding despite military coups. Wagner/Russia presence. French forces expelled. Humanitarian crisis deepening.',
+    keyEvents: ['Mali coup', 'Burkina coup', 'Niger coup', 'French withdrawal', 'Wagner deployment', 'Junta alliance'],
+    keywords: ['sahel', 'mali', 'burkina', 'niger', 'jnim', 'isis', 'wagner', 'bamako', 'ouagadougou'],
+    theatre: 'AFRICA'
+  },
+  {
+    id: 'haiti',
+    name: 'Haiti Crisis',
+    intensity: 'medium',
+    coords: [
+      // Port-au-Prince and surrounding areas
+      [-72.8, 18.7], [-71.8, 18.7], [-71.8, 18.3], [-72.8, 18.3]
+    ],
+    labelPos: { lat: 18.5, lon: -72.3 },
+    startDate: '2021 (state collapse)',
+    parties: ['Gang coalitions (G9, Viv Ansanm)', 'Haitian National Police', 'MSS Kenya force'],
+    casualties: '10,000+ (2023-present)',
+    displaced: '700,000+ displaced',
+    description: 'State collapse with gangs controlling 80% of Port-au-Prince. Kidnappings, sexual violence endemic. International intervention force struggling.',
+    keyEvents: ['Presidential assassination', 'Gang alliance', 'Prison breaks', 'Kenya deployment', 'Cannibalism reports'],
+    keywords: ['haiti', 'port-au-prince', 'gang', 'barbecue', 'kenya', 'caribbean', 'humanitarian'],
+    theatre: 'AMERICAS'
   },
   {
     id: 'taiwan_strait',
     name: 'Taiwan Strait',
     intensity: 'watch',
     coords: [
-      [119.0, 26.0], [121.5, 26.0], [121.5, 22.5], [119.0, 22.5]
+      // Taiwan Strait area
+      [119.0, 26.5], [122.0, 26.5], [122.0, 22.0], [119.0, 22.0]
     ],
-    labelPos: { lat: 24.5, lon: 120.0 },
+    labelPos: { lat: 24.5, lon: 120.5 },
     startDate: 'Ongoing tensions',
-    parties: ['China (PLA)', 'Taiwan (ROC)', 'United States (deterrence)'],
+    parties: ['China (PLA)', 'Taiwan (ROC)', 'United States'],
     casualties: 'N/A - no active combat',
     displaced: 'N/A',
-    description: 'Heightened tensions over Taiwan sovereignty. Regular PLA exercises, airspace incursions, naval activity. Risk of flashpoint escalation.',
-    keyEvents: ['PLA exercises', 'ADIZ incursions', 'US arms sales', 'Diplomatic tensions'],
-    keywords: ['taiwan', 'china', 'strait', 'pla', 'taipei', 'invasion', 'chinese military'],
+    description: 'Escalating tensions with near-daily PLA incursions. Military exercises increasing in scale. US deterrence posture strengthening. Key global flashpoint.',
+    keyEvents: ['Record ADIZ incursions', 'Joint Sword exercises', 'US arms sales', 'Blockade drills', 'Semiconductor concerns'],
+    keywords: ['taiwan', 'china', 'strait', 'pla', 'taipei', 'tsmc', 'invasion', 'blockade'],
     theatre: 'EAST_ASIA'
   },
   {
@@ -365,17 +428,36 @@ export const CONFLICT_ZONES = [
     name: 'Yemen / Red Sea',
     intensity: 'medium',
     coords: [
-      [42.5, 12.5], [45.0, 13.0], [48.0, 15.5], [52.0, 16.5],
-      [52.0, 14.0], [48.0, 12.0], [44.0, 11.5]
+      // Yemen territory
+      [42.5, 17.0], [48.0, 18.0], [53.0, 16.5], [52.0, 13.0],
+      [45.0, 12.5], [43.0, 14.0]
     ],
-    labelPos: { lat: 14.0, lon: 47.0 },
+    labelPos: { lat: 15.0, lon: 47.0 },
     startDate: '2014 (Houthi); 2023 (Red Sea)',
-    parties: ['Houthis (Ansar Allah)', 'Saudi-led Coalition', 'US/UK Naval Forces'],
-    casualties: '150,000+ (civil war)',
-    displaced: '4M+ displaced',
-    description: 'Ongoing civil war with regional proxy involvement. Houthi attacks on Red Sea shipping since Oct 2023 disrupting global trade.',
-    keyEvents: ['Red Sea attacks', 'US/UK airstrikes', 'Shipping diversions', 'Ceasefire talks'],
-    keywords: ['yemen', 'houthi', 'red sea', 'shipping', 'saudi', 'aden', 'sanaa'],
+    parties: ['Houthis (Ansar Allah)', 'Saudi-led Coalition', 'US/UK Naval Forces', 'Presidential Leadership Council'],
+    casualties: '150,000+ (civil war total)',
+    displaced: '4.5M+ displaced',
+    description: 'Civil war in stalemate. Houthi Red Sea attacks disrupting 15% of global trade. US/UK conducting strikes. Major shipping rerouting via Cape of Good Hope.',
+    keyEvents: ['Red Sea attacks', 'US/UK airstrikes', 'Shipping crisis', 'Suez traffic collapse', 'Iran support'],
+    keywords: ['yemen', 'houthi', 'red sea', 'shipping', 'saudi', 'aden', 'sanaa', 'bab el mandeb'],
+    theatre: 'MIDDLE_EAST'
+  },
+  {
+    id: 'lebanon',
+    name: 'Lebanon/Israel Border',
+    intensity: 'medium',
+    coords: [
+      // Southern Lebanon
+      [35.1, 33.5], [36.0, 33.5], [36.0, 33.0], [35.1, 33.0]
+    ],
+    labelPos: { lat: 33.25, lon: 35.5 },
+    startDate: 'Oct 8, 2023',
+    parties: ['Israel (IDF)', 'Hezbollah', 'Lebanese civilians'],
+    casualties: '3,000+ (mostly Lebanese)',
+    displaced: '1.2M+ displaced',
+    description: 'Daily cross-border exchanges since Oct 8. Israeli ground incursion in south Lebanon. Hezbollah rocket attacks on northern Israel. Ceasefire fragile.',
+    keyEvents: ['Pager attacks', 'Nasrallah assassination', 'Ground incursion', 'Beirut strikes', 'Ceasefire attempts'],
+    keywords: ['lebanon', 'hezbollah', 'israel', 'beirut', 'nasrallah', 'south lebanon', 'unifil'],
     theatre: 'MIDDLE_EAST'
   }
 ];

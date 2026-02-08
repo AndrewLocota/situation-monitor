@@ -163,12 +163,29 @@ const EXCLUSIONS = [
   'london stock exchange'
 ];
 
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+// Build and sort matchers once so geolocation stays fast while panning/refreshing.
+const LOCATION_MATCHERS = Object.keys(LOCATION_DATABASE)
+  .sort((a, b) => {
+    const pA = LOCATION_DATABASE[a].priority || 1;
+    const pB = LOCATION_DATABASE[b].priority || 1;
+    if (pA !== pB) return pB - pA;
+    return b.length - a.length;
+  })
+  .map((locationKey) => ({
+    locationKey,
+    regex: new RegExp(`\\b${escapeRegex(locationKey)}\\b`, 'i'),
+    location: LOCATION_DATABASE[locationKey]
+  }));
+
 /**
  * Extract location from news item title/description
  * Returns { lat, lng, label } or null if no location found
  */
 export function geolocateNews(newsItem) {
-  let text = `${newsItem.title || ''} ${newsItem.description || ''}`.toLowerCase();
+  const safeItem = newsItem || {};
+  let text = `${safeItem.title || ''} ${safeItem.description || ''}`.toLowerCase();
   
   // Remove exclusions first
   for (const exclusion of EXCLUSIONS) {
@@ -177,22 +194,8 @@ export function geolocateNews(newsItem) {
     }
   }
   
-  // Sort keys by priority (desc), then length (longest first)
-  const sortedLocations = Object.keys(LOCATION_DATABASE).sort((a, b) => {
-    const pA = LOCATION_DATABASE[a].priority || 1;
-    const pB = LOCATION_DATABASE[b].priority || 1;
-    if (pA !== pB) return pB - pA;
-    return b.length - a.length;
-  });
-  
-  for (const locationKey of sortedLocations) {
-    // strict word boundary check to avoid substrings (e.g. "sus" matching "us")
-    // Escape special regex chars in locationKey just in case
-    const safeKey = locationKey.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const regex = new RegExp(`\\b${safeKey}\\b`, 'i');
-    
+  for (const { locationKey, regex, location } of LOCATION_MATCHERS) {
     if (regex.test(text)) {
-      const location = LOCATION_DATABASE[locationKey];
       return {
         lat: location.lat,
         lng: location.lng,
@@ -210,6 +213,10 @@ export function geolocateNews(newsItem) {
  * Returns array of { newsItem, location } objects for items that could be geolocated
  */
 export function geolocateNewsItems(newsItems, limit = 10) {
+  if (!Array.isArray(newsItems) || newsItems.length === 0 || limit <= 0) {
+    return [];
+  }
+
   const geolocated = [];
   
   for (const item of newsItems.slice(0, limit)) {

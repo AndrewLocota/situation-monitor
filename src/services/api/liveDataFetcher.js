@@ -6,6 +6,46 @@
 import { fetchWithCorsProxy } from './corsProxy';
 import { fetchWithCircuitBreaker } from '../../utils/circuitBreaker';
 
+// Optional Supabase Edge Functions (recommended for GitHub Pages compatibility).
+// When configured, we prefer calling Supabase to avoid browser CORS blocks.
+const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL || '').trim().replace(/\/+$/, '');
+const SUPABASE_KEY = (import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim();
+
+function hasSupabase() {
+  return Boolean(SUPABASE_URL && SUPABASE_KEY);
+}
+
+async function fetchSupabaseFunctionJson(functionName, { query = {}, method = 'GET', body, signal } = {}) {
+  if (!hasSupabase()) return null;
+
+  const qs = new URLSearchParams(
+    Object.entries(query).reduce((acc, [k, v]) => {
+      if (v === undefined || v === null) return acc;
+      acc[k] = String(v);
+      return acc;
+    }, {})
+  ).toString();
+
+  const url = `${SUPABASE_URL}/functions/v1/${functionName}${qs ? `?${qs}` : ''}`;
+  const res = await fetch(url, {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`,
+    },
+    body: body ? JSON.stringify(body) : undefined,
+    signal,
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`[Supabase:${functionName}] HTTP ${res.status}${text ? ` - ${text.slice(0, 200)}` : ''}`);
+  }
+
+  return res.json();
+}
+
 // RSS Feed URLs for live news with bias ratings
 // Bias scale: -3 (far left) to +3 (far right), 0 = center
 // Based on GroundNews ratings (aggregates AllSides, Ad Fontes, MBFC)
@@ -412,11 +452,27 @@ async function parseRSSFeed(url, sourceName, biasInfo = {}, signal) {
 
 /**
  * Fetch all news from multiple sources
+ * Prefers Supabase Edge Function for speed/caching, falls back to direct RSS
  * @param {Object} options - Options for fetching
  * @param {number} options.limit - Max number of items to return (default: 200)
  * @param {boolean} options.fastMode - If true, fetch from ALL sources in parallel but return as soon as we have enough
  */
 export async function fetchAllNews({ limit = 200, fastMode = false } = {}) {
+  // Try Supabase Edge Function first (cached, fast, no CORS issues)
+  try {
+    const backend = await fetchSupabaseFunctionJson('news-aggregator', { query: { limit } });
+    if (Array.isArray(backend) && backend.length > 0) {
+      console.log(`[News] Fetched ${backend.length} items from Supabase backend`);
+      return backend.map(item => ({
+        ...item,
+        pubDate: new Date(item.pubDate),
+      }));
+    }
+  } catch (e) {
+    console.warn('[News] Supabase backend fetch failed, falling back to direct RSS:', e?.message || e);
+  }
+
+  // Fallback: direct RSS fetching
   const feedEntries = Object.entries(NEWS_FEEDS);
 
   if (fastMode) {
@@ -589,7 +645,7 @@ export async function fetchLiveConflictEvents() {
 export async function fetchEarthquakes() {
   try {
     const response = await fetch(
-      'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson'
+      'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_hour.geojson'
     );
 
     if (!response.ok) return [];
@@ -610,51 +666,105 @@ export async function fetchEarthquakes() {
 }
 
 /**
- * Fetch Twitter Intel from @WarMonitors via multiple RSS sources
- * Tries XCancel, Nitter mirrors, and RSSHub as fallbacks
+ * Fetch Twitter Intel from multiple OSINT accounts via RSS proxies
+ * Uses circuit breaker pattern to avoid hammering dead endpoints
+ * Aggregates tweets from multiple accounts for better coverage
  */
-export async function fetchTwitterIntel() {
-  // List of RSS sources to try (in order of preference)
-  const sources = [
-    { name: 'XCancel', url: 'https://xcancel.com/WarMonitors/rss' },
-    { name: 'Nitter.net', url: 'https://nitter.net/WarMonitors/rss' },
-    { name: 'Nitter.privacydev', url: 'https://nitter.privacydev.net/WarMonitors/rss' },
-    { name: 'RSSHub', url: 'https://rsshub.app/twitter/user/WarMonitors' },
-  ];
 
-  for (const source of sources) {
+// OSINT Twitter accounts to monitor (geopolitical focus)
+const TWITTER_ACCOUNTS = [
+  { username: 'WarMonitors', priority: 1 },
+  { username: 'OSINTdefender', priority: 2 },
+  { username: 'Conflicts', priority: 3 },
+  { username: 'IntelCrab', priority: 4 },
+  { username: 'sentaboringtweet', priority: 5 },  // Ukraine focused
+];
+
+// RSS proxy instances (ordered by reliability - updated Feb 2026)
+const RSS_PROXIES = [
+  { name: 'Nitter.poast', baseUrl: 'https://nitter.poast.org', working: true },
+  { name: 'Nitter.privacydev', baseUrl: 'https://nitter.privacydev.net', working: true },
+  { name: 'XCancel', baseUrl: 'https://xcancel.com', working: true },
+  { name: 'Nitter.net', baseUrl: 'https://nitter.net', working: false },  // Often down
+  { name: 'RSSHub', baseUrl: 'https://rsshub.app/twitter/user', isRssHub: true, working: true },
+];
+
+// Track which proxies are working (in-memory, resets on reload)
+const proxyHealth = new Map();
+
+function getProxyHealth(proxyName) {
+  if (!proxyHealth.has(proxyName)) {
+    proxyHealth.set(proxyName, { failures: 0, lastSuccess: null, lastAttempt: null });
+  }
+  return proxyHealth.get(proxyName);
+}
+
+function markProxySuccess(proxyName) {
+  const health = getProxyHealth(proxyName);
+  health.failures = 0;
+  health.lastSuccess = Date.now();
+  health.lastAttempt = Date.now();
+}
+
+function markProxyFailure(proxyName) {
+  const health = getProxyHealth(proxyName);
+  health.failures++;
+  health.lastAttempt = Date.now();
+}
+
+function shouldSkipProxy(proxyName) {
+  const health = getProxyHealth(proxyName);
+  // Skip if 3+ failures and last attempt was less than 2 minutes ago
+  if (health.failures >= 3 && health.lastAttempt && Date.now() - health.lastAttempt < 120000) {
+    return true;
+  }
+  return false;
+}
+
+async function fetchAccountTweets(username, maxTweets = 10) {
+  // Try each proxy until one works
+  for (const proxy of RSS_PROXIES) {
+    if (!proxy.working) continue;
+    if (shouldSkipProxy(proxy.name)) {
+      continue;
+    }
+
     try {
-      console.log(`[Twitter] Trying ${source.name}...`);
-      const response = await fetchWithCorsProxy(source.url);
-      
+      const url = proxy.isRssHub
+        ? `${proxy.baseUrl}/${username}`
+        : `${proxy.baseUrl}/${username}/rss`;
+
+      const response = await fetchWithCorsProxy(url);
+
       if (!response) {
-        console.log(`[Twitter] ${source.name} returned null`);
+        markProxyFailure(proxy.name);
         continue;
       }
-      
+
       const text = await response.text();
-      
-      // Check if we got valid RSS/XML
+
+      // Validate RSS response
       if (!text || text.length < 100 || (!text.includes('<rss') && !text.includes('<feed') && !text.includes('<item'))) {
-        console.log(`[Twitter] ${source.name} invalid response (${text.length} chars)`);
+        markProxyFailure(proxy.name);
         continue;
       }
-      
+
       const parser = new DOMParser();
       const doc = parser.parseFromString(text, 'text/xml');
-
       const items = doc.querySelectorAll('item');
+
       if (items.length === 0) {
-        console.log(`[Twitter] ${source.name} has no items`);
+        markProxyFailure(proxy.name);
         continue;
       }
-      
-      console.log(`[Twitter] ${source.name} SUCCESS - found ${items.length} items`);
-      
+
+      // Success!
+      markProxySuccess(proxy.name);
+
       const tweets = [];
       items.forEach((item, index) => {
-        if (tweets.length >= 25) return;
-        
+        if (tweets.length >= maxTweets) return;
+
         const title = item.querySelector('title')?.textContent || '';
         const description = item.querySelector('description')?.textContent || '';
         const link = item.querySelector('link')?.textContent || '';
@@ -664,27 +774,100 @@ export async function fetchTwitterIntel() {
         const tweetIdMatch = link.match(/status\/(\d+)/);
         const tweetId = tweetIdMatch ? tweetIdMatch[1] : null;
 
+        // Clean up the link to always point to twitter.com
+        const cleanLink = link
+          .replace(/xcancel\.com/g, 'twitter.com')
+          .replace(/nitter\.[^/]+/g, 'twitter.com');
+
         tweets.push({
-          id: `twitter-${tweetId || Date.now()}-${index}`,
+          id: `twitter-${username}-${tweetId || Date.now()}-${index}`,
           tweetId,
           title: title.trim() || description.replace(/<[^>]*>/g, '').trim().slice(0, 200),
           description: description.replace(/<[^>]*>/g, '').trim().slice(0, 500),
-          link: link.replace('xcancel.com', 'twitter.com').replace('nitter.net', 'twitter.com'),
+          link: cleanLink,
           pubDate: new Date(pubDate),
-          source: 'WarMonitors',
-          username: 'WarMonitors',
+          source: username,
+          username: username,
         });
       });
 
       return tweets;
     } catch (error) {
-      console.log(`[Twitter] ${source.name} error:`, error.message);
+      markProxyFailure(proxy.name);
       continue;
     }
   }
 
-  console.warn('[Twitter] All sources failed');
-  return [];
+  return []; // All proxies failed for this account
+}
+
+export async function fetchTwitterIntel() {
+  // Prefer Supabase Edge Function (no browser CORS issues on GitHub Pages).
+  try {
+    const backend = await fetchSupabaseFunctionJson('twitter-intel', { query: { limit: 30 } });
+    if (Array.isArray(backend) && backend.length > 0) {
+      return backend
+        .map((tweet) => ({
+          id: tweet.id || `twitter-${tweet.username || 'unknown'}-${tweet.tweetId || Date.now()}`,
+          tweetId: tweet.tweetId || null,
+          title: tweet.title || '',
+          description: tweet.description || '',
+          link: tweet.link || (tweet.tweetId ? `https://twitter.com/i/status/${tweet.tweetId}` : ''),
+          pubDate: new Date(tweet.pubDate),
+          source: tweet.source || tweet.username || 'twitter',
+          username: tweet.username || tweet.source || 'unknown',
+        }))
+        .filter((t) => t.tweetId && t.title);
+    }
+  } catch (e) {
+    console.warn('[Twitter] Supabase backend fetch failed, falling back to browser scraping:', e?.message || e);
+  }
+
+  console.log('[Twitter] Fetching from multiple OSINT accounts...');
+
+  const allTweets = [];
+  const successfulAccounts = [];
+
+  // Fetch from all accounts in parallel
+  const fetchPromises = TWITTER_ACCOUNTS.map(async (account) => {
+    try {
+      const tweets = await fetchAccountTweets(account.username, 8);
+      if (tweets.length > 0) {
+        successfulAccounts.push(account.username);
+        return tweets;
+      }
+      return [];
+    } catch (error) {
+      console.warn(`[Twitter] Failed to fetch @${account.username}:`, error.message);
+      return [];
+    }
+  });
+
+  const results = await Promise.all(fetchPromises);
+
+  // Combine all tweets
+  results.forEach(tweets => {
+    allTweets.push(...tweets);
+  });
+
+  // Sort by date (newest first) and deduplicate by tweetId
+  const seenIds = new Set();
+  const uniqueTweets = allTweets
+    .sort((a, b) => b.pubDate - a.pubDate)
+    .filter(tweet => {
+      if (tweet.tweetId && seenIds.has(tweet.tweetId)) return false;
+      if (tweet.tweetId) seenIds.add(tweet.tweetId);
+      return true;
+    })
+    .slice(0, 30); // Limit to 30 most recent tweets
+
+  if (successfulAccounts.length > 0) {
+    console.log(`[Twitter] SUCCESS - ${uniqueTweets.length} tweets from @${successfulAccounts.join(', @')}`);
+  } else {
+    console.warn('[Twitter] All accounts/proxies failed');
+  }
+
+  return uniqueTweets;
 }
 
 /**
@@ -1079,6 +1262,13 @@ export async function fetchGovContracts() {
  * Fetch sector ETF data for the heatmap
  */
 export async function fetchSectorData() {
+  try {
+    const backend = await fetchSupabaseFunctionJson('market-data', { query: { kind: 'sectors' } });
+    if (Array.isArray(backend) && backend.length > 0) return backend;
+  } catch (e) {
+    console.warn('[Markets] Supabase sectors fetch failed, falling back:', e?.message || e);
+  }
+
   const sectors = [
     { symbol: 'XLK', name: 'Tech' },
     { symbol: 'XLF', name: 'Finance' },
@@ -1133,6 +1323,13 @@ export async function fetchSectorData() {
  * Fetch commodity prices (Gold, Oil, Gas, etc.)
  */
 export async function fetchCommodityData() {
+  try {
+    const backend = await fetchSupabaseFunctionJson('market-data', { query: { kind: 'commodities' } });
+    if (Array.isArray(backend) && backend.length > 0) return backend;
+  } catch (e) {
+    console.warn('[Markets] Supabase commodities fetch failed, falling back:', e?.message || e);
+  }
+
   const commodities = [
     { symbol: 'GC=F', name: 'Gold', display: 'GOLD' },
     { symbol: 'SI=F', name: 'Silver', display: 'SILVER' },
@@ -1180,7 +1377,14 @@ export async function fetchCommodityData() {
  * Fetch stock market indices
  */
 export async function fetchMarketIndices() {
-  const symbols = ['SPY', 'QQQ', 'DIA', 'IWM', '^VIX'];
+  try {
+    const backend = await fetchSupabaseFunctionJson('market-data', { query: { kind: 'indices' } });
+    if (Array.isArray(backend) && backend.length > 0) return backend;
+  } catch (e) {
+    console.warn('[Markets] Supabase indices fetch failed, falling back:', e?.message || e);
+  }
+
+  const symbols = ['SPY', 'QQQ', '^VIX', 'IWM'];
   const results = [];
 
   try {

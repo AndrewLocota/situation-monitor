@@ -23,25 +23,17 @@
   width: 320px;
   min-width: 320px;
   background: transparent;
-  border: 1px solid var(--border-color, #2a3040);
+  border: none;
   transition: all 0.3s ease;
-  overflow: hidden;
+  overflow: visible;
   display: flex;
   flex-direction: column;
-  backdrop-filter: blur(4px);
+  backdrop-filter: none;
 }
 
 .sidebar.collapsed {
   width: 24px;
   min-width: 24px;
-}
-
-.sidebar.left {
-  border-right: 1px solid var(--border-color, #2a3040);
-}
-
-.sidebar.right {
-  border-left: 1px solid var(--border-color, #2a3040);
 }
 
 .sidebar-toggle {
@@ -64,9 +56,13 @@
 }
 
 .sidebar.left .sidebar-toggle {
-  right: 0;
+  right: -20px;
   border-left: none;
   border-radius: 0 4px 4px 0;
+}
+
+.sidebar.left.collapsed .sidebar-toggle {
+  right: 0;
 }
 
 .sidebar.right .sidebar-toggle {
@@ -85,10 +81,24 @@
   padding: 8px;
   overflow-y: auto;
   overflow-x: hidden;
+  scrollbar-gutter: stable;
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.sidebar.left .sidebar-content {
+  padding-right: 8px;
+  direction: rtl;
+}
+
+.sidebar.left .sidebar-content > * {
+  direction: ltr;
+}
+
+.sidebar.right .sidebar-content {
+  padding-left: 22px; /* reserve space for 20px toggle */
 }
 
 /* Map Area */
@@ -322,6 +332,35 @@
   color: var(--accent-primary, #4da6ff);
 }
 
+.ascii-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border: 1px solid rgba(77, 166, 255, 0.28);
+  background: rgba(77, 166, 255, 0.08);
+  font-size: 10px;
+  line-height: 1;
+  letter-spacing: 0.05em;
+}
+
+.ascii-pill-bracket {
+  color: var(--text-dim, #5a6478);
+  font-weight: bold;
+}
+
+.ascii-pill-label {
+  color: var(--text-dim, #5a6478);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+}
+
+.ascii-pill-value {
+  color: var(--accent-primary, #4da6ff);
+  font-weight: bold;
+  font-variant-numeric: tabular-nums;
+}
+
 .blink {
   animation: blink 1s step-end infinite;
 }
@@ -364,9 +403,9 @@
     z-index: 100;
     width: 300px; /* Wider on mobile for better reading */
     min-width: 300px;
-    background: rgba(6, 8, 12, 0.95);
-    backdrop-filter: blur(12px);
-    box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+    background: transparent;
+    backdrop-filter: none;
+    box-shadow: none;
   }
 
   .sidebar.left {
@@ -381,23 +420,31 @@
   .sidebar.collapsed {
     width: 32px !important;
     min-width: 32px !important;
-    background: rgba(6, 8, 12, 0.6);
-    backdrop-filter: blur(4px);
+    background: transparent;
+    backdrop-filter: none;
   }
 
-  .sidebar.left.collapsed {
-    border-right: 1px solid var(--border-color, #2a3040);
-  }
-
-  .sidebar.right.collapsed {
-    border-left: 1px solid var(--border-color, #2a3040);
-  }
-  
   /* Ensure toggle is clickable */
   .sidebar-toggle {
     height: 80px; /* Larger touch target */
     width: 24px;
     background: var(--bg-elevated);
+  }
+
+  .sidebar.left .sidebar-toggle {
+    right: -24px;
+  }
+
+  .sidebar.left.collapsed .sidebar-toggle {
+    right: 0;
+  }
+
+  .sidebar.left .sidebar-content {
+    padding-right: 8px;
+  }
+
+  .sidebar.right .sidebar-content {
+    padding-left: 26px; /* reserve space for 24px mobile toggle */
   }
 
   /* Map takes full space underneath */

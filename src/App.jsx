@@ -17,7 +17,7 @@ function App() {
     newsInterval: 60000,      // 1 minute
     conflictInterval: 30000,  // 30 seconds
     marketsInterval: 30000,   // 30 seconds
-    earthquakeInterval: 120000, // 2 minutes
+    earthquakeInterval: 60000, // 1 minute
     enabled: true,
   });
 

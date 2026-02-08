@@ -15,6 +15,8 @@ import {
     ContractsPanel,
     TwitterIntelPanel,
 } from './panels';
+import HoloCallBox from './HoloCallBox';
+import { useHoloCall } from '../hooks';
 import { useDataStore, useSettingsStore } from '../stores';
 import { fetchWithCircuitBreaker } from '../utils/circuitBreaker';
 import '../App.css';
@@ -27,9 +29,21 @@ import '../App.css';
 const UIOverlay = ({ onRefresh, videoPlaying, children }) => {
     const [sidebarCollapsed, setSidebarCollapsed] = useState(() => window.innerWidth < 1000);
     const [rightSidebarCollapsed, setRightSidebarCollapsed] = useState(() => window.innerWidth < 1000);
+    const [utcNow, setUtcNow] = useState(new Date());
 
-    const { isLoading, error, lastUpdate, allNews, conflictEvents, earthquakes } = useDataStore();
+    const { isLoading, error, allNews, conflictEvents, earthquakes, holoCall, closeHoloCall } = useDataStore();
     const { panels } = useSettingsStore();
+
+    // Initialize HoloCall hook for AI reactions
+    useHoloCall();
+
+    useEffect(() => {
+        const interval = setInterval(() => setUtcNow(new Date()), 1000);
+        return () => clearInterval(interval);
+    }, []);
+
+    const formatUTC = (date) => date.toISOString().substring(11, 19);
+    const formatDate = (date) => date.toISOString().substring(0, 10);
 
     // Cycling footer taglines
     const FOOTER_TAGLINES = [
@@ -106,6 +120,16 @@ __  __|__
             }}>
                 {children}
             </div>
+
+            {/* HoloCall Box - MGS Codec-style AI reactions */}
+            <HoloCallBox
+                isOpen={holoCall.isOpen}
+                characterId={holoCall.characterId}
+                message={holoCall.message}
+                isLoading={holoCall.isLoading}
+                newsItem={holoCall.newsItem}
+                onClose={closeHoloCall}
+            />
 
             {/* Header with Theatre Navigation and Music Player */}
             <Header onRefresh={onRefresh} musicPlayer={<MusicPlayer forcePause={videoPlaying} />} />
@@ -196,11 +220,16 @@ __  __|__
                     </div>
                 </div>
                 <div className="footer-center">
-                    <span className="stat-item">
-                        <span className="stat-label">UPDATED</span>
-                        <span className="stat-value">
-                            {lastUpdate ? new Date(lastUpdate).toLocaleTimeString() : '--:--:--'}
-                        </span>
+                    <span className="ascii-pill" aria-label="Current UTC time">
+                        <span className="ascii-pill-bracket">[</span>
+                        <span className="ascii-pill-label">UTC</span>
+                        <span className="ascii-pill-value">{formatUTC(utcNow)}</span>
+                        <span className="ascii-pill-bracket">]</span>
+                    </span>
+                    <span className="footer-separator">|</span>
+                    <span className="stat-item" aria-label="Current UTC date">
+                        <span className="stat-label">DATE</span>
+                        <span className="stat-value">{formatDate(utcNow)}</span>
                     </span>
                     <span className="footer-separator">|</span>
                     <span className="live-indicator-small">

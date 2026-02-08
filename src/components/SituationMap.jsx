@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
-import { MapContainer, TileLayer, useMap, Marker, Popup, Polygon, Circle, Polyline, CircleMarker, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, WMSTileLayer, useMap, Marker, Popup, Polygon, Circle, Polyline, CircleMarker, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import {
@@ -16,6 +16,7 @@ import {
 import { VIDEO_MARKERS } from '../data/videoMarkers';
 import { fetchLiveUAMapEvents, fetchUkraineFrontline, fetchSudanFrontlines, fetchMyanmarFrontlines, EVENT_STYLES } from '../data/liveFeeds';
 import { getAllConflictEvents, GLOBAL_EVENT_STYLES } from '../data/globalConflicts';
+import { SANCTION_HOTSPOTS } from '../data/sanctions';
 import { getControlZones } from '../services/api/controlZoneFetcher';
 import { geolocateNewsItems } from '../utils/geolocateNews';
 import { useDataStore, useMapStore } from '../stores';
@@ -54,6 +55,91 @@ const WIREFRAME_FILTER = `
     sepia(0.3)
     hue-rotate(180deg);
 `;
+
+// Global population density overlay (SEDAC GPWv4 WMS)
+const POPULATION_DENSITY_WMS_URL = 'https://sedac.ciesin.columbia.edu/geoserver/wms';
+const MAX_NEWS_MARKERS = 110;
+const INITIAL_NEWS_MARKERS = 36;
+const NEWS_MARKER_BATCH_SIZE = 24;
+const NEWS_MARKER_BATCH_INTERVAL_MS = 110;
+
+const EARTH_RADIUS_M = 6371008.8;
+const NIGHT_RADIUS_M = Math.PI * EARTH_RADIUS_M / 2; // 90deg great-circle distance
+
+function normalizeLongitude(lon) {
+    let value = lon;
+    while (value > 180) value -= 360;
+    while (value < -180) value += 360;
+    return value;
+}
+
+function getDayNightOverlay(date = new Date()) {
+    const deg = 180 / Math.PI;
+    const rad = Math.PI / 180;
+
+    const startOfYear = Date.UTC(date.getUTCFullYear(), 0, 0);
+    const dayOfYear = (Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()) - startOfYear) / 86400000;
+    const utcMinutes = date.getUTCHours() * 60 + date.getUTCMinutes() + date.getUTCSeconds() / 60;
+
+    const gamma = (2 * Math.PI / 365) * (dayOfYear - 1 + ((utcMinutes / 60) - 12) / 24);
+    const declination =
+        0.006918
+        - 0.399912 * Math.cos(gamma)
+        + 0.070257 * Math.sin(gamma)
+        - 0.006758 * Math.cos(2 * gamma)
+        + 0.000907 * Math.sin(2 * gamma)
+        - 0.002697 * Math.cos(3 * gamma)
+        + 0.00148 * Math.sin(3 * gamma);
+    const equationOfTime =
+        229.18 * (
+            0.000075
+            + 0.001868 * Math.cos(gamma)
+            - 0.032077 * Math.sin(gamma)
+            - 0.014615 * Math.cos(2 * gamma)
+            - 0.040849 * Math.sin(2 * gamma)
+        );
+
+    const subsolarLon = normalizeLongitude((720 - utcMinutes - equationOfTime) / 4);
+    const subsolarLat = declination * deg;
+    const nightCenter = [(-subsolarLat), normalizeLongitude(subsolarLon + 180)];
+
+    const terminator = [];
+    for (let lon = -180; lon <= 180; lon += 4) {
+        const hourAngle = (lon - subsolarLon) * rad;
+        let lat;
+        if (Math.abs(Math.tan(declination)) < 1e-6) {
+            lat = 0;
+        } else {
+            lat = Math.atan(-Math.cos(hourAngle) / Math.tan(declination)) * deg;
+        }
+        terminator.push([Math.max(-89.9, Math.min(89.9, lat)), lon]);
+    }
+
+    return { nightCenter, terminator };
+}
+
+function getEarthquakeColor(mag = 0) {
+    if (mag >= 6) return '#ff4757';
+    if (mag >= 5) return '#ff9f43';
+    if (mag >= 4) return '#f1c40f';
+    return '#4da6ff';
+}
+
+function positionsEqual(a = {}, b = {}) {
+    const aKeys = Object.keys(a);
+    const bKeys = Object.keys(b);
+    if (aKeys.length !== bKeys.length) return false;
+
+    for (let i = 0; i < aKeys.length; i++) {
+        const key = aKeys[i];
+        const aPos = a[key];
+        const bPos = b[key];
+        if (!bPos) return false;
+        if (Math.abs((aPos.lat || 0) - (bPos.lat || 0)) > 1e-7) return false;
+        if (Math.abs((aPos.lng || 0) - (bPos.lng || 0)) > 1e-7) return false;
+    }
+    return true;
+}
 
 // Custom marker icons
 const createPulseIcon = (color, size = 12) => {
@@ -102,6 +188,31 @@ const createTriangleIcon = (color, size = 10) => {
     "></div>`,
         iconSize: [size, size],
         iconAnchor: [size / 2, size]
+    });
+};
+
+const createSanctionsIcon = (color = '#ff9f43', size = 14) => {
+    return L.divIcon({
+        className: 'custom-sanctions-marker',
+        html: `
+            <div style="
+                width: ${size}px;
+                height: ${size}px;
+                border-radius: 50%;
+                background: rgba(0,0,0,0.85);
+                border: 1px solid ${color};
+                box-shadow: 0 0 8px ${color};
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: ${color};
+                font-size: 9px;
+                font-weight: bold;
+                line-height: 1;
+            ">S</div>
+        `,
+        iconSize: [size, size],
+        iconAnchor: [size / 2, size / 2]
     });
 };
 
@@ -189,6 +300,46 @@ const createNewsIcon = (color, opacity = 1, blur = 6, isRead = false, logoUrl = 
                         onerror="console.error('Logo failed:', '${safeLogo}'); this.style.display='none';"
                         onload="console.log('Logo loaded:', '${safeLogo}');"
                     />
+                ` : ''}
+            </div>
+        `,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
+    });
+};
+
+// Twitter/X marker icon with poster badge
+const createTwitterIcon = (color, opacity = 1, username = null) => {
+    const safeUsername = username ? username.replace(/"/g, '&quot;').replace(/'/g, '&#39;') : null;
+
+    return L.divIcon({
+        className: 'custom-twitter-marker',
+        html: `
+            <div style="position: relative; width: 24px; height: 24px; display: inline-block;">
+                <div style="
+                    font-size: 16px;
+                    opacity: ${opacity};
+                    text-shadow: 0 0 8px ${color}, 0 0 3px rgba(0,0,0,0.8);
+                    filter: drop-shadow(0 0 3px ${color});
+                    transition: all 0.5s ease;
+                    line-height: 1;
+                ">𝕏</div>
+                ${safeUsername ? `
+                    <div style="
+                        position: absolute;
+                        bottom: -4px;
+                        right: -8px;
+                        font-size: 7px;
+                        font-family: monospace;
+                        font-weight: bold;
+                        color: ${color};
+                        background: rgba(0,0,0,0.8);
+                        padding: 1px 3px;
+                        border-radius: 2px;
+                        white-space: nowrap;
+                        text-shadow: none;
+                        box-shadow: 0 0 4px rgba(0,0,0,0.6);
+                    ">@${safeUsername.slice(0, 8)}</div>
                 ` : ''}
             </div>
         `,
@@ -381,11 +532,11 @@ const AutoDeclutter = ({ allMarkers, setDeclutteredPositions }) => {
     useMapEvents({
         zoomend: () => {
             const positions = calculateDeclutteredPositions();
-            setDeclutteredPositions(positions);
+            setDeclutteredPositions(prev => (positionsEqual(prev, positions) ? prev : positions));
         },
         moveend: () => {
             const positions = calculateDeclutteredPositions();
-            setDeclutteredPositions(positions);
+            setDeclutteredPositions(prev => (positionsEqual(prev, positions) ? prev : positions));
         }
     });
 
@@ -394,7 +545,7 @@ const AutoDeclutter = ({ allMarkers, setDeclutteredPositions }) => {
         // Small delay to let the render settle
         const timeout = setTimeout(() => {
             const positions = calculateDeclutteredPositions();
-            setDeclutteredPositions(positions);
+            setDeclutteredPositions(prev => (positionsEqual(prev, positions) ? prev : positions));
         }, 100);
         return () => clearTimeout(timeout);
     }, [allMarkers, calculateDeclutteredPositions, setDeclutteredPositions]);
@@ -693,9 +844,19 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
     const [showTheatres, setShowTheatres] = useState(false);
     const [readNewsIds, setReadNewsIds] = useState(new Set());
     const [declutteredPositions, setDeclutteredPositions] = useState({});
+    const [legendOpen, setLegendOpen] = useState(false);
+    const [dayNightNow, setDayNightNow] = useState(() => new Date());
+    const [newsMarkerLimit, setNewsMarkerLimit] = useState(INITIAL_NEWS_MARKERS);
 
     // Access map layers and currentTheatre from store
     const { layers, currentTheatre } = useMapStore();
+
+    useEffect(() => {
+        if (!layers.daynight) return undefined;
+        setDayNightNow(new Date());
+        const timer = setInterval(() => setDayNightNow(new Date()), 60000);
+        return () => clearInterval(timer);
+    }, [layers.daynight]);
 
     // Delay showing theatre polygons until after initial zoom animation
     useEffect(() => {
@@ -705,13 +866,54 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
         return () => clearTimeout(timer);
     }, []);
 
-    // Get news and selectedNews from store
-    const { allNews, selectedNews, clearSelectedNews } = useDataStore();
+    // Get news, twitter, earthquakes, and selectedNews from store
+    const { allNews, twitterEvents, earthquakes, selectedNews, clearSelectedNews } = useDataStore();
 
-    // Geolocate news items (up to 110)
-    const geolocatedNews = useMemo(() => {
-        return geolocateNewsItems(allNews, 110);
+    // Fill map news markers in fast batches for better perceived responsiveness.
+    useEffect(() => {
+        const totalNews = Array.isArray(allNews) ? allNews.length : 0;
+        const targetLimit = Math.min(MAX_NEWS_MARKERS, totalNews);
+        if (targetLimit <= 0) {
+            setNewsMarkerLimit(0);
+            return undefined;
+        }
+
+        const initialLimit = Math.min(INITIAL_NEWS_MARKERS, targetLimit);
+        setNewsMarkerLimit(initialLimit);
+
+        if (targetLimit <= initialLimit) return undefined;
+
+        let currentLimit = initialLimit;
+        const timer = setInterval(() => {
+            currentLimit = Math.min(targetLimit, currentLimit + NEWS_MARKER_BATCH_SIZE);
+            setNewsMarkerLimit(currentLimit);
+            if (currentLimit >= targetLimit) clearInterval(timer);
+        }, NEWS_MARKER_BATCH_INTERVAL_MS);
+
+        return () => clearInterval(timer);
     }, [allNews]);
+
+    const dayNightOverlay = useMemo(() => getDayNightOverlay(dayNightNow), [dayNightNow]);
+
+    // Geolocate only the active batch; the limit ramps quickly above.
+    const geolocatedNews = useMemo(() => {
+        return geolocateNewsItems(allNews, newsMarkerLimit);
+    }, [allNews, newsMarkerLimit]);
+
+    // Geolocate twitter intel items (up to 50)
+    // Convert tweets to news-like format for geolocating
+    const geolocatedTweets = useMemo(() => {
+        const tweetAsNews = twitterEvents.map(tweet => ({
+            id: tweet.id,
+            title: tweet.title,
+            description: tweet.description,
+            link: tweet.link,
+            pubDate: tweet.pubDate,
+            source: tweet.source,
+            username: tweet.username
+        }));
+        return geolocateNewsItems(tweetAsNews, 50);
+    }, [twitterEvents]);
 
     // Calculate time stats for relative styling (opacity based on dataset range)
     const { minTime, timeRange } = useMemo(() => {
@@ -722,7 +924,124 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
         return { minTime: min, timeRange: max - min || 1 };
     }, [geolocatedNews]);
 
-    // Collect all markers for cluster detection
+    // Precompute news marker visual state/icons once per data update (not per zoom/pan render)
+    const newsMarkers = useMemo(() => {
+        return geolocatedNews.map(({ newsItem, location }, index) => {
+            const markerId = `news-${newsItem.id || index}`;
+            const itemTime = new Date(newsItem.pubDate).getTime();
+            const normalized = Math.max(0, Math.min(1, ((Number.isFinite(itemTime) ? itemTime : minTime) - minTime) / timeRange));
+            const opacity = 0.1 + (normalized * 0.9);
+            const blur = 2 + (normalized * 8);
+            const isRead = readNewsIds.has(newsItem.id);
+            const publisherInfo = getPublisherLogo(newsItem.source);
+            const logoUrl = publisherInfo?.url;
+
+            return {
+                key: markerId,
+                markerId,
+                newsItem,
+                location,
+                logoUrl,
+                icon: createNewsIcon(COLORS.news, opacity, blur, isRead, logoUrl)
+            };
+        });
+    }, [geolocatedNews, minTime, timeRange, readNewsIds]);
+
+    // Precompute twitter marker visual state/icons once per data update
+    const twitterMarkers = useMemo(() => {
+        return geolocatedTweets.map(({ newsItem: tweet, location }, index) => {
+            const markerId = `twitter-${tweet.id || index}`;
+            return {
+                key: markerId,
+                markerId,
+                tweet,
+                location,
+                icon: createTwitterIcon('#1da1f2', 1, tweet.username)
+            };
+        });
+    }, [geolocatedTweets]);
+
+    const globalConflictEvents = useMemo(() => getAllConflictEvents(), []);
+
+    // Shared canvas renderer for vector layers to reduce SVG DOM overhead.
+    const vectorRenderer = useMemo(() => L.canvas({ padding: 0.5 }), []);
+
+    // Memoize theatre polygons + style (static data - never changes)
+    const theatrePolygons = useMemo(() => {
+        return THEATRES.map(theatre => ({
+            id: theatre.id,
+            positions: theatre.polygon
+                ? theatre.polygon.map(([lat, lng]) => [lat, lng])
+                : [
+                    [theatre.bounds.north, theatre.bounds.west],
+                    [theatre.bounds.north, theatre.bounds.east],
+                    [theatre.bounds.south, theatre.bounds.east],
+                    [theatre.bounds.south, theatre.bounds.west]
+                ],
+            pathOptions: {
+                color: COLORS.accent,
+                weight: 1,
+                opacity: 0.3,
+                fillOpacity: 0,
+                dashArray: '10, 5',
+                interactive: false,
+                smoothFactor: 1.4,
+                renderer: vectorRenderer
+            }
+        }));
+    }, [vectorRenderer]);
+
+    // Precompute polygon points + style for territorial control zones.
+    const controlZonePolygons = useMemo(() => {
+        return controlZones
+            .filter(zone => Array.isArray(zone.coords) && zone.coords.length > 2)
+            .map(zone => ({
+                ...zone,
+                positions: zone.coords.map(c => [c[1], c[0]]),
+                pathOptions: {
+                    color: zone.color,
+                    weight: 1,
+                    opacity: 0.6,
+                    fillColor: zone.color,
+                    fillOpacity: zone.opacity || 0.2,
+                    dashArray: '4, 4',
+                    smoothFactor: 1.4,
+                    bubblingMouseEvents: false,
+                    renderer: vectorRenderer
+                }
+            }));
+    }, [controlZones, vectorRenderer]);
+
+    // Precompute conflict zone polygon points + style.
+    const conflictZonePolygons = useMemo(() => {
+        return CONFLICT_ZONES
+            .filter(zone => Array.isArray(zone.coords) && zone.coords.length > 2)
+            .map(zone => {
+                const intensityColor = zone.intensity === 'high'
+                    ? COLORS.high
+                    : zone.intensity === 'medium'
+                        ? COLORS.elevated
+                        : '#ffd700';
+
+                return {
+                    ...zone,
+                    intensityColor,
+                    positions: zone.coords.map(c => [c[1], c[0]]),
+                    pathOptions: {
+                        color: intensityColor,
+                        weight: 1.5,
+                        opacity: 0.6,
+                        fillOpacity: 0.15,
+                        dashArray: '6, 3',
+                        smoothFactor: 1.4,
+                        bubblingMouseEvents: false,
+                        renderer: vectorRenderer
+                    }
+                };
+            });
+    }, [vectorRenderer]);
+
+    // Collect only currently visible markers for cluster detection
     const allMarkers = useMemo(() => {
         const markers = [];
 
@@ -736,29 +1055,58 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
             markers.push({ id: `video-${video.id}`, lat: video.lat, lng: video.lng, type: 'video', data: video });
         });
 
-        // Military bases
-        MILITARY_BASES.forEach(base => {
-            markers.push({ id: `base-${base.id}`, lat: base.lat, lng: base.lon, type: 'base', data: base });
-        });
+        if (layers.bases) {
+            MILITARY_BASES.forEach(base => {
+                markers.push({ id: `base-${base.id}`, lat: base.lat, lng: base.lon, type: 'base', data: base });
+            });
+        }
 
-        // Shipping chokepoints
-        SHIPPING_CHOKEPOINTS.forEach(point => {
-            markers.push({ id: `ship-${point.id}`, lat: point.lat, lng: point.lon, type: 'ship', data: point });
-        });
+        if (layers.chokepoints) {
+            SHIPPING_CHOKEPOINTS.forEach(point => {
+                markers.push({ id: `ship-${point.id}`, lat: point.lat, lng: point.lon, type: 'ship', data: point });
+            });
+        }
 
-        // News markers (geolocated)
-        geolocatedNews.forEach(({ newsItem, location }, index) => {
+        newsMarkers.forEach((marker) => {
             markers.push({
-                id: `news-${newsItem.id || index}`,
-                lat: location.lat,
-                lng: location.lng,
+                id: marker.markerId,
+                lat: marker.location.lat,
+                lng: marker.location.lng,
                 type: 'news',
-                data: { newsItem, location }
+                data: marker
             });
         });
 
+        twitterMarkers.forEach((marker) => {
+            markers.push({
+                id: marker.markerId,
+                lat: marker.location.lat,
+                lng: marker.location.lng,
+                type: 'twitter',
+                data: marker
+            });
+        });
+
+        if (layers.nuclear) {
+            NUCLEAR_FACILITIES.forEach((facility) => {
+                markers.push({ id: `nuclear-${facility.id}`, lat: facility.lat, lng: facility.lon, type: 'nuclear', data: facility });
+            });
+        }
+
+        if (layers.cyber) {
+            CYBER_ZONES.forEach((zone) => {
+                markers.push({ id: `cyber-${zone.id}`, lat: zone.lat, lng: zone.lon, type: 'cyber', data: zone });
+            });
+        }
+
+        if (layers.sanctions) {
+            SANCTION_HOTSPOTS.forEach((spot) => {
+                markers.push({ id: `sanction-${spot.id}`, lat: spot.lat, lng: spot.lon, type: 'sanction', data: spot });
+            });
+        }
+
         return markers;
-    }, [geolocatedNews]);
+    }, [newsMarkers, twitterMarkers, layers.bases, layers.chokepoints, layers.nuclear, layers.cyber, layers.sanctions]);
 
     // Get marker position (auto-decluttered, spread, or original)
     const getMarkerPosition = useCallback((markerId, originalLat, originalLng) => {
@@ -855,6 +1203,7 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                 zoom={2}
                 minZoom={2}
                 maxZoom={18}
+                preferCanvas={true}
                 zoomSnap={0.25}
                 zoomDelta={0.5}
                 wheelPxPerZoomLevel={120}
@@ -882,6 +1231,48 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                     />
                 )}
 
+                {/* Optional population density overlay */}
+                {layers.density && (
+                    <WMSTileLayer
+                        url={POPULATION_DENSITY_WMS_URL}
+                        layers="gpw-v4:gpw-v4-population-density_2020"
+                        format="image/png"
+                        transparent={true}
+                        version="1.1.1"
+                        className="population-density-tiles"
+                        opacity={0.62}
+                        zIndex={250}
+                    />
+                )}
+
+                {/* Optional day/night overlay */}
+                {layers.daynight && (
+                    <>
+                        <Circle
+                            center={dayNightOverlay.nightCenter}
+                            radius={NIGHT_RADIUS_M}
+                            pathOptions={{
+                                color: '#0b1020',
+                                weight: 1,
+                                opacity: 0.55,
+                                fillColor: '#03060d',
+                                fillOpacity: 0.26
+                            }}
+                            interactive={false}
+                        />
+                        <Polyline
+                            positions={dayNightOverlay.terminator}
+                            pathOptions={{
+                                color: '#8aa7d6',
+                                weight: 1.2,
+                                opacity: 0.6,
+                                dashArray: '4, 6'
+                            }}
+                            interactive={false}
+                        />
+                    </>
+                )}
+
                 <MapController activeTheatre={currentTheatre || activeTheatre} onTheatreSelect={onTheatreSelect} />
                 <ZoomDisplay />
                 <NewsFocusHandler
@@ -900,43 +1291,21 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                 />
 
 
-                {/* Theatre Zone Polygons - delayed to appear after initial zoom */}
-                {showTheatres && THEATRES.map(theatre => (
+                {/* Theatre Zone Polygons - memoized for performance, delayed to appear after initial zoom */}
+                {showTheatres && theatrePolygons.map(theatre => (
                     <Polygon
                         key={theatre.id}
-                        positions={theatre.polygon
-                            ? theatre.polygon.map(([lat, lng]) => [lat, lng])
-                            : [
-                                [theatre.bounds.north, theatre.bounds.west],
-                                [theatre.bounds.north, theatre.bounds.east],
-                                [theatre.bounds.south, theatre.bounds.east],
-                                [theatre.bounds.south, theatre.bounds.west]
-                            ]
-                        }
-                        pathOptions={{
-                            color: COLORS.accent,
-                            weight: 1,
-                            opacity: 0.3,
-                            fillOpacity: 0,
-                            dashArray: '10, 5',
-                            interactive: false
-                        }}
+                        positions={theatre.positions}
+                        pathOptions={theatre.pathOptions}
                     />
                 ))}
 
                 {/* Territorial Control Zones - Low opacity overlays */}
-                {layers.controlzones && controlZones.map(zone => (
+                {layers.controlzones && controlZonePolygons.map(zone => (
                     <Polygon
                         key={zone.id}
-                        positions={zone.coords.map(c => [c[1], c[0]])}
-                        pathOptions={{
-                            color: zone.color,
-                            weight: 1,
-                            opacity: 0.6,
-                            fillColor: zone.color,
-                            fillOpacity: zone.opacity || 0.2,
-                            dashArray: '4, 4'
-                        }}
+                        positions={zone.positions}
+                        pathOptions={zone.pathOptions}
                     >
                         <Popup autoPan={false}>
                             <div style={{ fontFamily: 'monospace', fontSize: '11px' }}>
@@ -951,24 +1320,17 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                 ))}
 
                 {/* Conflict Zones */}
-                {layers.conflicts && CONFLICT_ZONES.map(zone => (
+                {layers.conflicts && conflictZonePolygons.map(zone => (
                     <Polygon
                         key={zone.id}
-                        positions={zone.coords.map(c => [c[1], c[0]])}
-                        pathOptions={{
-                            color: zone.intensity === 'high' ? COLORS.high :
-                                zone.intensity === 'medium' ? COLORS.elevated : '#ffd700',
-                            weight: 1.5,
-                            opacity: 0.6,
-                            fillOpacity: 0.15,
-                            dashArray: '6, 3'
-                        }}
+                        positions={zone.positions}
+                        pathOptions={zone.pathOptions}
                     >
                         <Popup maxWidth={320}>
                             <div style={{ fontFamily: 'monospace', fontSize: '11px', maxWidth: '300px' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px', borderBottom: '1px solid #2a3040', paddingBottom: '4px' }}>
-                                    <strong style={{ color: zone.intensity === 'high' ? '#ff4757' : zone.intensity === 'medium' ? '#ffa502' : '#4da6ff' }}>{zone.name}</strong>
-                                    <span style={{ fontSize: '9px', padding: '2px 6px', border: `1px solid ${zone.intensity === 'high' ? '#ff4757' : zone.intensity === 'medium' ? '#ffa502' : '#4da6ff'}`, color: zone.intensity === 'high' ? '#ff4757' : zone.intensity === 'medium' ? '#ffa502' : '#4da6ff' }}>
+                                    <strong style={{ color: zone.intensityColor }}>{zone.name}</strong>
+                                    <span style={{ fontSize: '9px', padding: '2px 6px', border: `1px solid ${zone.intensityColor}`, color: zone.intensityColor }}>
                                         {zone.intensity.toUpperCase()}
                                     </span>
                                 </div>
@@ -1008,26 +1370,59 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                         {frontlineData.map((segment, idx) => {
                             // Convert [lon, lat] to [lat, lon] for Leaflet
                             const positions = segment.coordinates.map(coord => [coord[1], coord[0]]);
+                            const segmentId = segment.id || idx;
                             return (
-                                <Polyline
-                                    key={`frontline-ukraine-${segment.id || idx}`}
-                                    positions={positions}
-                                    pathOptions={{
-                                        color: '#ff4757',
-                                        weight: 3,
-                                        opacity: 0.9,
-                                        dashArray: null,
-                                        smoothFactor: 1.5
-                                    }}
-                                >
-                                    <Popup autoPan={false}>
-                                        <div style={{ fontFamily: 'monospace', fontSize: '11px' }}>
-                                            <strong style={{ color: '#ff4757' }}>🇺🇦 UKRAINE FRONTLINE</strong><br />
-                                            Source: {segment.properties?.source || 'ISW/CTP'}<br />
-                                            <span style={{ color: '#888' }}>Updated: {segment.properties?.date}</span>
-                                        </div>
-                                    </Popup>
-                                </Polyline>
+                                <React.Fragment key={`frontline-ukraine-${segmentId}`}>
+                                    {/* Outer halo for better contrast against tiles */}
+                                    <Polyline
+                                        positions={positions}
+                                        pathOptions={{
+                                            color: '#ff4757',
+                                            weight: 8,
+                                            opacity: 0.2,
+                                            smoothFactor: 0.5,
+                                            lineCap: 'round',
+                                            lineJoin: 'round',
+                                            interactive: false
+                                        }}
+                                    />
+
+                                    {/* Core frontline stroke */}
+                                    <Polyline
+                                        positions={positions}
+                                        pathOptions={{
+                                            color: '#ff5f6f',
+                                            weight: 4,
+                                            opacity: 0.95,
+                                            smoothFactor: 0.5,
+                                            lineCap: 'round',
+                                            lineJoin: 'round',
+                                            interactive: false
+                                        }}
+                                    />
+
+                                    {/* Dashed tactical overlay */}
+                                    <Polyline
+                                        positions={positions}
+                                        pathOptions={{
+                                            color: '#ffd4da',
+                                            weight: 1.4,
+                                            opacity: 0.7,
+                                            dashArray: '10, 6',
+                                            smoothFactor: 0.5,
+                                            lineCap: 'round',
+                                            lineJoin: 'round'
+                                        }}
+                                    >
+                                        <Popup autoPan={false}>
+                                            <div style={{ fontFamily: 'monospace', fontSize: '11px' }}>
+                                                <strong style={{ color: '#ff4757' }}>🇺🇦 UKRAINE FRONTLINE</strong><br />
+                                                Source: {segment.properties?.source || 'ISW/CTP'}<br />
+                                                <span style={{ color: '#888' }}>Updated: {segment.properties?.date}</span>
+                                            </div>
+                                        </Popup>
+                                    </Polyline>
+                                </React.Fragment>
                             );
                         })}
 
@@ -1253,34 +1648,84 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                     </Marker>
                 ))}
 
-                {/* News Feed Markers */}
-                {geolocatedNews.map(({ newsItem, location }, index) => {
-                    // Calculate relative opacity: 0.1 (oldest) to 1.0 (newest)
-                    const itemTime = new Date(newsItem.pubDate).getTime();
-                    const normalized = Math.max(0, Math.min(1, (itemTime - minTime) / timeRange));
-                    const opacity = 0.1 + (normalized * 0.9);
-                    const blur = 2 + (normalized * 8);
-                    const isRead = readNewsIds.has(newsItem.id);
+                {/* Sanctions Layer */}
+                {layers.sanctions && SANCTION_HOTSPOTS.map((spot) => {
+                    const weightScale = Math.max(4, Math.min(11, Math.sqrt(spot.estimatedEntities || 0) / 6));
+                    return (
+                        <React.Fragment key={spot.id}>
+                            <CircleMarker
+                                center={[spot.lat, spot.lon]}
+                                radius={weightScale}
+                                pathOptions={{
+                                    color: '#ff9f43',
+                                    fillColor: '#ff9f43',
+                                    fillOpacity: 0.18,
+                                    weight: 1.2
+                                }}
+                            />
+                            <Marker
+                                position={[spot.lat, spot.lon]}
+                                icon={createSanctionsIcon('#ff9f43', 14)}
+                                eventHandlers={{
+                                    mouseover: (e) => {
+                                        e.target.openPopup();
+                                    }
+                                }}
+                            >
+                                <Popup autoPan={false}>
+                                    <div style={{ fontFamily: 'monospace', fontSize: '11px', minWidth: '220px' }}>
+                                        <strong style={{ color: '#ff9f43' }}>SANCTIONS: {spot.name}</strong><br />
+                                        <span style={{ color: '#8892a8' }}>Focus: {spot.target}</span><br />
+                                        <span style={{ color: '#4da6ff' }}>Regimes: {spot.regimes.join(', ')}</span><br />
+                                        <span style={{ color: '#5a6478', fontSize: '10px' }}>Estimated listed entities: {spot.estimatedEntities.toLocaleString()}</span><br />
+                                        <span style={{ color: '#888', fontSize: '10px' }}>{spot.note}</span>
+                                    </div>
+                                </Popup>
+                            </Marker>
+                        </React.Fragment>
+                    );
+                })}
 
-                    // Get publisher logo
-                    const publisherInfo = getPublisherLogo(newsItem.source);
-                    const logoUrl = publisherInfo?.url;
-
-                    // Debug: Log image, video, and logo availability for first few items
-                    if (index < 3) {
-                        console.log(`[News #${index}] ${newsItem.source}:`);
-                        console.log(`  - Title: ${newsItem.title.substring(0, 50)}...`);
-                        console.log(`  - Image: ${newsItem.imageUrl || 'NONE'}`);
-                        console.log(`  - Video: ${newsItem.videoUrl || 'NONE'} (${newsItem.videoType || 'N/A'})`);
-                        console.log(`  - Logo: ${logoUrl || 'NONE'}`);
-                        console.log(`  - Description length: ${newsItem.description?.length || 0} chars`);
-                    }
+                {/* Earthquakes Layer */}
+                {layers.earthquakes && earthquakes.map((eq, idx) => {
+                    const magnitude = Number(eq.mag) || 0;
+                    const color = getEarthquakeColor(magnitude);
+                    const radius = Math.max(4, Math.min(14, magnitude * 1.8));
+                    const eventTime = eq.time ? new Date(eq.time) : null;
+                    const quakeKey = `eq-${eventTime ? eventTime.getTime() : idx}-${eq.lat}-${eq.lon}`;
 
                     return (
+                        <CircleMarker
+                            key={quakeKey}
+                            center={[eq.lat, eq.lon]}
+                            radius={radius}
+                            pathOptions={{
+                                color,
+                                fillColor: color,
+                                fillOpacity: 0.45,
+                                weight: 1.2
+                            }}
+                        >
+                            <Popup autoPan={false}>
+                                <div style={{ fontFamily: 'monospace', fontSize: '11px', minWidth: '180px' }}>
+                                    <strong style={{ color }}>M{magnitude.toFixed(1)} Earthquake</strong><br />
+                                    <span style={{ color: '#e0e4eb' }}>{eq.place}</span><br />
+                                    <span style={{ color: '#5a6478', fontSize: '10px' }}>
+                                        {eventTime ? eventTime.toUTCString() : 'Unknown time'}
+                                    </span>
+                                </div>
+                            </Popup>
+                        </CircleMarker>
+                    );
+                })}
+
+                {/* News Feed Markers */}
+                {newsMarkers.map(({ key, markerId, newsItem, location, logoUrl, icon }) => {
+                    return (
                         <Marker
-                            key={`news-${newsItem.id || index}`}
-                            position={getMarkerPosition(`news-${newsItem.id || index}`, location.lat, location.lng)}
-                            icon={createNewsIcon(COLORS.news, opacity, blur, isRead, logoUrl)}
+                            key={key}
+                            position={getMarkerPosition(markerId, location.lat, location.lng)}
+                            icon={icon}
                             eventHandlers={{
                                 mouseover: (e) => {
                                     e.target.openPopup();
@@ -1417,11 +1862,7 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                                                     display: 'block'
                                                 }}
                                                 onError={(e) => {
-                                                    console.error(`[News Image] Failed to load: ${newsItem.imageUrl}`);
                                                     e.target.parentElement.style.display = 'none';
-                                                }}
-                                                onLoad={() => {
-                                                    console.log(`[News Image] Successfully loaded: ${newsItem.imageUrl}`);
                                                 }}
                                             />
                                         </div>
@@ -1476,6 +1917,60 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                     );
                 })}
 
+                {/* Twitter Intel Markers */}
+                {twitterMarkers.map(({ key, markerId, tweet, location, icon }) => {
+                    return (
+                        <Marker
+                            key={key}
+                            position={getMarkerPosition(markerId, location.lat, location.lng)}
+                            icon={icon}
+                            eventHandlers={{
+                                mouseover: (e) => {
+                                    e.target.openPopup();
+                                }
+                            }}
+                        >
+                            <Popup autoPan={false} maxWidth={300}>
+                                <div style={{ fontFamily: 'monospace', fontSize: '11px', maxWidth: '280px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                            <span style={{ fontSize: '14px' }}>𝕏</span>
+                                            <span style={{ color: '#1da1f2', fontWeight: 'bold', fontSize: '10px' }}>@{tweet.username}</span>
+                                        </div>
+                                        <span style={{ color: '#5a6478', fontSize: '9px' }}>{timeAgo(tweet.pubDate)}</span>
+                                    </div>
+                                    <a
+                                        href={tweet.link}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style={{ color: '#e0e4eb', textDecoration: 'none', lineHeight: '1.4', display: 'block', marginBottom: '8px' }}
+                                    >
+                                        {tweet.title}
+                                    </a>
+                                    {tweet.description && (
+                                        <div style={{
+                                            marginBottom: '8px',
+                                            padding: '8px',
+                                            background: '#1a2030',
+                                            borderRadius: '2px',
+                                            fontSize: '10px',
+                                            lineHeight: '1.5',
+                                            color: '#8892a8',
+                                            maxHeight: '100px',
+                                            overflowY: 'auto'
+                                        }}>
+                                            {tweet.description}
+                                        </div>
+                                    )}
+                                    <div style={{ fontSize: '9px', color: '#5a6478' }}>
+                                        📍 {location.label}
+                                    </div>
+                                </div>
+                            </Popup>
+                        </Marker>
+                    );
+                })}
+
                 {/* Live Events */}
                 {liveEvents.map(event => {
                     const style = EVENT_STYLES[event.type] || { color: '#ffffff' };
@@ -1503,7 +1998,7 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                 })}
 
                 {/* Global Conflict Events (Sudan, Gaza, Venezuela, Taiwan, Iran) */}
-                {getAllConflictEvents().map((event, idx) => {
+                {globalConflictEvents.map((event, idx) => {
                     const style = GLOBAL_EVENT_STYLES[event.type] || GLOBAL_EVENT_STYLES.default;
                     return (
                         <CircleMarker
@@ -1541,6 +2036,10 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
         .black-tiles {
           filter: brightness(0.4) contrast(1.3);
         }
+        .population-density-tiles {
+          filter: saturate(1.45) contrast(1.12) brightness(1.02);
+          mix-blend-mode: screen;
+        }
         .leaflet-popup-content-wrapper {
           background: rgba(10, 15, 25, 0.95);
           border: 1px solid #2a3040;
@@ -1567,7 +2066,10 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
         .leaflet-marker-icon,
         .leaflet-marker-shadow {
           will-change: transform;
-          transition: transform 0.3s ease-out;
+        }
+        .leaflet-marker-icon,
+        .leaflet-marker-shadow {
+          transition: none !important;
         }
         .leaflet-pane {
           transform: translateZ(0);
@@ -1576,31 +2078,165 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
           transform: translateZ(0);
           backface-visibility: hidden;
         }
+        .map-legend-container {
+          position: fixed;
+          top: 102px;
+          right: 340px;
+          z-index: 999;
+          pointer-events: auto;
+        }
+        .map-legend-toggle {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 6px 12px;
+          background: rgba(12, 15, 25, 0.92);
+          border: 1px solid rgba(77, 166, 255, 0.3);
+          color: #4da6ff;
+          cursor: pointer;
+          font-family: monospace;
+          font-size: 11px;
+          font-weight: bold;
+          letter-spacing: 0.1em;
+          transition: all 0.2s ease;
+          backdrop-filter: blur(8px);
+        }
+        .map-legend-toggle:hover {
+          background: rgba(77, 166, 255, 0.15);
+          box-shadow: 0 0 15px rgba(77, 166, 255, 0.3);
+          border-color: rgba(77, 166, 255, 0.5);
+        }
+        .map-legend-panel {
+          position: absolute;
+          top: 100%;
+          right: 0;
+          margin-top: 4px;
+          width: 220px;
+          background: rgba(10, 10, 15, 0.94);
+          border: 1px solid #2a3040;
+          padding: 8px 10px;
+          font-family: monospace;
+          font-size: 10px;
+          box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+          animation: slideDown 0.2s ease-out;
+        }
+        .map-legend-section {
+          margin-top: 6px;
+          padding-top: 6px;
+          border-top: 1px solid #2a3040;
+        }
+        .map-legend-row {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          margin-bottom: 4px;
+          color: #c7cfde;
+        }
+        .map-legend-chip {
+          display: inline-block;
+          width: 10px;
+          height: 10px;
+          border-radius: 2px;
+          flex-shrink: 0;
+        }
+        .map-legend-line {
+          display: inline-block;
+          width: 12px;
+          height: 2px;
+          border-radius: 2px;
+          flex-shrink: 0;
+        }
+        @media (max-width: 1000px) {
+          .map-legend-container {
+            top: 92px !important;
+            right: 20px !important;
+          }
+        }
       `}</style>
 
-            {/* Legend */}
-            <div style={{
-                position: 'absolute',
-                top: '12px',
-                right: '12px',
-                background: 'rgba(10,10,15,0.9)',
-                border: `1px solid #2a3040`,
-                padding: '10px 12px',
-                fontFamily: 'monospace',
-                fontSize: '10px',
-                zIndex: 1000
-            }}>
-                <div style={{ color: COLORS.high, marginBottom: '3px' }}>━ FRONTLINE (ISW)</div>
-                <div style={{ color: COLORS.medium, marginBottom: '3px' }}>● LOW ACTIVITY</div>
-                <div style={{ color: COLORS.elevated, marginBottom: '3px' }}>● ELEVATED</div>
-                <div style={{ color: COLORS.high, marginBottom: '6px' }}>● HIGH ACTIVITY</div>
-                <div style={{ borderTop: `1px solid #2a3040`, paddingTop: '6px' }}>
-                    <div style={{ color: COLORS.usnato }}>■ US/NATO</div>
-                    <div style={{ color: COLORS.china }}>■ CHINA</div>
-                    <div style={{ color: COLORS.russia }}>■ RUSSIA</div>
-                    <div style={{ color: COLORS.video }}>◆ VIDEO INTEL</div>
-                    <div style={{ color: COLORS.news }}>■ NEWS FEED</div>
-                </div>
+            {/* Compact legend (accordion-style toggle) */}
+            <div
+                className="map-legend-container"
+                onMouseEnter={() => setLegendOpen(true)}
+                onMouseLeave={() => setLegendOpen(false)}
+            >
+                <button
+                    type="button"
+                    className="map-legend-toggle"
+                    onClick={() => setLegendOpen(prev => !prev)}
+                    title="Map Legend"
+                    aria-expanded={legendOpen}
+                >
+                    <span>LEGEND</span>
+                    <span>{legendOpen ? 'v' : '>'}</span>
+                </button>
+
+                {legendOpen && (
+                    <div className="map-legend-panel">
+                        <div className="map-legend-row" style={{ color: COLORS.high }}>
+                            <span className="map-legend-line" style={{ background: COLORS.high }}></span>
+                            <span>Frontline (ISW)</span>
+                        </div>
+                        <div className="map-legend-row">
+                            <span className="map-legend-chip" style={{ background: COLORS.medium }}></span>
+                            <span>Low activity</span>
+                        </div>
+                        <div className="map-legend-row">
+                            <span className="map-legend-chip" style={{ background: COLORS.elevated }}></span>
+                            <span>Elevated</span>
+                        </div>
+                        <div className="map-legend-row">
+                            <span className="map-legend-chip" style={{ background: COLORS.high }}></span>
+                            <span>High activity</span>
+                        </div>
+
+                        <div className="map-legend-section">
+                            <div className="map-legend-row">
+                                <span className="map-legend-chip" style={{ background: COLORS.usnato }}></span>
+                                <span>US/NATO</span>
+                            </div>
+                            <div className="map-legend-row">
+                                <span className="map-legend-chip" style={{ background: COLORS.china }}></span>
+                                <span>China</span>
+                            </div>
+                            <div className="map-legend-row">
+                                <span className="map-legend-chip" style={{ background: COLORS.russia }}></span>
+                                <span>Russia</span>
+                            </div>
+                            <div className="map-legend-row">
+                                <span className="map-legend-chip" style={{ background: COLORS.video }}></span>
+                                <span>Video intel</span>
+                            </div>
+                            <div className="map-legend-row">
+                                <span className="map-legend-chip" style={{ background: COLORS.news }}></span>
+                                <span>News feed</span>
+                            </div>
+                            <div className="map-legend-row">
+                                <span className="map-legend-chip" style={{ background: '#1da1f2' }}></span>
+                                <span>Twitter intel</span>
+                            </div>
+                        </div>
+
+                        <div className="map-legend-section">
+                            <div className="map-legend-row">
+                                <span className="map-legend-chip" style={{ background: '#ff9f43' }}></span>
+                                <span>Sanctions</span>
+                            </div>
+                            <div className="map-legend-row">
+                                <span className="map-legend-chip" style={{ background: '#8aa7d6' }}></span>
+                                <span>Day/night terminator</span>
+                            </div>
+                            <div className="map-legend-row">
+                                <span className="map-legend-chip" style={{ background: '#f1c40f' }}></span>
+                                <span>Earthquakes</span>
+                            </div>
+                            <div className="map-legend-row">
+                                <span className="map-legend-chip" style={{ background: '#b366ff' }}></span>
+                                <span>Population density</span>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Grid overlay */}
@@ -1618,3 +2254,5 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
 };
 
 export default SituationMap;
+
+

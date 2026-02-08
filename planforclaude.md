@@ -25,6 +25,19 @@
 - [x] **UI Polish:** Removed emojis from all buttons (theatre nav, layers), professional compact design
 - [x] **Accordion Animation:** Implemented smooth slideDown/fade animation for layers panel
 
+### ✅ Completed (February 7, 2026)
+- [x] **Phase 7.2:** Twitter Intel Multi-Source - Implemented 5 OSINT accounts (@WarMonitors, @OSINTdefender, @Conflicts, @IntelCrab, @sentaboringtweet) with 5 RSS proxy fallbacks and health tracking
+- [x] **Phase 7.2:** Twitter Auto-Refresh - Enabled 5-minute refresh interval for Twitter intel with circuit breaker protection
+- [x] **Phase 7.4:** Twitter Map Markers - Added geolocated tweets to map with 𝕏 icon and @username badge, popup with tweet content
+- [x] **Phase 7.3:** Twitter Panel Lazy Loading - Initial 10 tweets, auto-expand to 25, scroll-to-load-more, compact styling (340px max height)
+- [x] **Phase 1.2:** Ukraine Frontline Fallback - Added 9-segment static fallback when ISW API requires authentication (Kharkiv to Crimea border)
+- [x] **Phase 4.1:** Conflict Zones Update - Updated to 10 conflicts with current Feb 2026 data:
+  - Added: DRC Eastern Conflict (M23/Goma), Sahel Insurgency (JNIM/Wagner), Haiti Crisis (gang control), Lebanon/Israel Border
+  - Updated: Ukraine, Gaza, Sudan, Myanmar, Taiwan Strait, Yemen with current figures
+- [x] **Performance:** Theatre Polygon Optimization - Memoized positions with useMemo, added canvas renderer for smooth zooming
+- [x] **Performance:** Code Splitting - Main bundle reduced from 513KB to 342KB (33% reduction) via manual chunks (vendor-map, vendor-react, vendor-viz, vendor-motion, vendor-media, vendor-ui)
+- [x] **Performance:** Build Target ES2020 - Smaller bundle, disabled source maps in production
+
 ### 🔄 In Progress
 - [ ] None currently
 
@@ -53,9 +66,48 @@
 
 ### 📋 Upcoming (Critical Path)
 - [ ] Add publisher logos to news markers (bottom-right corner, half height)
-- [ ] Implement day/night cycle visualization
-- [ ] Fix Twitter intel with multi-source fallback
+- [ ] Implement day/night cycle visualization (Phase 6.3 - rendering)
+- [x] ~~Fix Twitter intel with multi-source fallback~~ ✅ Completed Feb 7
 - [ ] Deploy backend RSS aggregation server
+- [ ] Phase 10: AI Character Reactions (MGS Holo-Call System) - See below
+
+### Supabase Backend Notes (For Later)
+- [ ] ACLED integration should use Supabase Edge Function secrets (not frontend `VITE_*` env vars)
+- [ ] Add secret: `ACLED_API_KEY`
+- [ ] Add secret: `ACLED_EMAIL`
+- [ ] Route control zone ACLED calls through Supabase so credentials never ship to the browser
+
+### 🆕 Phase 10: AI Character Reactions (MGS Holo-Call System)
+**Priority: HIGH | Status: Ready to Implement**
+
+When users click on news items, an AI (Gemini) generates reactions from celebrities/politicians. Visual: MGS-style holo-call box in top right corner with stop-motion animation.
+
+**Implementation Steps:**
+1. Create character profiles data structure (`/data/characters.js`)
+   - Start with Trump (bombastic, hyperbolic, "America First" worldview)
+   - Speech patterns, vocabulary, recent context
+   - Portrait frames for stop-motion animation
+
+2. Build Gemini API integration (`/services/api/geminiService.js`)
+   - Prompt engineering for character voice
+   - Short responses (1 sentence max, off-hand comments)
+   - Context injection (news headline + character profile)
+
+3. Create HoloCallBox component (`/components/HoloCallBox.jsx`)
+   - Fixed position top-right corner
+   - MGS codec-style visual design (green/blue scanlines, static effect)
+   - Stop-motion portrait animation (4-5 frames, 150ms intervals)
+   - Audio: codec beep on open/close
+
+4. Wire up news click → Gemini → HoloCallBox
+   - Trigger on news item click
+   - Loading state with "INCOMING TRANSMISSION" text
+   - Display character reaction with portrait
+
+5. Future enhancements:
+   - Voice synthesis (ElevenLabs or similar)
+   - Multiple characters (Putin, Zelensky, Xi, Biden, Musk)
+   - Character selection dropdown
 
 ---
 
