@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { ASCIIBox } from '../ui';
 import { useDataStore } from '../../stores';
 import { timeAgo } from '../../utils/timeFormat';
@@ -73,41 +73,7 @@ export function NewsFeed() {
     const [maxItems, setMaxItems] = useState(20);
     const { allNews, loading, lastUpdated, setSelectedNews, openHoloCall } = useDataStore();
 
-    // Filter news by category (simple keyword matching)
-    const filteredNews = allNews.filter(item => {
-        if (category === 'all') return true;
-
-        const titleLower = (item.title || '').toLowerCase();
-        const sourceLower = (item.source || '').toLowerCase();
-
-        switch (category) {
-            case 'politics':
-                return titleLower.includes('trump') || titleLower.includes('biden') ||
-                    titleLower.includes('congress') || titleLower.includes('senate') ||
-                    titleLower.includes('election') || titleLower.includes('political');
-            case 'tech':
-                return sourceLower.includes('tech') || titleLower.includes('ai') ||
-                    titleLower.includes('tech') || titleLower.includes('apple') ||
-                    titleLower.includes('google') || titleLower.includes('microsoft');
-            case 'finance':
-                return sourceLower.includes('market') || sourceLower.includes('bloomberg') ||
-                    titleLower.includes('stock') || titleLower.includes('market') ||
-                    titleLower.includes('economy');
-            case 'intel':
-                return titleLower.includes('ukraine') || titleLower.includes('russia') ||
-                    titleLower.includes('military') || titleLower.includes('conflict') ||
-                    titleLower.includes('war') || titleLower.includes('attack');
-            case 'ai':
-                return titleLower.includes('ai') || titleLower.includes('artificial intelligence') ||
-                    titleLower.includes('openai') || titleLower.includes('chatgpt') ||
-                    titleLower.includes('machine learning');
-            default:
-                return true;
-        }
-    }).slice(0, maxItems);
-
-    // Check if there are more items available
-    const totalFiltered = allNews.filter(item => {
+    const matchesCategory = (item) => {
         if (category === 'all') return true;
         const titleLower = (item.title || '').toLowerCase();
         const sourceLower = (item.source || '').toLowerCase();
@@ -135,7 +101,45 @@ export function NewsFeed() {
             default:
                 return true;
         }
-    }).length;
+    };
+
+    // Interleave sources so no single feed dominates the visible list.
+    // Groups items by source, then round-robins through sources picking
+    // the newest item from each in turn. Items within each source stay
+    // chronologically ordered.
+    const filteredNews = useMemo(() => {
+        const categoryFiltered = allNews.filter(matchesCategory);
+        if (categoryFiltered.length <= 1) return categoryFiltered.slice(0, maxItems);
+
+        const bySource = {};
+        for (const item of categoryFiltered) {
+            const src = item.source || 'unknown';
+            (bySource[src] ||= []).push(item);
+        }
+        const sourceQueues = Object.values(bySource);
+        sourceQueues.sort((a, b) => {
+            const aDate = new Date(a[0]?.pubDate || 0);
+            const bDate = new Date(b[0]?.pubDate || 0);
+            return bDate - aDate;
+        });
+
+        const interleaved = [];
+        let exhausted = 0;
+        const pointers = new Array(sourceQueues.length).fill(0);
+        while (interleaved.length < categoryFiltered.length && exhausted < sourceQueues.length) {
+            for (let i = 0; i < sourceQueues.length; i++) {
+                if (pointers[i] < sourceQueues[i].length) {
+                    interleaved.push(sourceQueues[i][pointers[i]++]);
+                } else if (pointers[i] === sourceQueues[i].length) {
+                    exhausted++;
+                    pointers[i]++;
+                }
+            }
+        }
+        return interleaved.slice(0, maxItems);
+    }, [allNews, category, maxItems]);
+
+    const totalFiltered = allNews.filter(matchesCategory).length;
 
     const hasMore = totalFiltered > maxItems;
 

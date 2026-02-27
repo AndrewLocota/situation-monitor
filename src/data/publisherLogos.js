@@ -95,10 +95,32 @@ export const PUBLISHER_LOGOS = {
     name: 'Ars Technica'
   },
 
+  // Wire / Broadcast
+  'npr': {
+    url: `${BASE}logos/npr.png`,
+    name: 'NPR'
+  },
+  'abcnews': {
+    url: `${BASE}logos/abcnews.png`,
+    name: 'ABC News'
+  },
+
   // European
   'euronews': {
     url: `${BASE}logos/euronews.png`,
     name: 'Euronews'
+  },
+  'dw': {
+    url: `${BASE}logos/dw.png`,
+    name: 'Deutsche Welle'
+  },
+  'france24': {
+    url: `${BASE}logos/france24.png`,
+    name: 'France 24'
+  },
+  'skynews': {
+    url: `${BASE}logos/skynews.png`,
+    name: 'Sky News'
   },
 
   // Geopolitics

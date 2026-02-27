@@ -50,34 +50,35 @@ async function fetchSupabaseFunctionJson(functionName, { query = {}, method = 'G
 // Bias scale: -3 (far left) to +3 (far right), 0 = center
 // Based on GroundNews ratings (aggregates AllSides, Ad Fontes, MBFC)
 const NEWS_FEEDS = {
-  // Breaking news - GroundNews verified ratings
-  reuters: { url: 'https://feeds.reuters.com/reuters/topNews', bias: 0, biasLabel: 'Center', reliability: 'High' },
-  ap: { url: 'https://rsshub.app/apnews/topics/apf-topnews', bias: -1, biasLabel: 'Lean Left', reliability: 'High' },
+  // Breaking / Wire services
   bbc: { url: 'https://feeds.bbci.co.uk/news/world/rss.xml', bias: 0, biasLabel: 'Center', reliability: 'High' },
   aljazeera: { url: 'https://www.aljazeera.com/xml/rss/all.xml', bias: -2, biasLabel: 'Left', reliability: 'Mixed' },
   guardian: { url: 'https://www.theguardian.com/world/rss', bias: -2, biasLabel: 'Left', reliability: 'High' },
+  npr: { url: 'https://feeds.npr.org/1004/rss.xml', bias: -1, biasLabel: 'Lean Left', reliability: 'High' },
+  abcnews: { url: 'https://abcnews.go.com/abcnews/internationalheadlines', bias: 0, biasLabel: 'Center', reliability: 'High' },
+
+  // European
+  euronews: { url: 'https://www.euronews.com/rss', bias: 0, biasLabel: 'Center', reliability: 'High' },
+  dw: { url: 'https://rss.dw.com/xml/rss-en-all', bias: 0, biasLabel: 'Center', reliability: 'High' },
+  france24: { url: 'https://www.france24.com/en/rss', bias: 0, biasLabel: 'Center', reliability: 'High' },
+  skynews: { url: 'https://feeds.skynews.com/feeds/rss/world.xml', bias: 1, biasLabel: 'Lean Right', reliability: 'High' },
 
   // Conflict-specific
-  kyivIndependent: { url: 'https://kyivindependent.com/feed/', bias: 0, biasLabel: 'Center', reliability: 'Mixed' },
   defenseOne: { url: 'https://www.defenseone.com/rss/all/', bias: 0, biasLabel: 'Center', reliability: 'High' },
   warOnTheRocks: { url: 'https://warontherocks.com/feed/', bias: 0, biasLabel: 'Center', reliability: 'High' },
 
-  // Financial/Markets - GroundNews verified
+  // Financial/Markets
   marketWatch: { url: 'https://feeds.marketwatch.com/marketwatch/topstories/', bias: 0, biasLabel: 'Center', reliability: 'High' },
   cnbc: { url: 'https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=100003114', bias: 0, biasLabel: 'Center', reliability: 'High' },
   bloomberg: { url: 'https://feeds.bloomberg.com/markets/news.rss', bias: -1, biasLabel: 'Lean Left', reliability: 'High' },
 
-  // Tech - GroundNews verified
+  // Tech
   techCrunch: { url: 'https://techcrunch.com/feed/', bias: 0, biasLabel: 'Center', reliability: 'High' },
   wired: { url: 'https://www.wired.com/feed/rss', bias: -1, biasLabel: 'Lean Left', reliability: 'High' },
   arstechnica: { url: 'https://feeds.arstechnica.com/arstechnica/index', bias: -1, biasLabel: 'Lean Left', reliability: 'High' },
 
-  // European
-  euronews: { url: 'https://www.euronews.com/rss', bias: 0, biasLabel: 'Center', reliability: 'High' },
-
   // Geopolitics
   foreignPolicy: { url: 'https://foreignpolicy.com/feed/', bias: 0, biasLabel: 'Center', reliability: 'High' },
-  cfr: { url: 'https://www.cfr.org/rss.xml', bias: 0, biasLabel: 'Center', reliability: 'High' },
 };
 
 // LiveUAMap-style event scraping (via their API/RSS if available)
@@ -479,60 +480,68 @@ export async function fetchAllNews({ limit = 200, fastMode = false } = {}) {
   const feedEntries = Object.entries(NEWS_FEEDS);
 
   if (fastMode) {
-    // In fast mode, fetch ALL sources in parallel and abort remaining once we have enough
+    // In fast mode, fetch ALL sources in parallel but wait for source diversity
+    // before resolving (avoids showing only the fastest-responding feed).
     const allItems = [];
+    const respondedSources = new Set();
     let resolved = false;
     const abortController = new AbortController();
+    const MIN_SOURCES = 3;
 
     return new Promise((resolve) => {
-      const checkAndResolve = () => {
+      const processAndResolve = () => {
         if (resolved) return;
-
-        // Sort and dedupe what we have so far
+        // Cap items per source so no single feed dominates the initial view.
+        // Assumes at least 5 sources for fair distribution even if fewer have responded.
+        const maxPerSource = Math.max(3, Math.ceil(limit / Math.max(respondedSources.size, 5)));
+        const sourceCounts = {};
         const processed = allItems
           .filter(item => item.title && item.pubDate)
           .sort((a, b) => b.pubDate.getTime() - a.pubDate.getTime())
           .filter((item, index, arr) =>
             index === arr.findIndex(i => i.title === item.title)
-          );
+          )
+          .filter(item => {
+            const src = item.source || 'unknown';
+            sourceCounts[src] = (sourceCounts[src] || 0) + 1;
+            return sourceCounts[src] <= maxPerSource;
+          });
+        resolved = true;
+        abortController.abort();
+        resolve(processed.slice(0, limit));
+      };
 
-        if (processed.length >= limit) {
-          resolved = true;
-          // Abort all remaining requests
-          abortController.abort();
-          resolve(processed.slice(0, limit));
+      const checkAndResolve = () => {
+        if (resolved) return;
+        if (allItems.filter(item => item.title && item.pubDate).length >= limit
+            && respondedSources.size >= MIN_SOURCES) {
+          processAndResolve();
         }
       };
+
+      // Safety timeout: resolve with whatever we have after 4s
+      setTimeout(() => {
+        if (!resolved && allItems.length > 0) processAndResolve();
+      }, 4000);
 
       let completedCount = 0;
       const totalFeeds = feedEntries.length;
 
-      // Fire off all requests in parallel
       feedEntries.forEach(([name, feedInfo]) => {
         const { url, bias, biasLabel, reliability } = feedInfo;
         parseRSSFeed(url, name, { bias, biasLabel, reliability }, abortController.signal)
           .then(items => {
-            if (!resolved) {
+            if (!resolved && items.length > 0) {
               allItems.push(...items);
+              respondedSources.add(name);
               checkAndResolve();
             }
           })
-          .catch(() => {
-            // Ignore errors (including abort errors), just continue
-          })
+          .catch(() => {})
           .finally(() => {
             completedCount++;
-            // If all feeds completed and we haven't resolved yet, resolve with what we have
             if (completedCount === totalFeeds && !resolved) {
-              resolved = true;
-              const processed = allItems
-                .filter(item => item.title && item.pubDate)
-                .sort((a, b) => b.pubDate.getTime() - a.pubDate.getTime())
-                .filter((item, index, arr) =>
-                  index === arr.findIndex(i => i.title === item.title)
-                )
-                .slice(0, limit);
-              resolve(processed);
+              processAndResolve();
             }
           });
       });
