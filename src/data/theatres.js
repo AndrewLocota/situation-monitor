@@ -273,17 +273,42 @@ export const INTEL_HOTSPOTS = [
 
 // Conflict zones - Updated Feb 2026 with current data from public sources
 // Intensity: high (active major combat), medium (ongoing conflict), watch (tensions/risk)
+// Coords: [lon, lat] format — converted to [lat, lon] for Leaflet at render time
 export const CONFLICT_ZONES = [
   {
     id: 'ukraine',
     name: 'Ukraine War',
     intensity: 'high',
     coords: [
-      // Eastern Ukraine conflict zone - Donetsk, Luhansk, Zaporizhzhia, Kherson oblasts
-      [36.5, 46.5], [37.5, 47.0], [38.5, 48.0], [38.0, 49.5],
-      [37.0, 50.0], [35.5, 49.5], [34.5, 48.0], [35.0, 47.0]
+      // Occupied eastern oblasts (Donetsk, Luhansk, Zaporizhzhia, Kherson) + Crimea
+      // Traced clockwise from NW frontline near Kupyansk
+      [36.0, 49.9],    // NW — frontline, Kupyansk sector
+      [37.5, 49.5],    // Svatove area
+      [38.5, 49.1],    // Starobilsk, N Luhansk
+      [39.6, 49.0],    // NE Luhansk — Russian border
+      [40.1, 48.3],    // E Luhansk (Milove)
+      [39.6, 47.7],    // SE Luhansk / Dovzhansk
+      [38.5, 47.1],    // E Donetsk (Volnovakha approaches)
+      [37.5, 46.7],    // Mariupol / Azov coast
+      [36.6, 46.5],    // Berdyansk
+      [35.5, 46.2],    // Melitopol area
+      [34.8, 45.8],    // Chonhar — N Crimea isthmus (east)
+      [35.4, 45.3],    // NE Crimea — Arabat spit
+      [36.6, 45.3],    // Kerch peninsula tip
+      [36.2, 44.8],    // E Crimea coast
+      [35.0, 44.5],    // S Crimea (Feodosia / Sudak)
+      [33.8, 44.4],    // Yalta / Sevastopol
+      [33.0, 44.6],    // SW Crimea (Cape Fiolent)
+      [32.5, 45.1],    // W Crimea — Yevpatoria
+      [33.0, 45.5],    // NW Crimea (Razdolnoe)
+      [33.3, 46.0],    // Perekop — N Crimea isthmus (west)
+      [33.0, 46.5],    // Kherson oblast (W bank Dnipro)
+      [33.4, 46.8],    // Kherson city area
+      [34.0, 47.5],    // Zaporizhzhia frontline sector
+      [34.8, 48.2],    // N Zaporizhzhia / Dnipro approaches
+      [35.5, 49.0],    // W frontline heading north
     ],
-    labelPos: { lat: 48.5, lon: 37.0 },
+    labelPos: { lat: 48.0, lon: 37.0 },
     startDate: 'Feb 24, 2022',
     parties: ['Russian Federation', 'Ukraine', 'NATO (materiel support)'],
     casualties: '700,000+ combined (est.)',
@@ -298,8 +323,16 @@ export const CONFLICT_ZONES = [
     name: 'Gaza War',
     intensity: 'high',
     coords: [
-      // Gaza Strip
-      [34.22, 31.60], [34.58, 31.60], [34.58, 31.22], [34.22, 31.22]
+      // Gaza Strip — narrow coastal enclave ~41km long, 6-12km wide
+      [34.45, 31.59],   // N coast (Beit Lahia beach)
+      [34.56, 31.54],   // NE — Erez crossing area
+      [34.53, 31.42],   // E border — Bureij / Nuseirat
+      [34.46, 31.32],   // E border — Khan Younis level
+      [34.38, 31.23],   // SE — Rafah crossing (Egypt border)
+      [34.22, 31.24],   // S coast — Rafah waterfront
+      [34.26, 31.35],   // W coast — Khan Younis beach
+      [34.32, 31.45],   // W coast — Deir el-Balah
+      [34.38, 31.52],   // NW coast — Gaza City
     ],
     labelPos: { lat: 31.4, lon: 34.4 },
     startDate: 'Oct 7, 2023',
@@ -316,11 +349,22 @@ export const CONFLICT_ZONES = [
     name: 'Sudan Civil War',
     intensity: 'high',
     coords: [
-      // Greater Khartoum + Darfur conflict zones
-      [29.0, 16.5], [34.0, 17.0], [35.5, 15.5], [34.0, 13.0],
-      [30.0, 12.0], [26.0, 13.5], [25.0, 15.5], [27.0, 16.0]
+      // Darfur + Kordofan + Khartoum + Gezira — the active warzone belt
+      [23.5, 15.0],    // NW Darfur (El Geneina approaches)
+      [25.5, 16.0],    // N Darfur (El Fasher area)
+      [28.0, 16.5],    // N Kordofan
+      [30.5, 16.8],    // Merowe / Nile bend
+      [32.5, 15.6],    // Khartoum / Omdurman
+      [34.0, 15.5],    // E — Kassala approaches
+      [35.5, 14.0],    // SE — Gedaref
+      [34.0, 12.8],    // S — Blue Nile state
+      [32.0, 11.5],    // S Kordofan (Kadugli)
+      [30.0, 11.0],    // SW Kordofan
+      [27.0, 10.5],    // S Darfur (Nyala approaches)
+      [24.5, 12.0],    // W Darfur — CAR border
+      [23.0, 13.5],    // W Darfur (Zalingei)
     ],
-    labelPos: { lat: 14.5, lon: 30.0 },
+    labelPos: { lat: 14.0, lon: 29.5 },
     startDate: 'Apr 15, 2023',
     parties: ['Sudanese Armed Forces (SAF)', 'Rapid Support Forces (RSF)', 'Various militias'],
     casualties: '25,000+ killed (est.)',
@@ -335,11 +379,21 @@ export const CONFLICT_ZONES = [
     name: 'Myanmar Civil War',
     intensity: 'high',
     coords: [
-      // Multiple fronts across Myanmar
-      [94.0, 20.0], [97.0, 22.5], [99.0, 24.0], [98.5, 20.5],
-      [97.0, 17.0], [95.0, 18.0], [93.5, 19.5]
+      // Multi-front conflict covering Rakhine, Chin, Sagaing, Kachin, Shan, Kayin
+      [92.5, 21.0],    // W — Rakhine coast (Sittwe)
+      [93.0, 23.0],    // NW — Chin State / Sagaing border
+      [94.5, 25.5],    // N — Sagaing / S Kachin
+      [96.0, 27.0],    // NE — Kachin (Myitkyina area)
+      [98.5, 25.5],    // E — N Shan State (Lashio)
+      [99.0, 23.5],    // E — E Shan (Kengtung approaches)
+      [98.5, 21.0],    // SE — Kayah / E Shan
+      [98.0, 18.0],    // S — Kayin (Myawaddy)
+      [97.0, 16.0],    // S — Mon State
+      [95.5, 16.5],    // SW — Bago / Irrawaddy
+      [94.5, 17.5],    // W — Rakhine south coast
+      [93.0, 19.5],    // W — Rakhine (Thandwe)
     ],
-    labelPos: { lat: 20.5, lon: 96.0 },
+    labelPos: { lat: 21.0, lon: 96.0 },
     startDate: 'Feb 1, 2021',
     parties: ['Military Junta (SAC/Tatmadaw)', 'Three Brotherhood Alliance', 'PDF/NUG', 'Ethnic Armed Organizations'],
     casualties: '60,000+ (est.)',
@@ -354,11 +408,21 @@ export const CONFLICT_ZONES = [
     name: 'DRC Eastern Conflict',
     intensity: 'high',
     coords: [
-      // North Kivu, South Kivu, Ituri
-      [28.5, 0.5], [30.0, 1.0], [30.5, -0.5], [29.5, -2.5],
-      [28.0, -2.0], [27.5, -0.5]
+      // Ituri, North Kivu, South Kivu — traced along provincial borders + Great Rift lakes
+      [27.5, 2.5],     // NW — Ituri (Bunia approaches)
+      [29.0, 2.3],     // N — Lake Albert shore
+      [30.5, 1.5],     // NE — Uganda border (Rwenzori)
+      [30.0, 0.0],     // E — Lake Edward
+      [29.4, -1.0],    // E — Goma / Lake Kivu N
+      [29.0, -2.0],    // E — Bukavu / Lake Kivu S
+      [29.2, -3.2],    // SE — Fizi / Lake Tanganyika N
+      [29.0, -4.5],    // S — S tip of S Kivu / N Katanga
+      [27.5, -4.0],    // SW — Maniema border
+      [26.5, -2.0],    // W — Maniema
+      [27.0, 0.0],     // W — W Ituri
+      [27.5, 1.5],     // NW — N Ituri
     ],
-    labelPos: { lat: -0.5, lon: 29.0 },
+    labelPos: { lat: -0.8, lon: 28.8 },
     startDate: '2022 (M23 resurgence)',
     parties: ['DRC Army (FARDC)', 'M23 (Rwanda-backed)', 'ADF', '100+ armed groups'],
     casualties: '10,000+ (recent), 6M+ (1996-present)',
@@ -373,9 +437,18 @@ export const CONFLICT_ZONES = [
     name: 'Sahel Insurgency',
     intensity: 'medium',
     coords: [
-      // Mali, Burkina Faso, Niger tri-border region
-      [-4.0, 15.0], [2.0, 17.0], [8.0, 16.0], [10.0, 14.0],
-      [5.0, 12.0], [-2.0, 12.0], [-5.0, 13.5]
+      // Mali + Burkina Faso + Niger tri-border insurgency belt
+      [-5.5, 15.0],    // W — Mali (Mopti / Ségou area)
+      [-4.0, 17.0],    // NW — Timbuktu area
+      [-1.0, 17.5],    // N — N Mali / S Algeria border
+      [3.0, 17.0],     // N — N Niger (Agadez approaches)
+      [7.0, 16.0],     // NE — central Niger
+      [10.0, 14.5],    // E — SE Niger / Lake Chad approach
+      [8.0, 12.5],     // SE — S Niger / N Nigeria border
+      [4.0, 11.0],     // S — N Benin / N Togo
+      [0.0, 11.5],     // S — N Ghana
+      [-2.5, 12.0],    // SW — W Burkina / Ivory Coast border
+      [-5.0, 13.0],    // W — SW Mali
     ],
     labelPos: { lat: 14.5, lon: 2.0 },
     startDate: '2012 (escalated)',
@@ -392,10 +465,19 @@ export const CONFLICT_ZONES = [
     name: 'Haiti Crisis',
     intensity: 'medium',
     coords: [
-      // Port-au-Prince and surrounding areas
-      [-72.8, 18.7], [-71.8, 18.7], [-71.8, 18.3], [-72.8, 18.3]
+      // Western Hispaniola — Haiti territory outline (nationwide state collapse)
+      [-73.40, 19.95],  // N coast — Cap-Haïtien area
+      [-72.00, 19.90],  // NE — Dominican border (N)
+      [-71.65, 19.55],  // E border — central
+      [-71.70, 19.10],  // E border — Artibonite valley
+      [-71.65, 18.65],  // E border — Port-au-Prince latitude
+      [-72.00, 18.20],  // SE — Les Cayes hinterland
+      [-73.40, 18.05],  // S coast — Tiburon peninsula
+      [-74.48, 18.10],  // SW tip — Jérémie area
+      [-74.10, 18.65],  // NW — Môle-Saint-Nicolas
+      [-73.80, 19.40],  // NW — Tortuga channel
     ],
-    labelPos: { lat: 18.5, lon: -72.3 },
+    labelPos: { lat: 18.9, lon: -72.8 },
     startDate: '2021 (state collapse)',
     parties: ['Gang coalitions (G9, Viv Ansanm)', 'Haitian National Police', 'MSS Kenya force'],
     casualties: '10,000+ (2023-present)',
@@ -410,10 +492,17 @@ export const CONFLICT_ZONES = [
     name: 'Taiwan Strait',
     intensity: 'watch',
     coords: [
-      // Taiwan Strait area
-      [119.0, 26.5], [122.0, 26.5], [122.0, 22.0], [119.0, 22.0]
+      // Strait and surrounding contested waters — Fujian coast to Taiwan
+      [117.5, 25.5],   // NW — Fujian coast N of Xiamen
+      [119.5, 26.2],   // N — strait N entrance (Fuzhou)
+      [121.8, 25.8],   // NE — near Taiwan N tip (Keelung)
+      [122.0, 24.0],   // E — Taiwan W coast (Taichung)
+      [120.8, 22.0],   // SE — S of Taiwan (Kaohsiung)
+      [118.5, 22.5],   // S — Dongsha / Pratas area
+      [116.5, 23.5],   // SW — Guangdong coast (Shantou)
+      [117.0, 24.5],   // W — S Fujian coast
     ],
-    labelPos: { lat: 24.5, lon: 120.5 },
+    labelPos: { lat: 24.2, lon: 119.5 },
     startDate: 'Ongoing tensions',
     parties: ['China (PLA)', 'Taiwan (ROC)', 'United States'],
     casualties: 'N/A - no active combat',
@@ -428,11 +517,23 @@ export const CONFLICT_ZONES = [
     name: 'Yemen / Red Sea',
     intensity: 'medium',
     coords: [
-      // Yemen territory
-      [42.5, 17.0], [48.0, 18.0], [53.0, 16.5], [52.0, 13.0],
-      [45.0, 12.5], [43.0, 14.0]
+      // Yemen — follows actual coastline and Saudi border
+      [42.5, 17.0],    // NW — Red Sea coast (Midi)
+      [43.5, 17.5],    // N — Sa'dah area
+      [45.0, 18.2],    // N — Saudi border, N of Sanaa
+      [47.0, 18.5],    // N central — Ma'rib approaches
+      [49.0, 18.0],    // NE — Hadramawt
+      [52.0, 17.5],    // E — Al Mahra
+      [53.0, 16.6],    // Far E — Oman border (coast)
+      [52.0, 14.5],    // SE coast — Sayhut
+      [49.0, 13.8],    // S coast — Mukalla
+      [46.0, 13.0],    // S coast — Zinjibar
+      [44.5, 12.6],    // S — Aden
+      [43.3, 12.6],    // SW — Bab el-Mandeb approach
+      [43.0, 13.5],    // W — Mocha
+      [42.8, 15.0],    // W coast — Hodeidah
     ],
-    labelPos: { lat: 15.0, lon: 47.0 },
+    labelPos: { lat: 15.5, lon: 47.0 },
     startDate: '2014 (Houthi); 2023 (Red Sea)',
     parties: ['Houthis (Ansar Allah)', 'Saudi-led Coalition', 'US/UK Naval Forces', 'Presidential Leadership Council'],
     casualties: '150,000+ (civil war total)',
@@ -447,8 +548,15 @@ export const CONFLICT_ZONES = [
     name: 'Lebanon/Israel Border',
     intensity: 'medium',
     coords: [
-      // Southern Lebanon
-      [35.1, 33.5], [36.0, 33.5], [36.0, 33.0], [35.1, 33.0]
+      // Southern Lebanon — Blue Line to Litani River zone
+      [35.10, 33.45],  // NW coast — near Sidon / Litani mouth
+      [35.35, 33.50],  // N — Nabatiye
+      [35.60, 33.45],  // NE — Marjayoun
+      [35.87, 33.30],  // E — Shebaa Farms / Hasbaya
+      [35.80, 33.10],  // SE — Golan Heights approaches
+      [35.50, 33.05],  // S — Bint Jbeil area
+      [35.20, 33.05],  // SW — Naqoura / UNIFIL HQ
+      [35.10, 33.15],  // W coast — Tyre
     ],
     labelPos: { lat: 33.25, lon: 35.5 },
     startDate: 'Oct 8, 2023',
