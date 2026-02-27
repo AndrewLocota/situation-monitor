@@ -72,6 +72,9 @@ const NEWS_FEEDS = {
   wired: { url: 'https://www.wired.com/feed/rss', bias: -1, biasLabel: 'Lean Left', reliability: 'High' },
   arstechnica: { url: 'https://feeds.arstechnica.com/arstechnica/index', bias: -1, biasLabel: 'Lean Left', reliability: 'High' },
 
+  // European
+  euronews: { url: 'https://www.euronews.com/rss', bias: 0, biasLabel: 'Center', reliability: 'High' },
+
   // Geopolitics
   foreignPolicy: { url: 'https://foreignpolicy.com/feed/', bias: 0, biasLabel: 'Center', reliability: 'High' },
   cfr: { url: 'https://www.cfr.org/rss.xml', bias: 0, biasLabel: 'Center', reliability: 'High' },

@@ -95,6 +95,12 @@ export const PUBLISHER_LOGOS = {
     name: 'Ars Technica'
   },
 
+  // European
+  'euronews': {
+    url: `${BASE}logos/euronews.png`,
+    name: 'Euronews'
+  },
+
   // Geopolitics
   'foreignPolicy': {
     url: `${BASE}logos/foreignpolicy.png`,
