@@ -998,6 +998,21 @@
   margin-bottom: 4px;
 }
 
+.twitter-source-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.twitter-avatar {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(77, 166, 255, 0.4);
+  flex-shrink: 0;
+}
+
 .twitter-source {
   font-size: 8px;
   color: var(--accent-primary, #4da6ff);

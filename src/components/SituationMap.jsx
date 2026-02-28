@@ -308,9 +308,26 @@ const createNewsIcon = (color, opacity = 1, blur = 6, isRead = false, logoUrl = 
     });
 };
 
-// Twitter/X marker icon with poster badge
+// Twitter avatar lookup — maps username to local profile image
+const TWITTER_AVATARS = {
+    warmonitors: 'twitter_warmonitors.jpg',
+    osintdefender: 'twitter_osintdefender.jpg',
+    conflicts: 'twitter_conflicts.jpg',
+    intelcrab: 'twitter_intelcrab.jpg',
+    visegrad24: 'visegrad24.jpg',
+    sentaboringtweet: 'twitter_sentaboringtweet.jpg',
+};
+
+function getTwitterAvatarUrl(username) {
+    if (!username) return null;
+    const file = TWITTER_AVATARS[username.toLowerCase()];
+    return file ? `${import.meta.env.BASE_URL}logos/${file}` : null;
+}
+
+// Twitter/X marker icon with profile picture badge
 const createTwitterIcon = (color, opacity = 1, username = null) => {
     const safeUsername = username ? username.replace(/"/g, '&quot;').replace(/'/g, '&#39;') : null;
+    const avatarUrl = getTwitterAvatarUrl(username);
 
     return L.divIcon({
         className: 'custom-twitter-marker',
@@ -324,7 +341,19 @@ const createTwitterIcon = (color, opacity = 1, username = null) => {
                     transition: all 0.5s ease;
                     line-height: 1;
                 ">𝕏</div>
-                ${safeUsername ? `
+                ${avatarUrl ? `
+                    <img src="${avatarUrl}" alt="" style="
+                        position: absolute;
+                        bottom: -5px;
+                        right: -8px;
+                        width: 16px;
+                        height: 16px;
+                        border-radius: 50%;
+                        border: 1.5px solid ${color};
+                        object-fit: cover;
+                        box-shadow: 0 0 4px rgba(0,0,0,0.7);
+                    " onerror="this.style.display='none'" />
+                ` : safeUsername ? `
                     <div style="
                         position: absolute;
                         bottom: -4px;
@@ -1934,7 +1963,11 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                                 <div style={{ fontFamily: 'monospace', fontSize: '11px', maxWidth: '280px' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                            <span style={{ fontSize: '14px' }}>𝕏</span>
+                                            {getTwitterAvatarUrl(tweet.username) ? (
+                                                <img src={getTwitterAvatarUrl(tweet.username)} alt="" style={{ width: '20px', height: '20px', borderRadius: '50%', objectFit: 'cover', border: '1px solid #1da1f2' }} onError={(e) => { e.target.outerHTML = '<span style="font-size:14px">𝕏</span>'; }} />
+                                            ) : (
+                                                <span style={{ fontSize: '14px' }}>𝕏</span>
+                                            )}
                                             <span style={{ color: '#1da1f2', fontWeight: 'bold', fontSize: '10px' }}>@{tweet.username}</span>
                                         </div>
                                         <span style={{ color: '#5a6478', fontSize: '9px' }}>{timeAgo(tweet.pubDate)}</span>

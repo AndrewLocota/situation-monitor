@@ -689,7 +689,8 @@ const TWITTER_ACCOUNTS = [
   { username: 'OSINTdefender', priority: 2 },
   { username: 'Conflicts', priority: 3 },
   { username: 'IntelCrab', priority: 4 },
-  { username: 'sentaboringtweet', priority: 5 },  // Ukraine focused
+  { username: 'Visegrad24', priority: 5 },
+  { username: 'sentaboringtweet', priority: 6 },  // Ukraine focused
 ];
 
 // RSS proxy instances (ordered by reliability - updated Feb 2026)

@@ -44,6 +44,7 @@ const TWITTER_ACCOUNTS = [
   'OSINTdefender',
   'Conflicts',
   'IntelCrab',
+  'Visegrad24',
   'sentaboringtweet',
 ];
 

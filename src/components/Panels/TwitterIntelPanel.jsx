@@ -5,6 +5,16 @@ import { geolocateNews } from '../../utils/geolocateNews';
 import { timeAgo } from '../../utils/timeFormat';
 import './Panels.css';
 
+const BASE = import.meta.env.BASE_URL;
+const TWITTER_AVATARS = {
+    warmonitors: `${BASE}logos/twitter_warmonitors.jpg`,
+    osintdefender: `${BASE}logos/twitter_osintdefender.jpg`,
+    conflicts: `${BASE}logos/twitter_conflicts.jpg`,
+    intelcrab: `${BASE}logos/twitter_intelcrab.jpg`,
+    visegrad24: `${BASE}logos/visegrad24.jpg`,
+    sentaboringtweet: `${BASE}logos/twitter_sentaboringtweet.jpg`,
+};
+
 // Skeleton loading component for twitter items (matches NewsFeed skeleton style)
 const TwitterSkeleton = ({ count = 3 }) => (
     <div className="news-skeleton">
@@ -72,7 +82,17 @@ export function TwitterIntelPanel() {
                             return (
                                 <div key={tweet.id} className="twitter-item">
                                     <div className="twitter-header">
-                                        <span className="twitter-source">@{tweet.username}</span>
+                                        <div className="twitter-source-row">
+                                            {TWITTER_AVATARS[tweet.username?.toLowerCase()] && (
+                                                <img
+                                                    src={TWITTER_AVATARS[tweet.username.toLowerCase()]}
+                                                    alt=""
+                                                    className="twitter-avatar"
+                                                    onError={(e) => { e.target.style.display = 'none'; }}
+                                                />
+                                            )}
+                                            <span className="twitter-source">@{tweet.username}</span>
+                                        </div>
                                         <span className="twitter-time">{timeAgo(tweet.pubDate)}</span>
                                     </div>
                                     <div
