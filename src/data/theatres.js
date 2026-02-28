@@ -283,6 +283,110 @@ export const INTEL_HOTSPOTS = [
     status: 'Political flux',
     level: 'elevated',
     theatre: 'GLOBAL'
+  },
+  {
+    id: 'langley',
+    name: 'Langley',
+    subtext: 'CIA HQ',
+    lat: 38.9517,
+    lon: -77.1467,
+    keywords: ['cia', 'langley', 'intelligence', 'covert'],
+    description: 'CIA headquarters. Foreign intelligence collection, covert operations, analysis center.',
+    agencies: ['CIA'],
+    status: 'Normal operations',
+    level: 'watch',
+    theatre: 'US_DOMESTIC'
+  },
+  {
+    id: 'fort_meade',
+    name: 'Fort Meade',
+    subtext: 'NSA / CYBERCOM',
+    lat: 39.1086,
+    lon: -76.7711,
+    keywords: ['nsa', 'cyber command', 'sigint', 'fort meade', 'surveillance'],
+    description: 'NSA and US Cyber Command HQ. Global SIGINT collection, cyber operations.',
+    agencies: ['NSA', 'CYBERCOM'],
+    status: 'Normal operations',
+    level: 'watch',
+    theatre: 'US_DOMESTIC'
+  },
+  {
+    id: 'riyadh',
+    name: 'Riyadh',
+    subtext: 'GIP / Saudi Intel',
+    lat: 25.2760,
+    lon: 46.7380,
+    keywords: ['saudi', 'saudi arabia', 'riyadh', 'mbs', 'opec', 'aramco'],
+    description: 'Saudi political center. MBS leadership, OPEC influence, Yemen war coordination, regional rivalries.',
+    agencies: ['GIP', 'Royal Court'],
+    status: 'Active operations',
+    level: 'elevated',
+    theatre: 'MIDDLE_EAST'
+  },
+  {
+    id: 'tokyo',
+    name: 'Tokyo',
+    subtext: 'Japan / USFJ',
+    lat: 35.6762,
+    lon: 139.6503,
+    keywords: ['japan', 'japanese', 'tokyo', 'usfj'],
+    description: 'Japanese government and US Forces Japan. Critical ally in Indo-Pacific strategy.',
+    agencies: ['PSIA', 'USFJ', 'JSDF'],
+    status: 'Alliance readiness',
+    level: 'watch',
+    theatre: 'EAST_ASIA'
+  },
+  {
+    id: 'seoul',
+    name: 'Seoul',
+    subtext: 'USFK / NIS',
+    lat: 37.5665,
+    lon: 126.9780,
+    keywords: ['south korea', 'korean', 'seoul', 'yoon'],
+    description: 'South Korean government and USFK. Korean Peninsula deterrence, DPRK monitoring.',
+    agencies: ['NIS', 'USFK', 'ROK JCS'],
+    status: 'Heightened readiness',
+    level: 'elevated',
+    theatre: 'EAST_ASIA'
+  },
+  {
+    id: 'paris',
+    name: 'Paris',
+    subtext: 'DGSE / DGSI',
+    lat: 48.8566,
+    lon: 2.3522,
+    keywords: ['france', 'french', 'paris', 'macron', 'dgse'],
+    description: 'French intelligence community. Foreign intel (DGSE), domestic security (DGSI), nuclear deterrent.',
+    agencies: ['DGSE', 'DGSI', 'DRM'],
+    status: 'Normal operations',
+    level: 'watch',
+    theatre: 'GLOBAL'
+  },
+  {
+    id: 'cairo',
+    name: 'Cairo',
+    subtext: 'GIS / Military Intel',
+    lat: 30.0444,
+    lon: 31.2357,
+    keywords: ['egypt', 'cairo', 'sisi', 'suez', 'egyptian'],
+    description: 'Egyptian military and intelligence center. Suez Canal security, Gaza border, regional mediation.',
+    agencies: ['GIS', 'Military Intelligence'],
+    status: 'Regional mediation',
+    level: 'elevated',
+    theatre: 'MIDDLE_EAST'
+  },
+  {
+    id: 'ankara',
+    name: 'Ankara',
+    subtext: 'MIT Activity',
+    lat: 39.9334,
+    lon: 32.8597,
+    keywords: ['turkey', 'turkish', 'ankara', 'erdogan', 'mit'],
+    description: 'Turkish government and MIT intelligence. Syria operations, NATO member, Russia relations.',
+    agencies: ['MIT', 'TSK'],
+    status: 'Active operations',
+    level: 'elevated',
+    theatre: 'MIDDLE_EAST'
   }
 ];
 
@@ -830,25 +934,43 @@ export const FRONTLINES = [
 
 // Military bases with accurate coordinates
 export const MILITARY_BASES = [
-  // US/NATO
+  // US/NATO — Europe
   { id: 'ramstein', name: 'Ramstein AB', lat: 49.4369, lon: 7.6003, type: 'us-nato' },
+  { id: 'aviano', name: 'Aviano AB', lat: 46.0319, lon: 12.5965, type: 'us-nato' },
+  { id: 'sigonella', name: 'NAS Sigonella', lat: 37.4017, lon: 14.9222, type: 'us-nato' },
+  { id: 'lakenheath', name: 'RAF Lakenheath', lat: 52.4093, lon: 0.5608, type: 'us-nato' },
+  { id: 'souda_bay', name: 'Souda Bay', lat: 35.4875, lon: 24.1178, type: 'us-nato' },
+  { id: 'rota', name: 'Naval Stn Rota', lat: 36.6453, lon: -6.3497, type: 'us-nato' },
+  { id: 'incirlik', name: 'Incirlik AB', lat: 37.0017, lon: 35.4258, type: 'us-nato' },
+  // US/NATO — Middle East / Africa
+  { id: 'bahrain', name: 'NSA Bahrain', lat: 26.2285, lon: 50.6501, type: 'us-nato' },
+  { id: 'qatar', name: 'Al Udeid', lat: 25.1175, lon: 51.3150, type: 'us-nato' },
+  { id: 'dhafra', name: 'Al Dhafra AB', lat: 24.2481, lon: 54.5481, type: 'us-nato' },
+  { id: 'lemonnier', name: 'Camp Lemonnier', lat: 11.5475, lon: 43.1592, type: 'us-nato' },
+  // US/NATO — Indo-Pacific
   { id: 'diego_garcia', name: 'Diego Garcia', lat: -7.3195, lon: 72.4229, type: 'us-nato' },
   { id: 'guam', name: 'Andersen AFB', lat: 13.5840, lon: 144.9305, type: 'us-nato' },
   { id: 'okinawa', name: 'Kadena AB', lat: 26.3516, lon: 127.7695, type: 'us-nato' },
   { id: 'yokosuka', name: 'Yokosuka', lat: 35.2833, lon: 139.6667, type: 'us-nato' },
-  { id: 'bahrain', name: 'NSA Bahrain', lat: 26.2285, lon: 50.6501, type: 'us-nato' },
-  { id: 'qatar', name: 'Al Udeid', lat: 25.1175, lon: 51.3150, type: 'us-nato' },
-  { id: 'incirlik', name: 'Incirlik AB', lat: 37.0017, lon: 35.4258, type: 'us-nato' },
+  { id: 'humphreys', name: 'Camp Humphreys', lat: 36.9628, lon: 127.0311, type: 'us-nato' },
+  // US/NATO — Other
+  { id: 'thule', name: 'Pituffik SB', lat: 76.5312, lon: -68.7031, type: 'us-nato' },
   // Chinese
   { id: 'djibouti_cn', name: 'PLA Djibouti', lat: 11.5886, lon: 43.0500, type: 'china' },
   { id: 'woody_island', name: 'Woody Island', lat: 16.8333, lon: 112.3333, type: 'china' },
   { id: 'fiery_cross', name: 'Fiery Cross', lat: 9.5500, lon: 112.8900, type: 'china' },
   { id: 'mischief_reef', name: 'Mischief Reef', lat: 9.9000, lon: 115.5300, type: 'china' },
+  { id: 'subi_reef', name: 'Subi Reef', lat: 10.9233, lon: 114.0833, type: 'china' },
+  { id: 'ream', name: 'Ream Naval Base', lat: 10.5053, lon: 103.6314, type: 'china' },
   // Russian
   { id: 'kaliningrad', name: 'Kaliningrad', lat: 54.7104, lon: 20.4522, type: 'russia' },
   { id: 'sevastopol', name: 'Sevastopol', lat: 44.6166, lon: 33.5254, type: 'russia' },
   { id: 'tartus', name: 'Tartus (Syria)', lat: 34.8959, lon: 35.8867, type: 'russia' },
-  { id: 'hmeimim', name: 'Hmeimim AB', lat: 35.4008, lon: 35.9486, type: 'russia' }
+  { id: 'hmeimim', name: 'Hmeimim AB', lat: 35.4008, lon: 35.9486, type: 'russia' },
+  { id: 'murmansk', name: 'Severomorsk', lat: 69.0733, lon: 33.4167, type: 'russia' },
+  { id: 'vladivostok', name: 'Vladivostok', lat: 43.1150, lon: 131.8855, type: 'russia' },
+  { id: 'petropavlovsk', name: 'Petropavlovsk', lat: 53.0167, lon: 158.6500, type: 'russia' },
+  { id: 'port_sudan', name: 'Port Sudan (RU)', lat: 19.6158, lon: 37.2164, type: 'russia' },
 ];
 
 // Shipping chokepoints with accurate coordinates
@@ -858,24 +980,46 @@ export const SHIPPING_CHOKEPOINTS = [
   { id: 'hormuz', name: 'Strait of Hormuz', lat: 26.5500, lon: 56.2500, desc: '21% of global oil', traffic: '~20/day' },
   { id: 'malacca', name: 'Malacca Strait', lat: 2.5000, lon: 101.4500, desc: '25% of global trade', traffic: '~80/day' },
   { id: 'bosphorus', name: 'Bosphorus', lat: 41.1190, lon: 29.0510, desc: 'Black Sea access', traffic: '~45/day' },
-  { id: 'bab_el_mandeb', name: 'Bab el-Mandeb', lat: 12.5833, lon: 43.3333, desc: 'Red Sea gateway', traffic: '~30/day' }
+  { id: 'bab_el_mandeb', name: 'Bab el-Mandeb', lat: 12.5833, lon: 43.3333, desc: 'Red Sea gateway', traffic: '~30/day' },
+  { id: 'gibraltar', name: 'Strait of Gibraltar', lat: 35.9667, lon: -5.6167, desc: 'Atlantic–Med gateway', traffic: '~60/day' },
+  { id: 'taiwan_strait', name: 'Taiwan Strait', lat: 24.0000, lon: 119.5000, desc: '88% of largest container ships', traffic: '~240/day' },
+  { id: 'singapore', name: 'Strait of Singapore', lat: 1.2500, lon: 103.8333, desc: '2nd busiest global strait', traffic: '~90/day' },
+  { id: 'dover', name: 'Strait of Dover', lat: 51.0000, lon: 1.5000, desc: 'Busiest shipping lane', traffic: '~400/day' },
+  { id: 'lombok', name: 'Lombok Strait', lat: -8.5000, lon: 115.8333, desc: 'Alt. to Malacca', traffic: '~20/day' },
 ];
 
 // Nuclear facilities with accurate coordinates
 export const NUCLEAR_FACILITIES = [
+  // Iran
   { id: 'natanz', name: 'Natanz', lat: 33.7200, lon: 51.7200, country: 'Iran', type: 'Enrichment' },
-  { id: 'fordow', name: 'Fordow', lat: 34.8800, lon: 50.9700, country: 'Iran', type: 'Enrichment' },
-  { id: 'yongbyon', name: 'Yongbyon', lat: 39.7900, lon: 125.7500, country: 'DPRK', type: 'Reactor' },
-  { id: 'dimona', name: 'Dimona', lat: 31.0000, lon: 35.1500, country: 'Israel', type: 'Reactor' },
-  { id: 'zaporizhzhia', name: 'Zaporizhzhia NPP', lat: 47.5060, lon: 34.5850, country: 'Ukraine', type: 'Power' }
+  { id: 'fordow', name: 'Fordow', lat: 34.8800, lon: 50.9700, country: 'Iran', type: 'Enrichment (underground)' },
+  { id: 'bushehr', name: 'Bushehr NPP', lat: 28.8333, lon: 50.8833, country: 'Iran', type: 'Power' },
+  { id: 'isfahan', name: 'Isfahan UCF', lat: 32.7000, lon: 51.7000, country: 'Iran', type: 'Conversion' },
+  { id: 'arak', name: 'Arak / Khondab', lat: 34.3500, lon: 49.2500, country: 'Iran', type: 'Heavy water reactor' },
+  { id: 'parchin', name: 'Parchin', lat: 35.5167, lon: 51.7667, country: 'Iran', type: 'Military / R&D' },
+  // DPRK
+  { id: 'yongbyon', name: 'Yongbyon', lat: 39.7900, lon: 125.7500, country: 'DPRK', type: 'Reactor / Enrichment' },
+  { id: 'punggye', name: 'Punggye-ri', lat: 41.2833, lon: 129.0833, country: 'DPRK', type: 'Test site' },
+  // Israel
+  { id: 'dimona', name: 'Dimona', lat: 31.0000, lon: 35.1500, country: 'Israel', type: 'Reactor (weapons)' },
+  // Ukraine
+  { id: 'zaporizhzhia', name: 'Zaporizhzhia NPP', lat: 47.5060, lon: 34.5850, country: 'Ukraine', type: 'Power (occupied)' },
+  // Pakistan
+  { id: 'kahuta', name: 'Kahuta', lat: 33.5900, lon: 73.3900, country: 'Pakistan', type: 'Enrichment' },
+  { id: 'chashma', name: 'Chashma NPP', lat: 32.3833, lon: 71.4167, country: 'Pakistan', type: 'Power' },
+  // India
+  { id: 'barc', name: 'BARC Mumbai', lat: 19.0000, lon: 72.8500, country: 'India', type: 'Research / Weapons' },
+  // China
+  { id: 'lop_nur', name: 'Lop Nur', lat: 41.5500, lon: 88.7300, country: 'China', type: 'Test site' },
 ];
 
-// Cyber threat zones
+// Cyber threat zones — coordinates point to capital / primary ops center
 export const CYBER_ZONES = [
-  { id: 'cyber_russia', name: 'RU', fullName: 'Russia', lat: 55.75, lon: 45.0, group: 'APT28/29', targets: ['Government', 'Defense'] },
-  { id: 'cyber_china', name: 'CN', fullName: 'China', lat: 35.0, lon: 105.0, group: 'APT41', targets: ['Tech', 'Supply Chain'] },
-  { id: 'cyber_nk', name: 'NK', fullName: 'North Korea', lat: 39.0, lon: 127.0, group: 'Lazarus', targets: ['Crypto', 'Banks'] },
-  { id: 'cyber_iran', name: 'IR', fullName: 'Iran', lat: 32.0, lon: 53.0, group: 'APT33/35', targets: ['Energy', 'Israel'] }
+  { id: 'cyber_russia', name: 'RU', fullName: 'Russia', lat: 55.75, lon: 37.62, group: 'APT28/29 (Fancy Bear/Cozy Bear)', targets: ['Government', 'Defense', 'Elections'] },
+  { id: 'cyber_china', name: 'CN', fullName: 'China', lat: 39.90, lon: 116.40, group: 'APT41 / APT10 / Volt Typhoon', targets: ['Tech', 'Supply Chain', 'Critical Infrastructure'] },
+  { id: 'cyber_nk', name: 'NK', fullName: 'North Korea', lat: 39.04, lon: 125.76, group: 'Lazarus / Kimsuky', targets: ['Crypto', 'Banks', 'Defense'] },
+  { id: 'cyber_iran', name: 'IR', fullName: 'Iran', lat: 35.69, lon: 51.39, group: 'APT33/34/35 (Charming Kitten)', targets: ['Energy', 'Israel', 'Saudi Arabia'] },
+  { id: 'cyber_israel', name: 'IL', fullName: 'Israel', lat: 32.08, lon: 34.78, group: 'Unit 8200 / NSO Group', targets: ['Iran', 'Surveillance', 'Intelligence'] },
 ];
 
 // Undersea cables - critical communications infrastructure
