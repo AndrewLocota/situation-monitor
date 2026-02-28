@@ -18,6 +18,7 @@ export function Header({ onRefresh, musicPlayer }) {
         'GLOBAL': { label: 'GLB' },
         'europe': { label: 'EUR' },
         'middle_east': { label: 'MDE' },
+        'iran': { label: 'IRN' },
         'pacific': { label: 'PAC' },
         'africa': { label: 'AFR' },
         'americas': { label: 'AME' }
@@ -53,7 +54,7 @@ export function Header({ onRefresh, musicPlayer }) {
                     {THEATRES.map(t => (
                         <button
                             key={t.id}
-                            className={`theatre-nav-btn ${currentTheatre === t.id ? 'active' : ''}`}
+                            className={`theatre-nav-btn ${currentTheatre === t.id ? 'active' : ''} ${t.id === 'iran' ? 'theatre-nav-btn--iran' : ''}`}
                             onClick={() => setTheatre(t.id)}
                             title={t.description}
                         >

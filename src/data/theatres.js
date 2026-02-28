@@ -27,6 +27,21 @@ export const THEATRES = [
     ]
   },
   {
+    id: 'iran',
+    name: 'Iran',
+    description: 'Iran / IRGC / Nuclear Program',
+    center: [53, 32],
+    bounds: { west: 44, east: 64, north: 40, south: 25 },
+    scale: 5,
+    polygon: [
+      [39.8, 44.0], [39.4, 48.0], [38.5, 49.0], [37.5, 54.0], [37.3, 55.5],
+      [37.0, 57.5], [35.5, 61.0], [33.5, 62.0], [31.5, 61.5], [29.0, 61.5],
+      [27.0, 63.5], [25.5, 61.5], [26.0, 57.0], [26.5, 54.5], [27.5, 52.0],
+      [29.5, 50.5], [30.0, 48.5], [31.0, 47.5], [32.0, 47.0], [33.5, 46.0],
+      [35.0, 46.0], [36.0, 45.0], [37.5, 44.5], [38.5, 44.0]
+    ]
+  },
+  {
     id: 'pacific',
     name: 'Indo-Pacific',
     description: 'Taiwan Strait / South China Sea',

@@ -78,6 +78,35 @@
   box-shadow: 0 0 12px rgba(77, 166, 255, 0.2);
 }
 
+/* Iran theatre button — subtle red glow */
+.theatre-nav-btn--iran {
+  color: #e05050;
+  border-color: rgba(224, 80, 80, 0.35);
+  animation: iran-glow 2.5s ease-in-out infinite;
+}
+
+.theatre-nav-btn--iran:hover {
+  color: #ff6b6b;
+  border-color: rgba(255, 107, 107, 0.5);
+  background: rgba(255, 70, 70, 0.12);
+}
+
+.theatre-nav-btn--iran.active {
+  color: #ff5555;
+  border-color: rgba(255, 85, 85, 0.6);
+  background: rgba(255, 70, 70, 0.18);
+  box-shadow: 0 0 14px rgba(255, 70, 70, 0.35);
+}
+
+@keyframes iran-glow {
+  0%, 100% {
+    box-shadow: 0 0 4px rgba(255, 70, 70, 0.15);
+  }
+  50% {
+    box-shadow: 0 0 10px rgba(255, 70, 70, 0.3);
+  }
+}
+
 .header-brand {
   display: flex;
   align-items: center;
