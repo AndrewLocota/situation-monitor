@@ -794,89 +794,117 @@ function extractTweetMedia(html) {
   return { imageUrl, videoUrl };
 }
 
+// Parse RSS text into tweet objects for a given username
+function parseRssTweets(text, username, maxTweets) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(text, 'text/xml');
+  const items = doc.querySelectorAll('item');
+  if (items.length === 0) return null;
+
+  const tweets = [];
+  items.forEach((item, index) => {
+    if (tweets.length >= maxTweets) return;
+    const title = item.querySelector('title')?.textContent || '';
+    const description = item.querySelector('description')?.textContent || '';
+    const link = item.querySelector('link')?.textContent || '';
+    const pubDate = item.querySelector('pubDate')?.textContent || '';
+    const { imageUrl, videoUrl } = extractTweetMedia(description);
+    const tweetIdMatch = link.match(/status\/(\d+)/);
+    const tweetId = tweetIdMatch ? tweetIdMatch[1] : null;
+    const cleanLink = link
+      .replace(/xcancel\.com/g, 'twitter.com')
+      .replace(/nitter\.[^/]+/g, 'twitter.com');
+
+    tweets.push({
+      id: `twitter-${username}-${tweetId || Date.now()}-${index}`,
+      tweetId,
+      title: title.trim() || description.replace(/<[^>]*>/g, '').trim().slice(0, 200),
+      description: description.replace(/<[^>]*>/g, '').trim().slice(0, 500),
+      link: cleanLink,
+      pubDate: new Date(pubDate),
+      source: username,
+      username,
+      imageUrl: imageUrl || null,
+      videoUrl: videoUrl || null,
+    });
+  });
+  return tweets.length > 0 ? tweets : null;
+}
+
+// Last known working proxy — reused across calls to skip dead ones fast
+let lastWorkingProxy = null;
+
 async function fetchAccountTweets(username, maxTweets = 10) {
-  // Try each proxy until one works
-  for (const proxy of RSS_PROXIES) {
-    if (!proxy.working) continue;
-    if (shouldSkipProxy(proxy.name)) {
-      continue;
-    }
+  const PROXY_TIMEOUT = 6000;
+  const eligible = RSS_PROXIES.filter(p => p.working && !shouldSkipProxy(p.name));
+  if (eligible.length === 0) return [];
 
-    try {
-      const url = proxy.isRssHub
-        ? `${proxy.baseUrl}/${username}`
-        : `${proxy.baseUrl}/${username}/rss`;
-
-      const response = await fetchWithCorsProxy(url);
-
-      if (!response) {
-        markProxyFailure(proxy.name);
-        continue;
-      }
-
-      const text = await response.text();
-
-      // Validate RSS response
-      if (!text || text.length < 100 || (!text.includes('<rss') && !text.includes('<feed') && !text.includes('<item'))) {
-        markProxyFailure(proxy.name);
-        continue;
-      }
-
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(text, 'text/xml');
-      const items = doc.querySelectorAll('item');
-
-      if (items.length === 0) {
-        markProxyFailure(proxy.name);
-        continue;
-      }
-
-      // Success!
-      markProxySuccess(proxy.name);
-
-      const tweets = [];
-      items.forEach((item, index) => {
-        if (tweets.length >= maxTweets) return;
-
-        const title = item.querySelector('title')?.textContent || '';
-        const description = item.querySelector('description')?.textContent || '';
-        const link = item.querySelector('link')?.textContent || '';
-        const pubDate = item.querySelector('pubDate')?.textContent || '';
-
-        // Extract media URLs from description HTML before stripping tags
-        const { imageUrl, videoUrl } = extractTweetMedia(description);
-
-        // Extract tweet ID from link
-        const tweetIdMatch = link.match(/status\/(\d+)/);
-        const tweetId = tweetIdMatch ? tweetIdMatch[1] : null;
-
-        // Clean up the link to always point to twitter.com
-        const cleanLink = link
-          .replace(/xcancel\.com/g, 'twitter.com')
-          .replace(/nitter\.[^/]+/g, 'twitter.com');
-
-        tweets.push({
-          id: `twitter-${username}-${tweetId || Date.now()}-${index}`,
-          tweetId,
-          title: title.trim() || description.replace(/<[^>]*>/g, '').trim().slice(0, 200),
-          description: description.replace(/<[^>]*>/g, '').trim().slice(0, 500),
-          link: cleanLink,
-          pubDate: new Date(pubDate),
-          source: username,
-          username: username,
-          imageUrl: imageUrl || null,
-          videoUrl: videoUrl || null,
-        });
-      });
-
-      return tweets;
-    } catch (error) {
-      markProxyFailure(proxy.name);
-      continue;
+  // If we know a working proxy, try it first with a short timeout
+  if (lastWorkingProxy) {
+    const fast = eligible.find(p => p.name === lastWorkingProxy);
+    if (fast) {
+      try {
+        const url = fast.isRssHub ? `${fast.baseUrl}/${username}` : `${fast.baseUrl}/${username}/rss`;
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), PROXY_TIMEOUT);
+        const response = await fetchWithCorsProxy(url, { signal: controller.signal });
+        clearTimeout(timer);
+        if (response) {
+          const text = await response.text();
+          if (text && text.length > 100 && (text.includes('<rss') || text.includes('<feed') || text.includes('<item'))) {
+            const tweets = parseRssTweets(text, username, maxTweets);
+            if (tweets) { markProxySuccess(fast.name); return tweets; }
+          }
+        }
+      } catch { /* fall through to race */ }
     }
   }
 
-  return []; // All proxies failed for this account
+  // Race ALL eligible proxies — first valid response wins
+  return new Promise((resolve) => {
+    let resolved = false;
+    let finished = 0;
+    const total = eligible.length;
+
+    eligible.forEach((proxy) => {
+      const url = proxy.isRssHub ? `${proxy.baseUrl}/${username}` : `${proxy.baseUrl}/${username}/rss`;
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), PROXY_TIMEOUT);
+
+      fetchWithCorsProxy(url, { signal: controller.signal })
+        .then(async (response) => {
+          clearTimeout(timer);
+          if (resolved || !response) { markProxyFailure(proxy.name); return; }
+          const text = await response.text();
+          if (resolved) return;
+          if (!text || text.length < 100 || (!text.includes('<rss') && !text.includes('<feed') && !text.includes('<item'))) {
+            markProxyFailure(proxy.name);
+            return;
+          }
+          const tweets = parseRssTweets(text, username, maxTweets);
+          if (resolved) return;
+          if (tweets) {
+            resolved = true;
+            markProxySuccess(proxy.name);
+            lastWorkingProxy = proxy.name;
+            resolve(tweets);
+          } else {
+            markProxyFailure(proxy.name);
+          }
+        })
+        .catch(() => {
+          clearTimeout(timer);
+          markProxyFailure(proxy.name);
+        })
+        .finally(() => {
+          finished++;
+          if (finished === total && !resolved) {
+            resolved = true;
+            resolve([]);
+          }
+        });
+    });
+  });
 }
 
 export async function fetchTwitterIntel() {
