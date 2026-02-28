@@ -63,6 +63,22 @@ const INITIAL_NEWS_MARKERS = 36;
 const NEWS_MARKER_BATCH_SIZE = 24;
 const NEWS_MARKER_BATCH_INTERVAL_MS = 110;
 
+// Extracted popup style constants to avoid recreating objects on every render
+const POPUP_STYLES = {
+    container: { fontFamily: 'monospace', fontSize: '11px', maxWidth: '280px' },
+    header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' },
+    headerLeft: { display: 'flex', alignItems: 'center', gap: '6px' },
+    time: { color: '#5a6478', fontSize: '9px' },
+    title: { color: '#e0e4eb', textDecoration: 'none', lineHeight: '1.4', display: 'block', marginBottom: '8px' },
+    description: { marginBottom: '8px', padding: '8px', background: '#1a2030', borderRadius: '2px', fontSize: '10px', lineHeight: '1.5', color: '#8892a8', maxHeight: '100px', overflowY: 'auto' },
+    location: { fontSize: '9px', color: '#5a6478' },
+    avatar: { width: '20px', height: '20px', borderRadius: '50%', objectFit: 'cover', border: '1px solid #1da1f2' },
+    username: { color: '#1da1f2', fontWeight: 'bold', fontSize: '10px' },
+    mediaWrap: { marginBottom: '6px', borderRadius: '4px', overflow: 'hidden', maxHeight: '160px' },
+    mediaImg: { width: '100%', display: 'block', objectFit: 'cover', maxHeight: '160px' },
+    mediaVid: { width: '100%', maxHeight: '160px', display: 'block' },
+};
+
 const EARTH_RADIUS_M = 6371008.8;
 const NIGHT_RADIUS_M = Math.PI * EARTH_RADIUS_M / 2; // 90deg great-circle distance
 
@@ -1960,65 +1976,37 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                             }}
                         >
                             <Popup autoPan={false} maxWidth={300}>
-                                <div style={{ fontFamily: 'monospace', fontSize: '11px', maxWidth: '280px' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <div style={POPUP_STYLES.container}>
+                                    <div style={POPUP_STYLES.header}>
+                                        <div style={POPUP_STYLES.headerLeft}>
                                             {getTwitterAvatarUrl(tweet.username) ? (
-                                                <img src={getTwitterAvatarUrl(tweet.username)} alt="" style={{ width: '20px', height: '20px', borderRadius: '50%', objectFit: 'cover', border: '1px solid #1da1f2' }} onError={(e) => { e.target.outerHTML = '<span style="font-size:14px">𝕏</span>'; }} />
+                                                <img src={getTwitterAvatarUrl(tweet.username)} alt="" style={POPUP_STYLES.avatar} onError={(e) => { e.target.outerHTML = '<span style="font-size:14px">𝕏</span>'; }} />
                                             ) : (
                                                 <span style={{ fontSize: '14px' }}>𝕏</span>
                                             )}
-                                            <span style={{ color: '#1da1f2', fontWeight: 'bold', fontSize: '10px' }}>@{tweet.username}</span>
+                                            <span style={POPUP_STYLES.username}>@{tweet.username}</span>
                                         </div>
-                                        <span style={{ color: '#5a6478', fontSize: '9px' }}>{timeAgo(tweet.pubDate)}</span>
+                                        <span style={POPUP_STYLES.time}>{timeAgo(tweet.pubDate)}</span>
                                     </div>
-                                    <a
-                                        href={tweet.link}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        style={{ color: '#e0e4eb', textDecoration: 'none', lineHeight: '1.4', display: 'block', marginBottom: '8px' }}
-                                    >
+                                    <a href={tweet.link} target="_blank" rel="noopener noreferrer" style={POPUP_STYLES.title}>
                                         {tweet.title}
                                     </a>
                                     {tweet.imageUrl && (
-                                        <div style={{ marginBottom: '6px', borderRadius: '4px', overflow: 'hidden', maxHeight: '160px' }}>
-                                            <img
-                                                src={tweet.imageUrl}
-                                                alt=""
-                                                style={{ width: '100%', display: 'block', objectFit: 'cover', maxHeight: '160px' }}
-                                                loading="lazy"
-                                                onError={(e) => { e.target.style.display = 'none'; }}
-                                            />
+                                        <div style={POPUP_STYLES.mediaWrap}>
+                                            <img src={tweet.imageUrl} alt="" style={POPUP_STYLES.mediaImg} loading="lazy" onError={(e) => { e.target.style.display = 'none'; }} />
                                         </div>
                                     )}
                                     {tweet.videoUrl && !tweet.imageUrl && (
-                                        <div style={{ marginBottom: '6px', borderRadius: '4px', overflow: 'hidden' }}>
-                                            <video
-                                                src={tweet.videoUrl}
-                                                controls
-                                                muted
-                                                preload="metadata"
-                                                style={{ width: '100%', maxHeight: '160px', display: 'block' }}
-                                                onError={(e) => { e.target.style.display = 'none'; }}
-                                            />
+                                        <div style={POPUP_STYLES.mediaWrap}>
+                                            <video src={tweet.videoUrl} controls muted preload="metadata" style={POPUP_STYLES.mediaVid} onError={(e) => { e.target.style.display = 'none'; }} />
                                         </div>
                                     )}
                                     {tweet.description && (
-                                        <div style={{
-                                            marginBottom: '8px',
-                                            padding: '8px',
-                                            background: '#1a2030',
-                                            borderRadius: '2px',
-                                            fontSize: '10px',
-                                            lineHeight: '1.5',
-                                            color: '#8892a8',
-                                            maxHeight: '100px',
-                                            overflowY: 'auto'
-                                        }}>
+                                        <div style={POPUP_STYLES.description}>
                                             {tweet.description}
                                         </div>
                                     )}
-                                    <div style={{ fontSize: '9px', color: '#5a6478' }}>
+                                    <div style={POPUP_STYLES.location}>
                                         📍 {location.label}
                                     </div>
                                 </div>

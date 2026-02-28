@@ -1,6 +1,7 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { ASCIIBox, IranLink } from '../ui';
 import { useDataStore } from '../../stores';
+import { useShallow } from 'zustand/react/shallow';
 import { timeAgo } from '../../utils/timeFormat';
 import { geolocateNews } from '../../utils/geolocateNews';
 import './Panels.css';
@@ -71,9 +72,11 @@ const NewsSkeleton = ({ count = 5 }) => (
 export function NewsFeed() {
     const [category, setCategory] = useState('all');
     const [maxItems, setMaxItems] = useState(20);
-    const { allNews, loading, lastUpdated, setSelectedNews, openHoloCall } = useDataStore();
+    const { allNews, loading, lastUpdated, setSelectedNews, openHoloCall } = useDataStore(
+        useShallow(s => ({ allNews: s.allNews, loading: s.loading, lastUpdated: s.lastUpdated, setSelectedNews: s.setSelectedNews, openHoloCall: s.openHoloCall }))
+    );
 
-    const matchesCategory = (item) => {
+    const matchesCategory = useCallback((item) => {
         if (category === 'all') return true;
         const titleLower = (item.title || '').toLowerCase();
         const sourceLower = (item.source || '').toLowerCase();
@@ -101,14 +104,13 @@ export function NewsFeed() {
             default:
                 return true;
         }
-    };
+    }, [category]);
+
+    // Memoize the full filtered list (before pagination) to avoid double-filtering
+    const categoryFiltered = useMemo(() => allNews.filter(matchesCategory), [allNews, matchesCategory]);
 
     // Interleave sources so no single feed dominates the visible list.
-    // Groups items by source, then round-robins through sources picking
-    // the newest item from each in turn. Items within each source stay
-    // chronologically ordered.
     const filteredNews = useMemo(() => {
-        const categoryFiltered = allNews.filter(matchesCategory);
         if (categoryFiltered.length <= 1) return categoryFiltered.slice(0, maxItems);
 
         const bySource = {};
@@ -137,9 +139,9 @@ export function NewsFeed() {
             }
         }
         return interleaved.slice(0, maxItems);
-    }, [allNews, category, maxItems]);
+    }, [categoryFiltered, maxItems]);
 
-    const totalFiltered = allNews.filter(matchesCategory).length;
+    const totalFiltered = categoryFiltered.length;
 
     const hasMore = totalFiltered > maxItems;
 

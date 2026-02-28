@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useDataStore } from '../../stores';
+import { useShallow } from 'zustand/react/shallow';
 import { ASCIIBox, IranLink } from '../ui';
 import { geolocateNews } from '../../utils/geolocateNews';
 import { timeAgo } from '../../utils/timeFormat';
@@ -32,7 +33,9 @@ const TwitterSkeleton = ({ count = 3 }) => (
 );
 
 export function TwitterIntelPanel() {
-    const { twitterEvents, loading, setSelectedNews } = useDataStore();
+    const { twitterEvents, loading, setSelectedNews } = useDataStore(
+        useShallow(s => ({ twitterEvents: s.twitterEvents, loading: s.loading, setSelectedNews: s.setSelectedNews }))
+    );
     const [maxItems, setMaxItems] = useState(10);
 
     const isLoading = loading?.twitter || false;

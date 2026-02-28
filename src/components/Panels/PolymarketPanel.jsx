@@ -2,10 +2,13 @@ import { useState } from 'react';
 import { ASCIIBox, IranLink } from '../ui';
 import { ASCIILoader } from '../ui/ASCIILoader';
 import { useDataStore } from '../../stores';
+import { useShallow } from 'zustand/react/shallow';
 import './Panels.css';
 
 export function PolymarketPanel() {
-    const { polymarket, loading, lastUpdated } = useDataStore();
+    const { polymarket, loading, lastUpdated } = useDataStore(
+        useShallow(s => ({ polymarket: s.polymarket, loading: s.loading, lastUpdated: s.lastUpdated }))
+    );
     const [maxItems, setMaxItems] = useState(10);
 
     const formatVolume = (vol) => {
