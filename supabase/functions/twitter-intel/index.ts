@@ -7,6 +7,8 @@ type TweetItem = {
   pubDate: string;
   source: string;
   username: string;
+  imageUrl: string | null;
+  videoUrl: string | null;
 };
 
 const DEFAULT_ALLOWED_ORIGINS = [
@@ -76,6 +78,34 @@ function tryGetLinkFromItem(item: Element): string {
   return '';
 }
 
+function extractMediaFromHtml(html: string): { imageUrl: string | null; videoUrl: string | null } {
+  let imageUrl: string | null = null;
+  let videoUrl: string | null = null;
+
+  const pbsMatch = html.match(/https?:\/\/pbs\.twimg\.com\/media\/[A-Za-z0-9_\-]+\.\w+/i);
+  if (pbsMatch) imageUrl = pbsMatch[0];
+
+  if (!imageUrl) {
+    const nitterPicMatch = html.match(/media%2F([A-Za-z0-9_\-]+\.\w+)/i);
+    if (nitterPicMatch) imageUrl = `https://pbs.twimg.com/media/${decodeURIComponent(nitterPicMatch[1])}`;
+  }
+
+  if (!imageUrl) {
+    const imgMatch = html.match(/<img[^>]+src=["']([^"']+)["']/i);
+    if (imgMatch && imgMatch[1].length > 40) imageUrl = imgMatch[1];
+  }
+
+  const twitterVidMatch = html.match(/https?:\/\/video\.twimg\.com\/[^\s"'<>]+\.mp4/i);
+  if (twitterVidMatch) videoUrl = twitterVidMatch[0];
+
+  if (!videoUrl) {
+    const vidSrcMatch = html.match(/<video[^>]+src=["']([^"']+)["']/i);
+    if (vidSrcMatch) videoUrl = vidSrcMatch[1];
+  }
+
+  return { imageUrl, videoUrl };
+}
+
 function parseRssXml(xmlText: string, username: string): TweetItem[] {
   const parser = new DOMParser();
   const doc = parser.parseFromString(xmlText, 'text/xml');
@@ -87,12 +117,15 @@ function parseRssXml(xmlText: string, username: string): TweetItem[] {
   const tweets: TweetItem[] = [];
 
   for (const entry of entries) {
-    const title = stripHtml(parseTextContent(doc, entry.querySelector('title'))).slice(0, 240);
-    const description = stripHtml(
+    const rawDescription =
       parseTextContent(doc, entry.querySelector('description')) ||
-        parseTextContent(doc, entry.querySelector('content')) ||
-        parseTextContent(doc, entry.querySelector('summary'))
-    ).slice(0, 700);
+      parseTextContent(doc, entry.querySelector('content')) ||
+      parseTextContent(doc, entry.querySelector('summary'));
+
+    const { imageUrl, videoUrl } = extractMediaFromHtml(rawDescription);
+
+    const title = stripHtml(parseTextContent(doc, entry.querySelector('title'))).slice(0, 240);
+    const description = stripHtml(rawDescription).slice(0, 700);
 
     const rawLink = tryGetLinkFromItem(entry);
     const tweetIdMatch = rawLink.match(/status\/(\d+)/);
@@ -117,6 +150,8 @@ function parseRssXml(xmlText: string, username: string): TweetItem[] {
       pubDate: pubDateIso,
       source: username,
       username,
+      imageUrl,
+      videoUrl,
     });
   }
 

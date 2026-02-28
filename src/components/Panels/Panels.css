@@ -1029,6 +1029,28 @@
   margin-right: 4px;
 }
 
+.twitter-media {
+  margin: 4px 0;
+  border-radius: 4px;
+  overflow: hidden;
+  max-height: 140px;
+}
+
+.twitter-media-img {
+  width: 100%;
+  display: block;
+  object-fit: cover;
+  max-height: 140px;
+  border-radius: 4px;
+}
+
+.twitter-media-vid {
+  width: 100%;
+  display: block;
+  max-height: 140px;
+  border-radius: 4px;
+}
+
 .twitter-actions {
   display: flex;
   justify-content: flex-end;

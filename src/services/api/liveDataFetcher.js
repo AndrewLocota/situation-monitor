@@ -733,6 +733,67 @@ function shouldSkipProxy(proxyName) {
   return false;
 }
 
+/**
+ * Extract image and video URLs from Nitter/RSSHub RSS description HTML.
+ * Nitter embeds media as <img> / <video> tags pointing to its own CDN or
+ * directly to pbs.twimg.com / video.twimg.com.  We normalise Nitter proxy
+ * URLs back to the original Twitter CDN so they load in any context.
+ */
+function extractTweetMedia(html) {
+  if (!html) return {};
+
+  let imageUrl = null;
+  let videoUrl = null;
+
+  // --- Images ---
+  // Direct Twitter CDN images
+  const pbsMatch = html.match(/https?:\/\/pbs\.twimg\.com\/media\/[A-Za-z0-9_\-]+\.\w+/i);
+  if (pbsMatch) {
+    imageUrl = pbsMatch[0];
+  }
+
+  // Nitter proxied images: /pic/orig/media%2F<id>.<ext>  or  /pic/media%2F...
+  if (!imageUrl) {
+    const nitterPicMatch = html.match(/(?:src|href)=["']([^"']*\/pic\/(?:orig\/)?media%2F[A-Za-z0-9_\-]+\.\w+)/i);
+    if (nitterPicMatch) {
+      const encoded = nitterPicMatch[1];
+      const mediaId = encoded.match(/media%2F([A-Za-z0-9_\-]+\.\w+)/i);
+      if (mediaId) imageUrl = `https://pbs.twimg.com/media/${decodeURIComponent(mediaId[1])}`;
+    }
+  }
+
+  // Generic <img src="..."> fallback (skip tiny tracker pixels)
+  if (!imageUrl) {
+    const imgMatch = html.match(/<img[^>]+src=["']([^"']+)["']/i);
+    if (imgMatch && imgMatch[1].length > 40) {
+      imageUrl = imgMatch[1];
+    }
+  }
+
+  // --- Videos ---
+  const twitterVidMatch = html.match(/https?:\/\/video\.twimg\.com\/[^\s"'<>]+\.mp4/i);
+  if (twitterVidMatch) {
+    videoUrl = twitterVidMatch[0];
+  }
+
+  if (!videoUrl) {
+    const vidSrcMatch = html.match(/<video[^>]+src=["']([^"']+)["']/i);
+    if (vidSrcMatch) {
+      videoUrl = vidSrcMatch[1];
+    }
+  }
+
+  // Normalise Nitter video proxy URLs to Twitter CDN
+  if (videoUrl && !videoUrl.includes('video.twimg.com')) {
+    const vidIdMatch = videoUrl.match(/\/vid\/([^\s"'?]+)/i);
+    if (vidIdMatch) {
+      videoUrl = `https://video.twimg.com/ext_tw_video/${vidIdMatch[1]}`;
+    }
+  }
+
+  return { imageUrl, videoUrl };
+}
+
 async function fetchAccountTweets(username, maxTweets = 10) {
   // Try each proxy until one works
   for (const proxy of RSS_PROXIES) {
@@ -782,6 +843,9 @@ async function fetchAccountTweets(username, maxTweets = 10) {
         const link = item.querySelector('link')?.textContent || '';
         const pubDate = item.querySelector('pubDate')?.textContent || '';
 
+        // Extract media URLs from description HTML before stripping tags
+        const { imageUrl, videoUrl } = extractTweetMedia(description);
+
         // Extract tweet ID from link
         const tweetIdMatch = link.match(/status\/(\d+)/);
         const tweetId = tweetIdMatch ? tweetIdMatch[1] : null;
@@ -800,6 +864,8 @@ async function fetchAccountTweets(username, maxTweets = 10) {
           pubDate: new Date(pubDate),
           source: username,
           username: username,
+          imageUrl: imageUrl || null,
+          videoUrl: videoUrl || null,
         });
       });
 
@@ -828,6 +894,8 @@ export async function fetchTwitterIntel() {
           pubDate: new Date(tweet.pubDate),
           source: tweet.source || tweet.username || 'twitter',
           username: tweet.username || tweet.source || 'unknown',
+          imageUrl: tweet.imageUrl || null,
+          videoUrl: tweet.videoUrl || null,
         }))
         .filter((t) => t.tweetId && t.title);
     }

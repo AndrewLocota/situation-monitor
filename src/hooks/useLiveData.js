@@ -186,6 +186,8 @@ export function useLiveData(options = {}) {
         pubDate: tweet.pubDate.toISOString(),
         source: tweet.source,
         username: tweet.username,
+        imageUrl: tweet.imageUrl || null,
+        videoUrl: tweet.videoUrl || null,
       }));
 
       const getTweetKey = (tweet) =>

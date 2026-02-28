@@ -1947,6 +1947,29 @@ const SituationMap = ({ activeTheatre, onTheatreSelect, mapTheme = 'dark', onVid
                                     >
                                         {tweet.title}
                                     </a>
+                                    {tweet.imageUrl && (
+                                        <div style={{ marginBottom: '6px', borderRadius: '4px', overflow: 'hidden', maxHeight: '160px' }}>
+                                            <img
+                                                src={tweet.imageUrl}
+                                                alt=""
+                                                style={{ width: '100%', display: 'block', objectFit: 'cover', maxHeight: '160px' }}
+                                                loading="lazy"
+                                                onError={(e) => { e.target.style.display = 'none'; }}
+                                            />
+                                        </div>
+                                    )}
+                                    {tweet.videoUrl && !tweet.imageUrl && (
+                                        <div style={{ marginBottom: '6px', borderRadius: '4px', overflow: 'hidden' }}>
+                                            <video
+                                                src={tweet.videoUrl}
+                                                controls
+                                                muted
+                                                preload="metadata"
+                                                style={{ width: '100%', maxHeight: '160px', display: 'block' }}
+                                                onError={(e) => { e.target.style.display = 'none'; }}
+                                            />
+                                        </div>
+                                    )}
                                     {tweet.description && (
                                         <div style={{
                                             marginBottom: '8px',

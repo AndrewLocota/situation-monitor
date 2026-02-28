@@ -83,6 +83,29 @@ export function TwitterIntelPanel() {
                                         {hasLocation && <span className="location-icon">📍</span>}
                                         <IranLink>{tweet.title}</IranLink>
                                     </div>
+                                    {tweet.imageUrl && (
+                                        <div className="twitter-media">
+                                            <img
+                                                src={tweet.imageUrl}
+                                                alt=""
+                                                className="twitter-media-img"
+                                                loading="lazy"
+                                                onError={(e) => { e.target.style.display = 'none'; }}
+                                            />
+                                        </div>
+                                    )}
+                                    {tweet.videoUrl && !tweet.imageUrl && (
+                                        <div className="twitter-media">
+                                            <video
+                                                src={tweet.videoUrl}
+                                                controls
+                                                muted
+                                                preload="metadata"
+                                                className="twitter-media-vid"
+                                                onError={(e) => { e.target.style.display = 'none'; }}
+                                            />
+                                        </div>
+                                    )}
                                     <div className="twitter-actions">
                                         {tweet.tweetId && (
                                             <a
