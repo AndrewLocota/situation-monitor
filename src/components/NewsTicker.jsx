@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, useMemo } from 'react';
+import { IranLink } from './ui/KeywordLink';
 import './NewsTicker.css';
 
 /**
@@ -59,7 +60,7 @@ export function NewsTicker({ news = [] }) {
                         {sortedNews.map((item, idx) => (
                             <span key={`t1-${item.id || idx}`} className="ticker-item">
                                 <span className="ticker-source">[{item.source}]</span>
-                                {item.title?.replace(/^\[.*?\]\s*/, '')}
+                                <IranLink>{item.title?.replace(/^\[.*?\]\s*/, '')}</IranLink>
                                 <span className="ticker-separator">•</span>
                             </span>
                         ))}
@@ -69,7 +70,7 @@ export function NewsTicker({ news = [] }) {
                         {sortedNews.map((item, idx) => (
                             <span key={`t2-${item.id || idx}`} className="ticker-item">
                                 <span className="ticker-source">[{item.source}]</span>
-                                {item.title?.replace(/^\[.*?\]\s*/, '')}
+                                <IranLink>{item.title?.replace(/^\[.*?\]\s*/, '')}</IranLink>
                                 <span className="ticker-separator">•</span>
                             </span>
                         ))}

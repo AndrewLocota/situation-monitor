@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ASCIIBox } from '../ui';
+import { ASCIIBox, IranLink } from '../ui';
 import { ASCIILoader } from '../ui/ASCIILoader';
 import { useDataStore } from '../../stores';
 import './Panels.css';
@@ -55,10 +55,10 @@ export function PolymarketPanel() {
                                             className="polymarket-question polymarket-link"
                                             title="View on Polymarket"
                                         >
-                                            {item.question}
+                                            <IranLink>{item.question}</IranLink>
                                         </a>
                                     ) : (
-                                        <span className="polymarket-question">{item.question}</span>
+                                        <span className="polymarket-question"><IranLink>{item.question}</IranLink></span>
                                     )}
                                     {item.marketCount > 1 && (
                                         <span className="polymarket-subcount" title={`${item.marketCount} sub-markets`}>

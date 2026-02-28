@@ -474,3 +474,20 @@
     display: none;
   }
 }
+
+/* Iran keyword link — clickable inline text */
+.keyword-iran {
+  color: #ff6b6b;
+  cursor: pointer;
+  font-weight: inherit;
+  text-decoration: underline;
+  text-decoration-color: rgba(255, 107, 107, 0.35);
+  text-underline-offset: 2px;
+  transition: color 0.15s, text-shadow 0.15s;
+}
+
+.keyword-iran:hover {
+  color: #ff4040;
+  text-shadow: 0 0 6px rgba(255, 70, 70, 0.4);
+  text-decoration-color: rgba(255, 70, 70, 0.6);
+}

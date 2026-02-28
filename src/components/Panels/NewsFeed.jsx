@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { ASCIIBox } from '../ui';
+import { ASCIIBox, IranLink } from '../ui';
 import { useDataStore } from '../../stores';
 import { timeAgo } from '../../utils/timeFormat';
 import { geolocateNews } from '../../utils/geolocateNews';
@@ -200,7 +200,7 @@ export function NewsFeed() {
                                             title={geolocateNews(item) ? `Click to view on map (${geolocateNews(item)?.label})` : 'No location detected'}
                                         >
                                             {isAlert && <span className="news-alert-badge">!</span>}
-                                            {item.title}
+                                            <IranLink>{item.title}</IranLink>
                                             {geolocateNews(item) && <span className="news-map-icon">📍</span>}
                                         </span>
                                         <a

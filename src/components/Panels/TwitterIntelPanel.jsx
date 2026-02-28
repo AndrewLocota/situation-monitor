@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useDataStore } from '../../stores';
-import { ASCIIBox } from '../ui';
+import { ASCIIBox, IranLink } from '../ui';
 import { geolocateNews } from '../../utils/geolocateNews';
 import { timeAgo } from '../../utils/timeFormat';
 import './Panels.css';
@@ -81,7 +81,7 @@ export function TwitterIntelPanel() {
                                         style={{ cursor: hasLocation ? 'pointer' : 'default' }}
                                     >
                                         {hasLocation && <span className="location-icon">📍</span>}
-                                        {tweet.title}
+                                        <IranLink>{tweet.title}</IranLink>
                                     </div>
                                     <div className="twitter-actions">
                                         {tweet.tweetId && (
