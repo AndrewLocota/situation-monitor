@@ -395,11 +395,34 @@
   border-bottom: 1px solid var(--border-dim, #1a2030);
 }
 
+.polymarket-question-row {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
 .polymarket-question {
   font-size: 11px;
   color: var(--text-secondary, #8892a8);
-  margin-bottom: 4px;
   line-height: 1.4;
+}
+
+.polymarket-link {
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.polymarket-link:hover {
+  color: var(--accent-primary, #4da6ff);
+  text-decoration: underline;
+}
+
+.polymarket-subcount {
+  font-size: 9px;
+  color: var(--text-dim, #5a6478);
+  flex-shrink: 0;
 }
 
 .polymarket-odds {
@@ -422,7 +445,8 @@
 
 .polymarket-values {
   display: flex;
-  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
   font-size: 10px;
 }
 
@@ -431,8 +455,14 @@
   font-weight: bold;
 }
 
+.polymarket-change {
+  font-size: 9px;
+  font-weight: bold;
+}
+
 .polymarket-vol {
   color: var(--text-dim, #5a6478);
+  margin-left: auto;
 }
 
 /* Congress Trades */

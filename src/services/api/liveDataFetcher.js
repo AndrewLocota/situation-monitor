@@ -906,54 +906,104 @@ export async function fetchCryptoPrices() {
   }
 }
 
+// Geopolitical relevance keywords — markets matching these score higher
+const POLYMARKET_RELEVANCE_KEYWORDS = [
+  'war', 'strike', 'bomb', 'military', 'missile', 'nuclear', 'invasion',
+  'iran', 'israel', 'gaza', 'ukraine', 'russia', 'china', 'taiwan', 'nato',
+  'sanctions', 'ceasefire', 'troops', 'conflict', 'houthi', 'hezbollah',
+  'syria', 'yemen', 'sudan', 'myanmar', 'korea', 'putin', 'zelensky',
+  'election', 'president', 'prime minister', 'resign', 'impeach', 'coup',
+  'tariff', 'fed ', 'interest rate', 'recession', 'inflation', 'gdp',
+  'oil', 'opec', 'energy', 'commodity',
+  'ai ', 'artificial intelligence', 'openai', 'regulation',
+  'trump', 'biden', 'congress', 'senate', 'supreme court',
+  'refugee', 'border', 'terror', 'intelligence', 'drone', 'cyber',
+  'pandemic', 'famine', 'humanitarian',
+];
+
+const POLYMARKET_TAGS = ['geopolitics', 'world', 'politics', 'war', 'military', 'nuclear', 'middle-east'];
+
+function scorePolymarketRelevance(title) {
+  const lower = (title || '').toLowerCase();
+  let score = 0;
+  for (const kw of POLYMARKET_RELEVANCE_KEYWORDS) {
+    if (lower.includes(kw)) score++;
+  }
+  return score;
+}
+
 /**
- * Fetch Polymarket prediction markets
+ * Fetch Polymarket prediction markets — geopolitically focused
+ * Uses the /events endpoint with tag filtering for relevant markets,
+ * then scores and sorts by relevance × volume.
  */
 export async function fetchPolymarketEvents() {
   try {
-    const response = await fetchWithCorsProxy(
-      'https://gamma-api.polymarket.com/markets?closed=false&limit=20'
-    );
+    const allEvents = [];
+    const seenIds = new Set();
 
-    if (!response) return [];
-
-    const data = await response.json();
-
-    return data.map((market) => {
-      // Extract probability - Polymarket returns values 0-1, already as decimal
-      // Try multiple fields in case API structure varies
-      let probability = 0.5; // Default to 50%
-
-      if (market.outcomePrices && Array.isArray(market.outcomePrices) && market.outcomePrices.length > 0) {
-        // outcomePrices[0] is typically the "Yes" price (0-1 range)
-        probability = parseFloat(market.outcomePrices[0]);
-      } else if (market.clobTokenIds && Array.isArray(market.outcomes) && market.outcomes.length > 0) {
-        // Alternative: try to get from outcomes array (only if it's actually an array)
-        const yesOutcome = market.outcomes.find(o => o?.toLowerCase() === 'yes');
-        if (yesOutcome) {
-          probability = parseFloat(market.outcomePrices?.[0] || 0.5);
-        }
-      } else if (typeof market.probability !== 'undefined') {
-        // Direct probability field if available
-        probability = parseFloat(market.probability);
-      }
-
-      // Ensure probability is in valid range 0-1
-      probability = Math.max(0, Math.min(1, probability));
-
-      return {
-        id: market.id || market.conditionId,
-        question: market.question || market.title,
-        probability: probability, // Stored as decimal (0-1), displayed as % in UI
-        volume: parseFloat(market.volume) || 0,
-        category: market.category || 'Other',
-        // Optional: store raw data for debugging
-        _debug: {
-          outcomePrices: market.outcomePrices,
-          outcomes: market.outcomes
-        }
-      };
+    const tagFetches = POLYMARKET_TAGS.map(async (tag) => {
+      try {
+        const response = await fetchWithCorsProxy(
+          `https://gamma-api.polymarket.com/events?closed=false&limit=20&tag=${tag}&order=volume24hr&ascending=false`
+        );
+        if (!response) return [];
+        return response.json();
+      } catch { return []; }
     });
+
+    const results = await Promise.allSettled(tagFetches);
+    for (const result of results) {
+      if (result.status !== 'fulfilled' || !Array.isArray(result.value)) continue;
+      for (const event of result.value) {
+        if (seenIds.has(event.id || event.slug)) continue;
+        seenIds.add(event.id || event.slug);
+        allEvents.push(event);
+      }
+    }
+
+    const parsed = allEvents
+      .map((event) => {
+        const markets = event.markets || [];
+        const primary = markets[0] || {};
+        const tags = (event.tags || []).map(t => t.label || t).filter(Boolean);
+        const totalVolume = markets.reduce((s, m) => s + (m.volumeNum || parseFloat(m.volume) || 0), 0);
+        const volume24h = markets.reduce((s, m) => s + (parseFloat(m.volume24hr) || 0), 0);
+
+        let probability = 0.5;
+        if (primary.outcomePrices && Array.isArray(primary.outcomePrices) && primary.outcomePrices.length > 0) {
+          probability = parseFloat(primary.outcomePrices[0]);
+        } else if (typeof primary.probability !== 'undefined') {
+          probability = parseFloat(primary.probability);
+        }
+        probability = Math.max(0, Math.min(1, isNaN(probability) ? 0.5 : probability));
+
+        const priceChange = parseFloat(primary.oneDayPriceChange) || 0;
+        const title = event.title || primary.question || 'Unknown';
+        const relevance = scorePolymarketRelevance(title + ' ' + tags.join(' '));
+
+        return {
+          id: event.id || event.slug || primary.id,
+          question: title,
+          probability,
+          volume: totalVolume,
+          volume24h,
+          priceChange,
+          tags: tags.slice(0, 4),
+          slug: event.slug || '',
+          marketCount: markets.length,
+          relevance,
+        };
+      })
+      .filter(e => e.question && e.question !== 'Unknown')
+      .sort((a, b) => {
+        const aScore = a.relevance * 2 + Math.log10(Math.max(a.volume24h, 1));
+        const bScore = b.relevance * 2 + Math.log10(Math.max(b.volume24h, 1));
+        return bScore - aScore;
+      })
+      .slice(0, 30);
+
+    return parsed;
   } catch (error) {
     console.error('Failed to fetch Polymarket:', error);
     return [];
